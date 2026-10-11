@@ -31,10 +31,30 @@ service cloud.firestore {
       allow delete: if isSuperAdmin();
     }
 
-    // Civilizations Hubs Content
+    // Civilizations Hubs Content & Subcollections
     match /civilizations/{civId} {
       allow read: if true;
       allow write: if isAdmin();
+
+      // Subcollection: Think Tanks / Centers
+      match /centers/{centerId} {
+        allow read: if true;
+        allow write: if isAdmin();
+      }
+
+      // Subcollection: Thinkers / Authors
+      match /authors/{authorId} {
+        allow read: if true;
+        allow write: if isAdmin();
+      }
+    }
+
+    // Collection Group queries across all civilizations
+    match /{path=**}/centers/{centerId} {
+      allow read: if true;
+    }
+    match /{path=**}/authors/{authorId} {
+      allow read: if true;
     }
 
     // Site Pages Content (home, about, dialogue, forum)

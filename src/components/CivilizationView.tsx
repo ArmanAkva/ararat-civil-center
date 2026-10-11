@@ -20,7 +20,14 @@ interface Props {
 
 export default function CivilizationView({ civilization: initialCiv }: Props) {
   const [civ, setCiv] = useState<Civilization>(initialCiv);
-  const { isEditMode, saveCivilizationField, saveCivilizationFull } = useEditMode();
+  const {
+    isEditMode,
+    saveCivilizationField,
+    saveCenter,
+    deleteCenter,
+    saveAuthor,
+    deleteAuthor,
+  } = useEditMode();
 
   // SPA Tab State: "centers" | "authors"
   const [activeTab, setActiveTab] = useState<"centers" | "authors">("centers");
@@ -59,7 +66,7 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
     }
   };
 
-  // Center CRUD
+  // Center CRUD via Subcollections
   const handleSaveCenter = async (updated: ThinkTank) => {
     let newCenters: ThinkTank[];
     if (editingCenter?.isNew) {
@@ -68,16 +75,16 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
       newCenters = civ.centers.map((c) => (c.id === updated.id ? updated : c));
     }
     setCiv((prev) => ({ ...prev, centers: newCenters }));
-    await saveCivilizationFull(civ.id, { centers: newCenters });
+    await saveCenter(civ.id, updated);
   };
 
   const handleDeleteCenter = async (centerId: string) => {
     const newCenters = civ.centers.filter((c) => c.id !== centerId);
     setCiv((prev) => ({ ...prev, centers: newCenters }));
-    await saveCivilizationFull(civ.id, { centers: newCenters });
+    await deleteCenter(civ.id, centerId);
   };
 
-  // Author CRUD
+  // Author CRUD via Subcollections
   const handleSaveAuthor = async (updated: Thinker) => {
     let newAuthors: Thinker[];
     if (editingAuthor?.isNew) {
@@ -86,13 +93,13 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
       newAuthors = civ.authors.map((a) => (a.id === updated.id ? updated : a));
     }
     setCiv((prev) => ({ ...prev, authors: newAuthors }));
-    await saveCivilizationFull(civ.id, { authors: newAuthors });
+    await saveAuthor(civ.id, updated);
   };
 
   const handleDeleteAuthor = async (authorId: string) => {
     const newAuthors = civ.authors.filter((a) => a.id !== authorId);
     setCiv((prev) => ({ ...prev, authors: newAuthors }));
-    await saveCivilizationFull(civ.id, { authors: newAuthors });
+    await deleteAuthor(civ.id, authorId);
   };
 
   // Filter centers based on query

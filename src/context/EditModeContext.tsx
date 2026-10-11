@@ -10,9 +10,13 @@ import { useAuth } from "./AuthContext";
 import {
   updatePageContent,
   updateCivilizationContent,
+  saveCenterDoc,
+  deleteCenterDoc,
+  saveAuthorDoc,
+  deleteAuthorDoc,
   seedAllContentToFirestore,
 } from "@/lib/contentService";
-import { Civilization } from "@/lib/civilizationsData";
+import { Civilization, ThinkTank, Thinker } from "@/lib/civilizationsData";
 
 interface EditModeContextType {
   isEditMode: boolean;
@@ -34,6 +38,10 @@ interface EditModeContextType {
     civId: string,
     data: Partial<Civilization>
   ) => Promise<void>;
+  saveCenter: (civId: string, center: ThinkTank) => Promise<void>;
+  deleteCenter: (civId: string, centerId: string) => Promise<void>;
+  saveAuthor: (civId: string, author: Thinker) => Promise<void>;
+  deleteAuthor: (civId: string, authorId: string) => Promise<void>;
   seedAll: () => Promise<void>;
   saving: boolean;
 }
@@ -122,6 +130,68 @@ export function EditModeProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Subcollection Center CRUD
+  const saveCenter = async (civId: string, center: ThinkTank) => {
+    if (!isAdmin) return;
+    setSaving(true);
+    try {
+      await saveCenterDoc(civId, center);
+      showStatus("success", `✓ Կենտրոնը («${center.name}») պահպանվեց ենթահավաքածուում:`);
+    } catch (err: any) {
+      console.error(err);
+      showStatus("error", `Սխալ կենտրոնը պահպանելիս. ${err.message || err}`);
+      throw err;
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const deleteCenter = async (civId: string, centerId: string) => {
+    if (!isAdmin) return;
+    setSaving(true);
+    try {
+      await deleteCenterDoc(civId, centerId);
+      showStatus("success", "✓ Կենտրոնը հեռացվեց ենթահավաքածուից:");
+    } catch (err: any) {
+      console.error(err);
+      showStatus("error", `Սխալ կենտրոնը հեռացնելիս. ${err.message || err}`);
+      throw err;
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Subcollection Author CRUD
+  const saveAuthor = async (civId: string, author: Thinker) => {
+    if (!isAdmin) return;
+    setSaving(true);
+    try {
+      await saveAuthorDoc(civId, author);
+      showStatus("success", `✓ Հեղինակը («${author.name}») պահպանվեց ենթահավաքածուում:`);
+    } catch (err: any) {
+      console.error(err);
+      showStatus("error", `Սխալ հեղինակին պահպանելիս. ${err.message || err}`);
+      throw err;
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const deleteAuthor = async (civId: string, authorId: string) => {
+    if (!isAdmin) return;
+    setSaving(true);
+    try {
+      await deleteAuthorDoc(civId, authorId);
+      showStatus("success", "✓ Հեղինակը հեռացվեց ենթահավաքածուից:");
+    } catch (err: any) {
+      console.error(err);
+      showStatus("error", `Սխալ հեղինակին հեռացնելիս. ${err.message || err}`);
+      throw err;
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const seedAll = async () => {
     if (!isAdmin) return;
     setSaving(true);
@@ -150,6 +220,10 @@ export function EditModeProvider({ children }: { children: ReactNode }) {
         savePageField,
         saveCivilizationField,
         saveCivilizationFull,
+        saveCenter,
+        deleteCenter,
+        saveAuthor,
+        deleteAuthor,
         seedAll,
         saving,
       }}
