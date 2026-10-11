@@ -7,3 +7,17 @@ runConfig:
   concurrency: 80
   cpu: 1
   memoryMiB: 512
+
+env:
+  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+    value: AIzaSyDKVJvw7-IbfRU0oGGTQqjuj88s7ZBJa0k
+  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    value: ararat-civil-center.firebaseapp.com
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    value: ararat-civil-center
+  - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    value: ararat-civil-center.firebasestorage.app
+  - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+    value: "306816522579"
+  - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+    value: 1:306816522579:web:6c15e1bd42a42cd59ca9a6
