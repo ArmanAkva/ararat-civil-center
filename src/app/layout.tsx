@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Header from "@/components/Header";
 import { AuthProvider } from "@/context/AuthContext";
+import { EditModeProvider } from "@/context/EditModeContext";
+import FloatingAdminBar from "@/components/cms/FloatingAdminBar";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -43,8 +45,11 @@ export default function RootLayout({
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <AuthProvider>
-          <Header />
-          {children}
+          <EditModeProvider>
+            <Header />
+            {children}
+            <FloatingAdminBar />
+          </EditModeProvider>
         </AuthProvider>
       </body>
     </html>

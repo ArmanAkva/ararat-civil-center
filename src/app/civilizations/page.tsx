@@ -1,13 +1,25 @@
-import Link from "next/link";
-import { civilizationsData } from "@/lib/civilizationsData";
+"use client";
 
-export const metadata = {
-  title: "8 Քաղաքակրթական Բևեռներ և Մտածողներ | Արարատյան Ֆորում",
-  description:
-    "Բացահայտեք 8 քաղաքակրթական բևեռների հոգևոր կոդերը, գլխավոր ասելիքը, առաջատար գիտահետազոտական կենտրոններն ու մտածողներին։",
-};
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { civilizationsData, Civilization } from "@/lib/civilizationsData";
+import { getAllCivilizationsContent } from "@/lib/contentService";
 
 export default function Civilizations() {
+  const [civilizations, setCivilizations] = useState<Civilization[]>(civilizationsData);
+
+  useEffect(() => {
+    let isMounted = true;
+    getAllCivilizationsContent().then((data) => {
+      if (isMounted && data && data.length > 0) {
+        setCivilizations(data);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   return (
     <main className="container" style={{ paddingBottom: "5rem" }}>
       {/* Page Header */}
@@ -57,7 +69,7 @@ export default function Civilizations() {
           gap: "2rem",
         }}
       >
-        {civilizationsData.map((civ) => (
+        {civilizations.map((civ) => (
           <Link
             key={civ.id}
             href={`/hubs/${civ.slug}`}
@@ -166,8 +178,8 @@ export default function Civilizations() {
                   gap: "0.75rem",
                 }}
               >
-                <span>🏛 {civ.centers.length} կենտրոն</span>
-                <span>🖋 {civ.authors.length} հեղինակ</span>
+                <span>🏛 {civ.centers?.length || 0} կենտրոն</span>
+                <span>🖋 {civ.authors?.length || 0} հեղինակ</span>
               </div>
               <span
                 style={{

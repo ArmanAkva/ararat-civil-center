@@ -1,20 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   Civilization,
   ThinkTank,
   Thinker,
   Publication,
-  civilizationsData
+  civilizationsData,
 } from "@/lib/civilizationsData";
+import { useEditMode } from "@/context/EditModeContext";
+import EditableText from "@/components/cms/EditableText";
+import EditCardModal from "@/components/cms/EditCardModal";
+import { getCivilizationContent } from "@/lib/contentService";
 
 interface Props {
   civilization: Civilization;
 }
 
-export default function CivilizationView({ civilization: civ }: Props) {
+export default function CivilizationView({ civilization: initialCiv }: Props) {
+  const [civ, setCiv] = useState<Civilization>(initialCiv);
+  const { isEditMode, saveCivilizationField, saveCivilizationFull } = useEditMode();
+
   // SPA Tab State: "centers" | "authors"
   const [activeTab, setActiveTab] = useState<"centers" | "authors">("centers");
   const [searchQuery, setSearchQuery] = useState("");
@@ -23,6 +30,23 @@ export default function CivilizationView({ civilization: civ }: Props) {
     pub: Publication;
     authorName: string;
   } | null>(null);
+
+  // Modal editing states
+  const [editingCenter, setEditingCenter] = useState<{ center: ThinkTank; isNew: boolean } | null>(null);
+  const [editingAuthor, setEditingAuthor] = useState<{ author: Thinker; isNew: boolean } | null>(null);
+
+  // Sync latest from Firestore on mount
+  useEffect(() => {
+    let isMounted = true;
+    getCivilizationContent(initialCiv.id).then((data) => {
+      if (isMounted && data) {
+        setCiv(data);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, [initialCiv.id]);
 
   // Copy credo text to clipboard
   const handleCopyCredo = async () => {
@@ -33,6 +57,42 @@ export default function CivilizationView({ civilization: civ }: Props) {
     } catch {
       // Fallback
     }
+  };
+
+  // Center CRUD
+  const handleSaveCenter = async (updated: ThinkTank) => {
+    let newCenters: ThinkTank[];
+    if (editingCenter?.isNew) {
+      newCenters = [updated, ...civ.centers];
+    } else {
+      newCenters = civ.centers.map((c) => (c.id === updated.id ? updated : c));
+    }
+    setCiv((prev) => ({ ...prev, centers: newCenters }));
+    await saveCivilizationFull(civ.id, { centers: newCenters });
+  };
+
+  const handleDeleteCenter = async (centerId: string) => {
+    const newCenters = civ.centers.filter((c) => c.id !== centerId);
+    setCiv((prev) => ({ ...prev, centers: newCenters }));
+    await saveCivilizationFull(civ.id, { centers: newCenters });
+  };
+
+  // Author CRUD
+  const handleSaveAuthor = async (updated: Thinker) => {
+    let newAuthors: Thinker[];
+    if (editingAuthor?.isNew) {
+      newAuthors = [updated, ...civ.authors];
+    } else {
+      newAuthors = civ.authors.map((a) => (a.id === updated.id ? updated : a));
+    }
+    setCiv((prev) => ({ ...prev, authors: newAuthors }));
+    await saveCivilizationFull(civ.id, { authors: newAuthors });
+  };
+
+  const handleDeleteAuthor = async (authorId: string) => {
+    const newAuthors = civ.authors.filter((a) => a.id !== authorId);
+    setCiv((prev) => ({ ...prev, authors: newAuthors }));
+    await saveCivilizationFull(civ.id, { authors: newAuthors });
   };
 
   // Filter centers based on query
@@ -91,19 +151,55 @@ export default function CivilizationView({ civilization: civ }: Props) {
         <div className="civ-icon-wrapper">
           <div className="civ-icon-glow"></div>
           <div className="civ-icon-badge" aria-hidden="true">
-            {civ.symbol}
+            <EditableText
+              value={civ.symbol}
+              label="Խորհրդանիշ (Symbol)"
+              tag="span"
+              onSave={async (val) => {
+                setCiv((prev) => ({ ...prev, symbol: val }));
+                await saveCivilizationField(civ.id, "symbol", val);
+              }}
+            />
           </div>
         </div>
 
         <div className="civ-title-meta">
-          <span className="civ-badge-pill">{civ.badge}</span>
+          <span className="civ-badge-pill">
+            <EditableText
+              value={civ.badge}
+              label="Տարբերանշան (Badge)"
+              tag="span"
+              onSave={async (val) => {
+                setCiv((prev) => ({ ...prev, badge: val }));
+                await saveCivilizationField(civ.id, "badge", val);
+              }}
+            />
+          </span>
         </div>
 
         <h1 id="civ-heading" className="civ-main-title">
-          {civ.nameHy}
+          <EditableText
+            value={civ.nameHy}
+            label="Անվանում (Հայերեն)"
+            tag="span"
+            onSave={async (val) => {
+              setCiv((prev) => ({ ...prev, nameHy: val }));
+              await saveCivilizationField(civ.id, "nameHy", val);
+            }}
+          />
         </h1>
 
-        <p className="civ-en-title">{civ.nameEn}</p>
+        <p className="civ-en-title">
+          <EditableText
+            value={civ.nameEn}
+            label="Անվանում (Անգլերեն)"
+            tag="span"
+            onSave={async (val) => {
+              setCiv((prev) => ({ ...prev, nameEn: val }));
+              await saveCivilizationField(civ.id, "nameEn", val);
+            }}
+          />
+        </p>
       </section>
 
       {/* =========================================================
@@ -121,7 +217,16 @@ export default function CivilizationView({ civilization: civ }: Props) {
         </div>
 
         <blockquote className="credo-quote-text">
-          {civ.credo}
+          <EditableText
+            value={civ.credo}
+            label="Գլխավոր Ասելիք (Core Credo Quote)"
+            tag="span"
+            multiline
+            onSave={async (val) => {
+              setCiv((prev) => ({ ...prev, credo: val }));
+              await saveCivilizationField(civ.id, "credo", val);
+            }}
+          />
         </blockquote>
 
         <div className="credo-footer">
@@ -187,22 +292,74 @@ export default function CivilizationView({ civilization: civ }: Props) {
             </button>
           </div>
 
-          {/* Real-time search filter */}
-          <div className="tab-search-wrapper">
-            <span className="tab-search-icon" aria-hidden="true">
-              🔍
-            </span>
-            <input
-              type="text"
-              className="tab-search-input"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={
-                activeTab === "centers"
-                  ? "Որոնել կենտրոններ, քաղաք, ոլորտ..."
-                  : "Որոնել հեղինակ, աշխատություն..."
-              }
-            />
+          {/* Action buttons in Edit Mode */}
+          <div style={{ display: "flex", gap: "1rem", alignItems: "center", flexWrap: "wrap" }}>
+            {isEditMode && activeTab === "centers" && (
+              <button
+                type="button"
+                onClick={() =>
+                  setEditingCenter({
+                    center: {
+                      id: "center-" + Date.now(),
+                      name: "Նոր Գիտական Կենտրոն",
+                      originalName: "New Think Tank",
+                      city: "Երևան",
+                      country: "Հայաստան",
+                      description: "Կենտրոնի հետազոտական առաքելությունը...",
+                      focusAreas: ["Փիլիսոփայություն", "Քաղաքակրթական երկխոսություն"],
+                      website: "",
+                    },
+                    isNew: true,
+                  })
+                }
+                className="btn-primary"
+                style={{ padding: "0.5rem 1rem", fontSize: "0.85rem" }}
+              >
+                + Ավելացնել Կենտրոն
+              </button>
+            )}
+
+            {isEditMode && activeTab === "authors" && (
+              <button
+                type="button"
+                onClick={() =>
+                  setEditingAuthor({
+                    author: {
+                      id: "author-" + Date.now(),
+                      name: "Նոր Մտածող",
+                      nameOriginal: "New Thinker",
+                      title: "Փիլիսոփա, Հետազոտող",
+                      bio: "Հեղինակի կենսագրությունը և գիտական ժառանգությունը...",
+                      quote: "«Մարդկության ապագան հիմնված է արժեքների ներդաշնակման վրա։»",
+                      publications: [],
+                    },
+                    isNew: true,
+                  })
+                }
+                className="btn-primary"
+                style={{ padding: "0.5rem 1rem", fontSize: "0.85rem" }}
+              >
+                + Ավելացնել Հեղինակ
+              </button>
+            )}
+
+            {/* Real-time search filter */}
+            <div className="tab-search-wrapper">
+              <span className="tab-search-icon" aria-hidden="true">
+                🔍
+              </span>
+              <input
+                type="text"
+                className="tab-search-input"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={
+                  activeTab === "centers"
+                    ? "Որոնել կենտրոններ, քաղաք, ոլորտ..."
+                    : "Որոնել հեղինակ, աշխատություն..."
+                }
+              />
+            </div>
           </div>
         </div>
 
@@ -217,7 +374,7 @@ export default function CivilizationView({ civilization: civ }: Props) {
                   color: "var(--text-secondary)",
                   background: "var(--card-bg)",
                   borderRadius: "1rem",
-                  border: "1px dashed var(--card-border)"
+                  border: "1px dashed var(--card-border)",
                 }}
               >
                 Որոնմանը համապատասխանող կենտրոն չգտնվեց:
@@ -225,9 +382,48 @@ export default function CivilizationView({ civilization: civ }: Props) {
             ) : (
               <div className="cards-grid-subpage">
                 {filteredCenters.map((center) => (
-                  <article key={center.id} className="center-card">
+                  <article key={center.id} className="center-card" style={{ position: "relative" }}>
+                    {isEditMode && (
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: "1rem",
+                          right: "1rem",
+                          display: "flex",
+                          gap: "0.5rem",
+                          zIndex: 10,
+                        }}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => setEditingCenter({ center, isNew: false })}
+                          className="credo-action-btn"
+                          style={{ padding: "0.3rem 0.6rem", fontSize: "0.75rem", background: "var(--bg-secondary)" }}
+                          title="Խմբագրել կենտրոնի տվյալները"
+                        >
+                          ✏️ Խմբագրել
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteCenter(center.id)}
+                          style={{
+                            background: "transparent",
+                            border: "1px solid rgba(239, 68, 68, 0.3)",
+                            color: "#ef4444",
+                            padding: "0.3rem 0.5rem",
+                            borderRadius: "0.4rem",
+                            cursor: "pointer",
+                            fontSize: "0.75rem",
+                          }}
+                          title="Հեռացնել կենտրոնը"
+                        >
+                          🗑
+                        </button>
+                      </div>
+                    )}
+
                     <div>
-                      <div className="center-card-header">
+                      <div className="center-card-header" style={{ paddingRight: isEditMode ? "100px" : "0" }}>
                         <div className="center-location-tag">
                           <span>📍</span>
                           <span>
@@ -294,7 +490,7 @@ export default function CivilizationView({ civilization: civ }: Props) {
                   color: "var(--text-secondary)",
                   background: "var(--card-bg)",
                   borderRadius: "1rem",
-                  border: "1px dashed var(--card-border)"
+                  border: "1px dashed var(--card-border)",
                 }}
               >
                 Որոնմանը համապատասխանող մտածող չգտնվեց:
@@ -302,7 +498,46 @@ export default function CivilizationView({ civilization: civ }: Props) {
             ) : (
               <div className="cards-grid-subpage">
                 {filteredAuthors.map((author) => (
-                  <article key={author.id} className="author-card">
+                  <article key={author.id} className="author-card" style={{ position: "relative" }}>
+                    {isEditMode && (
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: "1rem",
+                          right: "1rem",
+                          display: "flex",
+                          gap: "0.5rem",
+                          zIndex: 10,
+                        }}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => setEditingAuthor({ author, isNew: false })}
+                          className="credo-action-btn"
+                          style={{ padding: "0.3rem 0.6rem", fontSize: "0.75rem", background: "var(--bg-secondary)" }}
+                          title="Խմբագրել հեղինակի տվյալները"
+                        >
+                          ✏️ Խմբագրել
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteAuthor(author.id)}
+                          style={{
+                            background: "transparent",
+                            border: "1px solid rgba(239, 68, 68, 0.3)",
+                            color: "#ef4444",
+                            padding: "0.3rem 0.5rem",
+                            borderRadius: "0.4rem",
+                            cursor: "pointer",
+                            fontSize: "0.75rem",
+                          }}
+                          title="Հեռացնել հեղինակին"
+                        >
+                          🗑
+                        </button>
+                      </div>
+                    )}
+
                     <div className="author-header-flex">
                       <div className="author-avatar" aria-hidden="true">
                         {author.name.charAt(0)}
@@ -371,6 +606,49 @@ export default function CivilizationView({ civilization: civ }: Props) {
           </div>
         )}
       </section>
+
+      {/* =========================================================
+          Edit Center Modal
+          ========================================================= */}
+      {editingCenter && (
+        <EditCardModal
+          title={editingCenter.isNew ? "Ավելացնել Նոր Կենտրոն" : `Խմբագրել՝ ${editingCenter.center.name}`}
+          initialData={editingCenter.center}
+          fields={[
+            { key: "name", label: "Կենտրոնի Անվանում (Հայերեն)", placeholder: "օրինակ՝ Մատենադարան" },
+            { key: "originalName", label: "Բնօրինակ / Անգլերեն Անվանում", placeholder: "e.g. Mesrop Mashtots Institute" },
+            { key: "city", label: "Քաղաք", placeholder: "օրինակ՝ Երևան" },
+            { key: "country", label: "Երկիր", placeholder: "օրինակ՝ Հայաստան" },
+            { key: "foundedYear", label: "Հիմնադրման Տարեթիվ", placeholder: "օրինակ՝ 1959" },
+            { key: "description", label: "Գործունեության և Առաքելության Նկարագրություն", type: "textarea" },
+            { key: "focusAreas", label: "Գիտական Ուղղություններ (#tags բաժանված ստորակետով)", type: "tags" },
+            { key: "website", label: "Պաշտոնական Կայքի Հղում (URL)", placeholder: "https://..." },
+          ]}
+          onSave={handleSaveCenter}
+          onClose={() => setEditingCenter(null)}
+          onDelete={!editingCenter.isNew ? () => handleDeleteCenter(editingCenter.center.id) : undefined}
+        />
+      )}
+
+      {/* =========================================================
+          Edit Author Modal
+          ========================================================= */}
+      {editingAuthor && (
+        <EditCardModal
+          title={editingAuthor.isNew ? "Ավելացնել Նոր Հեղինակ" : `Խմբագրել՝ ${editingAuthor.author.name}`}
+          initialData={editingAuthor.author}
+          fields={[
+            { key: "name", label: "Անուն Ազգանուն (Հայերեն)", placeholder: "օրինակ՝ Վարդան Գրիգորյան" },
+            { key: "nameOriginal", label: "Բնօրինակ / Լատիներեն Անուն", placeholder: "e.g. Vartan Gregorian" },
+            { key: "title", label: "Գիտական Կոչում / Դեր", placeholder: "օրինակ՝ Պատմաբան, Փիլիսոփա" },
+            { key: "bio", label: "Կենսագրություն և Նշանակություն", type: "textarea" },
+            { key: "quote", label: "Նշանավոր Մեջբերում", type: "textarea", placeholder: "«...»" },
+          ]}
+          onSave={handleSaveAuthor}
+          onClose={() => setEditingAuthor(null)}
+          onDelete={!editingAuthor.isNew ? () => handleDeleteAuthor(editingAuthor.author.id) : undefined}
+        />
+      )}
 
       {/* =========================================================
           Publication Details Modal (Preview / Download)

@@ -25,17 +25,29 @@ service cloud.firestore {
 
     // Users Collection & Profiles
     match /users/{userId} {
-      // Anyone can read profiles (for authors/contributors/dialogue participants)
       allow read: if true;
-      
-      // Authenticated users can create their own profile
       allow create: if isAuthenticated() && request.auth.uid == userId;
-      
-      // Owners or admins can update
       allow update: if isOwner(userId) || isAdmin();
-      
-      // Only super-admins can delete
       allow delete: if isSuperAdmin();
+    }
+
+    // Civilizations Hubs Content
+    match /civilizations/{civId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Site Pages Content (home, about, dialogue, forum)
+    match /site_content/{pageKey} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Public Feedback & Dialogue Comments
+    match /dialogue_comments/{id} {
+      allow read: if true;
+      allow create: if true;
+      allow update, delete: if isAdmin();
     }
   }
 }
