@@ -1,36 +1,56 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Քաղաքակրթական Համագործակցության Արարատյան Կենտրոն
+### Araratian Center for Civilizational Cooperation
 
-## Getting Started
+Արարատյան Կենտրոնը քաղաքակրթական կենսիմաստների և գլոբալ այլընտրանքի համատեղ արարման (Co-creation / Համարարչություն) հարթակ է։
 
-First, run the development server:
+---
+
+## 🏛 8 Քաղաքակրթական Բևեռներ (Civilization Hubs)
+
+Հարթակում ինտեգրված են 8 ավանդական քաղաքակրթությունների անհատական ենթաէջերը (`/hubs/[slug]`)՝
+
+1. 🇨🇳 **Չինական քաղաքակրթություն** (`/hubs/chinese`) — «Տյանսյա» համակարգ և համակեցության օնտոլոգիա
+2. 🇦🇲 **Հայկական քաղաքակրթություն** (`/hubs/armenian`) — Հոգևոր Էակի և Արդար պետության համարարչություն
+3. 🇷🇺 **Ռուսական քաղաքակրթություն** (`/hubs/russian`) — Հարության կենսիմաստ և Սոբորնոստ
+4. 🇪🇺 **Եվրոպական քաղաքակրթություն** (`/hubs/european`) — Ավանդական Եվրոպայի պահպանողական միտք
+5. 🇮🇷 **Իրանական քաղաքակրթություն** (`/hubs/iranian`) — Հիքմա (Իմաստնություն) և հոգևոր ինքնիշխանություն
+6. 🇦🇪 **Արաբական քաղաքակրթություն** (`/hubs/arabic`) — Ինտելեկտուալ վերածնունդ և ոսկեդարյան ավանդույթ
+7. 🇬🇷 **Հունական քաղաքակրթություն** (`/hubs/greek`) — Դասական ռացիոնալիզմ, Բյուզանդական կոդ և Աթոսի լույս
+8. 🇮🇳 **Հնդկական քաղաքակրթություն** (`/hubs/indian`) — Սանատանա Դհարմա և «Վասուդհայվա Կուտումբակամ»
+
+Յուրաքանչյուր քաղաքակրթության էջ բաղկացած է 3 տրամաբանական բլոկներից.
+- **Բլոկ Ա (Header & Title)**: Խորհրդանիշ (Icon), հայերեն և անգլերեն անվանումներ, արագ նավիգացիա
+- **Բլոկ Բ (Core Credo)**: Քաղաքակրթական գաղափարական ասելիքը մեծ, էսթետիկ մեջբերման (Quote) ոճով
+- **Բլոկ Գ (Navigation Tabs - SPA logic)**: [🏛 Կենտրոններ] և [🖋 Հեղինակներ] առանց էջի վերաբեռնման
+
+---
+
+## 👥 Դերեր և Իրավասություններ (User Roles & Permissions)
+
+- 👑 **`super-admin` (Գերադմին)**: Համակարգի լիակատար կառավարում, դերերի փոփոխություն և ադմինների նշանակում
+- 🛡 **`admin` (Ադմինիստրատոր)**: Բովանդակության, քննարկումների և ֆորումի նյութերի կառավարում
+- 🖋 **`scholar` (Մտածող / Գիտնական)**: Գիտական աշխատությունների հրապարակում, Մանիֆեստի համահեղինակություն
+- 👤 **`member` (Արարատյան Անդամ)**: Գրանցված օգտատեր, հանրային երկխոսությունների մասնակից
+
+---
+
+## 🚀 Տեխնոլոգիական Հենքը
+
+- **Framework**: Next.js 16 (App Router, Turbopack, React 19)
+- **Styling**: Modern CSS Design System (Light & Dark Academic Theme, Glassmorphism, Gold Accents)
+- **Backend & Auth**: Firebase Auth (Email/Password, Google OAuth) & Cloud Firestore (`users` collection)
+- **Deployment**: Firebase App Hosting (Cloud Run, Git-backed CI/CD via GitHub `main` branch)
+
+---
+
+## 📦 Տեղային Գործարկում (Local Development)
 
 ```bash
+# Կախվածությունների տեղադրում
+npm install
+
+# Տեղային սերվերի մեկնարկ
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Այցելեք [http://localhost:3000](http://localhost:3000):
