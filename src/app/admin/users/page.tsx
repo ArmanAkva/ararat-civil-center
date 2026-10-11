@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { UserProfile, UserRole, USER_ROLES } from "@/types/auth";
-import { getAllUsers, updateUserRole } from "@/lib/authService";
+import { getAllUsers, updateUserRole, seedInitialUsers } from "@/lib/authService";
 
 export default function AdminUsersPage() {
   const { user, role, isAdmin, isSuperAdmin, loading: authLoading } = useAuth();
@@ -12,6 +12,7 @@ export default function AdminUsersPage() {
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [updatingUid, setUpdatingUid] = useState<string | null>(null);
+  const [seeding, setSeeding] = useState(false);
   const [statusMessage, setStatusMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const fetchUsers = async () => {
@@ -23,6 +24,25 @@ export default function AdminUsersPage() {
       console.error(err);
     } finally {
       setLoadingUsers(false);
+    }
+  };
+
+  const handleSeedUsers = async () => {
+    if (!confirm("Ստեղծե՞լ նախնական օգտատերերի բազան Firestore-ի 'users' հավաքածուում:")) return;
+    setSeeding(true);
+    setStatusMessage(null);
+    try {
+      const res = await seedInitialUsers();
+      if (res.success) {
+        setStatusMessage({ type: "success", text: res.message });
+        await fetchUsers();
+      } else {
+        setStatusMessage({ type: "error", text: res.message });
+      }
+    } catch (e: any) {
+      setStatusMessage({ type: "error", text: e.message || "Սխալ սերվերում:" });
+    } finally {
+      setSeeding(false);
     }
   };
 
@@ -116,7 +136,19 @@ export default function AdminUsersPage() {
           </h1>
         </div>
 
-        <div style={{ display: "flex", gap: "0.75rem" }}>
+        <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
+          {isSuperAdmin && (
+            <button
+              type="button"
+              onClick={handleSeedUsers}
+              disabled={seeding}
+              className="credo-action-btn"
+              style={{ color: "var(--gold-accent)", borderColor: "var(--gold-accent)" }}
+              title="Ստեղծել նախնական օգտատերերի բազա Firestore-ում"
+            >
+              {seeding ? "Ստեղծվում է..." : "⚡️ Ստեղծել Նախնական Բազան (Seed)"}
+            </button>
+          )}
           <button
             type="button"
             onClick={fetchUsers}
