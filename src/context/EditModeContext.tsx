@@ -14,9 +14,11 @@ import {
   deleteCenterDoc,
   saveAuthorDoc,
   deleteAuthorDoc,
+  savePublicationDoc,
+  deletePublicationDoc,
   seedAllContentToFirestore,
 } from "@/lib/contentService";
-import { Civilization, ThinkTank, Thinker } from "@/lib/civilizationsData";
+import { Civilization, ThinkTank, Thinker, Publication } from "@/lib/civilizationsData";
 
 interface EditModeContextType {
   isEditMode: boolean;
@@ -42,6 +44,8 @@ interface EditModeContextType {
   deleteCenter: (civId: string, centerId: string) => Promise<void>;
   saveAuthor: (civId: string, author: Thinker) => Promise<void>;
   deleteAuthor: (civId: string, authorId: string) => Promise<void>;
+  savePublication: (civId: string, publication: Publication) => Promise<void>;
+  deletePublication: (civId: string, pubId: string) => Promise<void>;
   seedAll: () => Promise<void>;
   saving: boolean;
 }
@@ -192,6 +196,36 @@ export function EditModeProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const savePublication = async (civId: string, publication: Publication) => {
+    if (!isAdmin) return;
+    setSaving(true);
+    try {
+      await savePublicationDoc(civId, publication);
+      showStatus("success", `✓ Աշխատությունը («${publication.title}») պահպանվեց ենթահավաքածուում:`);
+    } catch (err: any) {
+      console.error(err);
+      showStatus("error", `Սխալ աշխատությունը պահպանելիս. ${err.message || err}`);
+      throw err;
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const deletePublication = async (civId: string, pubId: string) => {
+    if (!isAdmin) return;
+    setSaving(true);
+    try {
+      await deletePublicationDoc(civId, pubId);
+      showStatus("success", "✓ Աշխատությունը հեռացվեց ենթահավաքածուից:");
+    } catch (err: any) {
+      console.error(err);
+      showStatus("error", `Սխալ աշխատությունը հեռացնելիս. ${err.message || err}`);
+      throw err;
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const seedAll = async () => {
     if (!isAdmin) return;
     setSaving(true);
@@ -224,6 +258,8 @@ export function EditModeProvider({ children }: { children: ReactNode }) {
         deleteCenter,
         saveAuthor,
         deleteAuthor,
+        savePublication,
+        deletePublication,
         seedAll,
         saving,
       }}

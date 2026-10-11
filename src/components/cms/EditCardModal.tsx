@@ -159,9 +159,14 @@ export default function EditCardModal<T extends Record<string, any>>({
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
-              marginTop: "1rem",
-              paddingTop: "1rem",
+              marginTop: "1.5rem",
+              paddingTop: "1.25rem",
               borderTop: "1px solid var(--card-border)",
+              position: "sticky",
+              bottom: "-2.5rem",
+              background: "var(--bg-secondary)",
+              paddingBottom: "0.5rem",
+              zIndex: 10,
             }}
           >
             {onDelete ? (

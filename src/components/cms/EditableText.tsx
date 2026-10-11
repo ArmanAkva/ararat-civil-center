@@ -11,6 +11,7 @@ interface EditableTextProps {
   style?: React.CSSProperties;
   multiline?: boolean;
   label?: string;
+  id?: string;
 }
 
 export default function EditableText({
@@ -21,11 +22,18 @@ export default function EditableText({
   style = {},
   multiline = false,
   label,
+  id,
 }: EditableTextProps) {
   const { isEditMode } = useEditMode();
+  const [mounted, setMounted] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState(value);
   const [saving, setSaving] = useState(false);
+
+  // Guarantee client hydration matches server initial HTML to prevent hydration errors
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Sync draft when incoming value changes
   useEffect(() => {
@@ -55,11 +63,15 @@ export default function EditableText({
     setIsEditing(false);
   };
 
-  // 1. Not in Edit Mode: render pristine element
-  if (!isEditMode) {
-    const Component = tag;
+  const Component = tag;
+  const isInline = tag === "span" || tag === "small" || tag === "strong";
+  const Wrapper = isInline ? "span" : "div";
+
+  // 1. Not mounted or Not in Edit Mode: render pristine element
+  // This guarantees SSR output matches client hydration 100%
+  if (!mounted || !isEditMode) {
     return (
-      <Component className={className} style={style}>
+      <Component id={id} className={className} style={style}>
         {value}
       </Component>
     );
@@ -68,16 +80,17 @@ export default function EditableText({
   // 2. Currently actively editing this specific text
   if (isEditing) {
     return (
-      <div
+      <Wrapper
         style={{
           position: "relative",
-          margin: "0.5rem 0",
+          margin: isInline ? "0.2rem 0" : "0.5rem 0",
           background: "var(--bg-secondary)",
           border: "2px solid var(--gold-accent)",
           borderRadius: "0.75rem",
           padding: "1rem",
           boxShadow: "0 8px 30px rgba(183, 121, 31, 0.2)",
           zIndex: 50,
+          display: isInline ? "inline-block" : "block",
         }}
       >
         {label && (
@@ -180,14 +193,13 @@ export default function EditableText({
             {saving ? "Պահպանվում է..." : "✓ Պահպանել"}
           </button>
         </div>
-      </div>
+      </Wrapper>
     );
   }
 
   // 3. Edit Mode is ON, but not yet opened: show interactive hoverable container
-  const Component = tag;
   return (
-    <div
+    <Wrapper
       onClick={() => setIsEditing(true)}
       role="button"
       tabIndex={0}
@@ -202,6 +214,7 @@ export default function EditableText({
         padding: "0.2rem 0.4rem",
         margin: "-0.2rem -0.4rem",
         transition: "all 0.2s ease",
+        display: isInline ? "inline-block" : "block",
       }}
       title="Սեղմեք՝ տեքստը խմբագրելու համար"
       onMouseEnter={(e) => {
@@ -231,9 +244,9 @@ export default function EditableText({
       >
         ✏️ Խմբագրել
       </span>
-      <Component className={className} style={style}>
+      <Component id={id} className={className} style={style}>
         {value}
       </Component>
-    </div>
+    </Wrapper>
   );
 }

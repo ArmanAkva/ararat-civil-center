@@ -22,15 +22,19 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
   const [civ, setCiv] = useState<Civilization>(initialCiv);
   const {
     isEditMode,
+    toggleEditMode,
+    canEdit,
     saveCivilizationField,
     saveCenter,
     deleteCenter,
     saveAuthor,
     deleteAuthor,
+    savePublication,
+    deletePublication,
   } = useEditMode();
 
-  // SPA Tab State: "centers" | "authors"
-  const [activeTab, setActiveTab] = useState<"centers" | "authors">("centers");
+  // SPA Tab State: "centers" | "authors" | "publications"
+  const [activeTab, setActiveTab] = useState<"centers" | "authors" | "publications">("centers");
   const [searchQuery, setSearchQuery] = useState("");
   const [copiedCredo, setCopiedCredo] = useState(false);
   const [selectedPublication, setSelectedPublication] = useState<{
@@ -41,6 +45,8 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
   // Modal editing states
   const [editingCenter, setEditingCenter] = useState<{ center: ThinkTank; isNew: boolean } | null>(null);
   const [editingAuthor, setEditingAuthor] = useState<{ author: Thinker; isNew: boolean } | null>(null);
+  const [editingLibraryPub, setEditingLibraryPub] = useState<{ pub: Publication; isNew: boolean } | null>(null);
+  const [addingPubAuthor, setAddingPubAuthor] = useState<Thinker | null>(null);
 
   // Sync latest from Firestore on mount
   useEffect(() => {
@@ -78,10 +84,12 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
     await saveCenter(civ.id, updated);
   };
 
-  const handleDeleteCenter = async (centerId: string) => {
-    const newCenters = civ.centers.filter((c) => c.id !== centerId);
+  const handleDeleteCenter = async (center: ThinkTank) => {
+    const name = center.name || center.originalName || "այս կենտրոնը";
+    if (!confirm(`Իսկապե՞ս ցանկանում եք հեռացնել «${name}» կենտրոնը:`)) return;
+    const newCenters = civ.centers.filter((c) => c.id !== center.id);
     setCiv((prev) => ({ ...prev, centers: newCenters }));
-    await deleteCenter(civ.id, centerId);
+    await deleteCenter(civ.id, center.id);
   };
 
   // Author CRUD via Subcollections
@@ -96,10 +104,56 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
     await saveAuthor(civ.id, updated);
   };
 
-  const handleDeleteAuthor = async (authorId: string) => {
-    const newAuthors = civ.authors.filter((a) => a.id !== authorId);
+  const handleDeleteAuthor = async (author: Thinker) => {
+    const name = author.name || author.nameOriginal || "այս հեղինակին";
+    if (!confirm(`Իսկապե՞ս ցանկանում եք հեռացնել «${name}» հեղինակին:`)) return;
+    const newAuthors = civ.authors.filter((a) => a.id !== author.id);
     setCiv((prev) => ({ ...prev, authors: newAuthors }));
-    await deleteAuthor(civ.id, authorId);
+    await deleteAuthor(civ.id, author.id);
+  };
+
+  // Publication CRUD inside an Author
+  const handleDeletePublication = async (author: Thinker, pubIndex: number) => {
+    const pub = author.publications[pubIndex];
+    if (!confirm(`Իսկապե՞ս ցանկանում եք հեռացնել «${pub.title}» աշխատությունը:`)) return;
+    const updatedPubs = author.publications.filter((_, i) => i !== pubIndex);
+    const updatedAuthor = { ...author, publications: updatedPubs };
+    const newAuthors = civ.authors.map((a) => (a.id === author.id ? updatedAuthor : a));
+    setCiv((prev) => ({ ...prev, authors: newAuthors }));
+    await saveAuthor(civ.id, updatedAuthor);
+  };
+
+  const handleSaveNewPublication = async (pub: Publication) => {
+    if (!addingPubAuthor) return;
+    const updatedPubs = [...(addingPubAuthor.publications || []), pub];
+    const updatedAuthor = { ...addingPubAuthor, publications: updatedPubs };
+    const newAuthors = civ.authors.map((a) => (a.id === addingPubAuthor.id ? updatedAuthor : a));
+    setCiv((prev) => ({ ...prev, authors: newAuthors }));
+    await saveAuthor(civ.id, updatedAuthor);
+    setAddingPubAuthor(null);
+  };
+
+  // Publication CRUD via Subcollection
+  const handleSaveLibraryPub = async (updated: Publication) => {
+    let newPubs: Publication[];
+    if (editingLibraryPub?.isNew) {
+      newPubs = [updated, ...(civ.publications || [])];
+    } else {
+      newPubs = (civ.publications || []).map((p) => (p.id === updated.id ? updated : p));
+    }
+    setCiv((prev) => ({ ...prev, publications: newPubs }));
+    await savePublication(civ.id, updated);
+    setEditingLibraryPub(null);
+  };
+
+  const handleDeleteLibraryPub = async (pub: Publication) => {
+    if (!confirm(`Իսկապե՞ս ցանկանում եք հեռացնել «${pub.title}» աշխատությունը քաղաքակրթության գրադարանից:`)) return;
+    const newPubs = (civ.publications || []).filter((p) => p.id !== pub.id);
+    setCiv((prev) => ({ ...prev, publications: newPubs }));
+    if (pub.id) {
+      await deletePublication(civ.id, pub.id);
+    }
+    setEditingLibraryPub(null);
   };
 
   // Filter centers based on query
@@ -125,6 +179,18 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
       a.title.toLowerCase().includes(q) ||
       a.bio.toLowerCase().includes(q) ||
       a.publications.some((p) => p.title.toLowerCase().includes(q))
+    );
+  });
+
+  // Filter publications based on query
+  const filteredPublications = (civ.publications || []).filter((p) => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      p.title.toLowerCase().includes(q) ||
+      (p.type && p.type.toLowerCase().includes(q)) ||
+      (p.description && p.description.toLowerCase().includes(q)) ||
+      (p.year && String(p.year).includes(q))
     );
   });
 
@@ -196,7 +262,7 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
           />
         </h1>
 
-        <p className="civ-en-title">
+        <div className="civ-en-title">
           <EditableText
             value={civ.nameEn}
             label="Անվանում (Անգլերեն)"
@@ -206,7 +272,7 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
               await saveCivilizationField(civ.id, "nameEn", val);
             }}
           />
-        </p>
+        </div>
       </section>
 
       {/* =========================================================
@@ -297,10 +363,42 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
               <span>Հեղինակներ</span>
               <span className="tab-counter">{civ.authors.length}</span>
             </button>
+
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === "publications"}
+              onClick={() => setActiveTab("publications")}
+              className={`tab-nav-btn ${activeTab === "publications" ? "active" : ""}`}
+            >
+              <span>📚</span>
+              <span>Գիտական Աշխատություններ</span>
+              <span className="tab-counter">{civ.publications?.length || 0}</span>
+            </button>
           </div>
 
-          {/* Action buttons in Edit Mode */}
-          <div style={{ display: "flex", gap: "1rem", alignItems: "center", flexWrap: "wrap" }}>
+          {/* Action buttons: Quick Toggle, Add Center, Add Author, Add Publication, Search */}
+          <div style={{ display: "flex", gap: "0.75rem", alignItems: "center", flexWrap: "wrap" }}>
+            {/* Quick Edit Toggle for Admins */}
+            {canEdit && !isEditMode && (
+              <button
+                type="button"
+                onClick={toggleEditMode}
+                className="credo-action-btn"
+                style={{
+                  padding: "0.5rem 1rem",
+                  fontSize: "0.85rem",
+                  background: "rgba(183, 121, 31, 0.12)",
+                  border: "1px solid var(--gold-accent)",
+                  color: "var(--gold-accent)",
+                }}
+                title="Ակտիվացնել Խմբագրման ռեժիմը՝ նոր կենտրոններ կամ հեղինակներ ավելացնելու համար"
+              >
+                <span>✏️ Միացնել Խմբագրումը</span>
+              </button>
+            )}
+
+            {/* Add Center Button */}
             {isEditMode && activeTab === "centers" && (
               <button
                 type="button"
@@ -308,24 +406,33 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
                   setEditingCenter({
                     center: {
                       id: "center-" + Date.now(),
-                      name: "Նոր Գիտական Կենտրոն",
-                      originalName: "New Think Tank",
+                      name: "",
+                      originalName: "",
                       city: "Երևան",
                       country: "Հայաստան",
-                      description: "Կենտրոնի հետազոտական առաքելությունը...",
-                      focusAreas: ["Փիլիսոփայություն", "Քաղաքակրթական երկխոսություն"],
+                      foundedYear: "",
+                      description: "",
+                      focusAreas: [],
                       website: "",
                     },
                     isNew: true,
                   })
                 }
                 className="btn-primary"
-                style={{ padding: "0.5rem 1rem", fontSize: "0.85rem" }}
+                style={{
+                  padding: "0.55rem 1.2rem",
+                  fontSize: "0.88rem",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.4rem",
+                }}
               >
-                + Ավելացնել Կենտրոն
+                <span>🏛➕</span>
+                <span>Ավելացնել Կենտրոն</span>
               </button>
             )}
 
+            {/* Add Author Button */}
             {isEditMode && activeTab === "authors" && (
               <button
                 type="button"
@@ -333,20 +440,62 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
                   setEditingAuthor({
                     author: {
                       id: "author-" + Date.now(),
-                      name: "Նոր Մտածող",
-                      nameOriginal: "New Thinker",
-                      title: "Փիլիսոփա, Հետազոտող",
-                      bio: "Հեղինակի կենսագրությունը և գիտական ժառանգությունը...",
-                      quote: "«Մարդկության ապագան հիմնված է արժեքների ներդաշնակման վրա։»",
+                      name: "",
+                      nameOriginal: "",
+                      title: "",
+                      bio: "",
+                      quote: "",
                       publications: [],
                     },
                     isNew: true,
                   })
                 }
                 className="btn-primary"
-                style={{ padding: "0.5rem 1rem", fontSize: "0.85rem" }}
+                style={{
+                  padding: "0.55rem 1.2rem",
+                  fontSize: "0.88rem",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.4rem",
+                }}
               >
-                + Ավելացնել Հեղինակ
+                <span>🖋➕</span>
+                <span>Ավելացնել Հեղինակ</span>
+              </button>
+            )}
+
+            {/* Add Publication Button */}
+            {isEditMode && activeTab === "publications" && (
+              <button
+                type="button"
+                onClick={() =>
+                  setEditingLibraryPub({
+                    pub: {
+                      id: "pub-" + Date.now(),
+                      civId: civ.id,
+                      title: "",
+                      year: String(new Date().getFullYear()),
+                      type: "Զեկույց",
+                      pages: 100,
+                      description: "",
+                      downloadUrl: "",
+                      authorIds: [],
+                      centerIds: [],
+                    },
+                    isNew: true,
+                  })
+                }
+                className="btn-primary"
+                style={{
+                  padding: "0.55rem 1.2rem",
+                  fontSize: "0.88rem",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.4rem",
+                }}
+              >
+                <span>📚➕</span>
+                <span>Ավելացնել Աշխատություն</span>
               </button>
             )}
 
@@ -363,7 +512,9 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
                 placeholder={
                   activeTab === "centers"
                     ? "Որոնել կենտրոններ, քաղաք, ոլորտ..."
-                    : "Որոնել հեղինակ, աշխատություն..."
+                    : activeTab === "authors"
+                    ? "Որոնել հեղինակ, աշխատություն..."
+                    : "Որոնել աշխատություն, տեսակ, թեմա..."
                 }
               />
             </div>
@@ -373,7 +524,212 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
         {/* Tab 1 Content: [Կենտրոններ] */}
         {activeTab === "centers" && (
           <div className="tab-content-panel" role="tabpanel" aria-label="Կենտրոններ">
-            {filteredCenters.length === 0 ? (
+            <div className="cards-grid-subpage">
+              {/* Dashed Add Card when in Edit Mode */}
+              {isEditMode && (
+                <div
+                  onClick={() =>
+                    setEditingCenter({
+                      center: {
+                        id: "center-" + Date.now(),
+                        name: "",
+                        originalName: "",
+                        city: "Երևան",
+                        country: "Հայաստան",
+                        foundedYear: "",
+                        description: "",
+                        focusAreas: [],
+                        website: "",
+                      },
+                      isNew: true,
+                    })
+                  }
+                  role="button"
+                  tabIndex={0}
+                  style={{
+                    border: "2px dashed var(--gold-accent)",
+                    borderRadius: "1.25rem",
+                    padding: "2.5rem 1.5rem",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    textAlign: "center",
+                    cursor: "pointer",
+                    background: "rgba(183, 121, 31, 0.04)",
+                    transition: "all 0.25s ease",
+                    minHeight: "280px",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "rgba(183, 121, 31, 0.1)";
+                    e.currentTarget.style.borderColor = "var(--gold-accent)";
+                    e.currentTarget.style.transform = "translateY(-3px)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "rgba(183, 121, 31, 0.04)";
+                    e.currentTarget.style.borderColor = "var(--gold-accent)";
+                    e.currentTarget.style.transform = "translateY(0)";
+                  }}
+                >
+                  <div style={{ fontSize: "2.8rem", marginBottom: "0.8rem", color: "var(--gold-accent)" }}>
+                    🏛➕
+                  </div>
+                  <h3
+                    style={{
+                      margin: "0 0 0.5rem 0",
+                      color: "var(--gold-accent)",
+                      fontSize: "1.2rem",
+                      fontFamily: "var(--font-serif)",
+                    }}
+                  >
+                    + Ավելացնել Նոր Կենտրոն
+                  </h3>
+                  <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-secondary)", maxWidth: "240px" }}>
+                    Սեղմեք՝ նոր գիտահետազոտական կամ ուղեղային կենտրոն ավելացնելու համար
+                  </p>
+                </div>
+              )}
+
+              {filteredCenters.map((center) => (
+                <article key={center.id} className="center-card" style={{ position: "relative" }}>
+                  {isEditMode && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: "1rem",
+                        right: "1rem",
+                        display: "flex",
+                        gap: "0.5rem",
+                        zIndex: 10,
+                      }}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => setEditingCenter({ center, isNew: false })}
+                        className="credo-action-btn"
+                        style={{ padding: "0.3rem 0.6rem", fontSize: "0.75rem", background: "var(--bg-secondary)" }}
+                        title="Խմբագրել կենտրոնի տվյալները"
+                      >
+                        ✏️ Խմբագրել
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteCenter(center)}
+                        style={{
+                          background: "rgba(239, 68, 68, 0.1)",
+                          border: "1px solid rgba(239, 68, 68, 0.4)",
+                          color: "#ef4444",
+                          padding: "0.3rem 0.6rem",
+                          borderRadius: "0.4rem",
+                          cursor: "pointer",
+                          fontSize: "0.75rem",
+                          fontWeight: "600",
+                        }}
+                        title="Հեռացնել կենտրոնը"
+                      >
+                        🗑 Ջնջել
+                      </button>
+                    </div>
+                  )}
+
+                  <div>
+                    <div className="center-card-header" style={{ paddingRight: isEditMode ? "140px" : "0" }}>
+                      <div className="center-location-tag">
+                        <span>📍</span>
+                        <span>
+                          {center.city}, {center.country}
+                        </span>
+                        {center.foundedYear && (
+                          <span style={{ opacity: 0.7, marginLeft: "0.25rem" }}>
+                            • հիմնադրված {center.foundedYear}թ.
+                          </span>
+                        )}
+                      </div>
+                      <h3 className="center-card-title">
+                        <Link href={`/centers/${center.id}`} style={{ color: "inherit", textDecoration: "none" }}>
+                          {center.name}
+                        </Link>
+                      </h3>
+                      {center.originalName && <p className="center-card-origin">{center.originalName}</p>}
+                    </div>
+
+                    <p className="center-card-desc">{center.description}</p>
+                  </div>
+
+                  <div>
+                    {center.focusAreas && center.focusAreas.length > 0 && (
+                      <div className="center-tags">
+                        {center.focusAreas.map((tag, idx) => (
+                          <span key={idx} className="center-tag">
+                            #{tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    {(() => {
+                      const pubCount = center.publications?.length || 0;
+                      const authorCount = new Set([
+                        ...(center.authorIds || []),
+                        ...(center.authors || []).map((a) => a.id),
+                      ]).size;
+
+                      if (pubCount === 0 && authorCount === 0) return null;
+
+                      return (
+                        <div style={{ display: "flex", gap: "0.8rem", alignItems: "center", marginBottom: "0.8rem", fontSize: "0.82rem", color: "var(--text-secondary)" }}>
+                          {pubCount > 0 && (
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
+                              <span>📄</span>
+                              <span>{pubCount} աշխատություն</span>
+                            </span>
+                          )}
+                          {authorCount > 0 && (
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
+                              <span>🖋</span>
+                              <span>{authorCount} հեղինակ</span>
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })()}
+
+                    <div className="center-card-footer">
+                      <Link
+                        href={`/centers/${center.id}`}
+                        style={{
+                          fontSize: "0.85rem",
+                          color: "var(--gold-accent)",
+                          fontWeight: "600",
+                          textDecoration: "none",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "0.25rem",
+                        }}
+                      >
+                        <span>Մանրամասն էջը →</span>
+                      </Link>
+                      {center.website ? (
+                        <a
+                          href={center.website}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="center-link-btn"
+                        >
+                          <span>Պաշտոնական կայք ↗</span>
+                        </a>
+                      ) : (
+                        <span className="center-link-btn" style={{ cursor: "default" }}>
+                          Գործընկեր ինստիտուտ
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+
+            {filteredCenters.length === 0 && !isEditMode && (
               <div
                 style={{
                   textAlign: "center",
@@ -386,102 +742,6 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
               >
                 Որոնմանը համապատասխանող կենտրոն չգտնվեց:
               </div>
-            ) : (
-              <div className="cards-grid-subpage">
-                {filteredCenters.map((center) => (
-                  <article key={center.id} className="center-card" style={{ position: "relative" }}>
-                    {isEditMode && (
-                      <div
-                        style={{
-                          position: "absolute",
-                          top: "1rem",
-                          right: "1rem",
-                          display: "flex",
-                          gap: "0.5rem",
-                          zIndex: 10,
-                        }}
-                      >
-                        <button
-                          type="button"
-                          onClick={() => setEditingCenter({ center, isNew: false })}
-                          className="credo-action-btn"
-                          style={{ padding: "0.3rem 0.6rem", fontSize: "0.75rem", background: "var(--bg-secondary)" }}
-                          title="Խմբագրել կենտրոնի տվյալները"
-                        >
-                          ✏️ Խմբագրել
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteCenter(center.id)}
-                          style={{
-                            background: "transparent",
-                            border: "1px solid rgba(239, 68, 68, 0.3)",
-                            color: "#ef4444",
-                            padding: "0.3rem 0.5rem",
-                            borderRadius: "0.4rem",
-                            cursor: "pointer",
-                            fontSize: "0.75rem",
-                          }}
-                          title="Հեռացնել կենտրոնը"
-                        >
-                          🗑
-                        </button>
-                      </div>
-                    )}
-
-                    <div>
-                      <div className="center-card-header" style={{ paddingRight: isEditMode ? "100px" : "0" }}>
-                        <div className="center-location-tag">
-                          <span>📍</span>
-                          <span>
-                            {center.city}, {center.country}
-                          </span>
-                          {center.foundedYear && (
-                            <span style={{ opacity: 0.7, marginLeft: "0.25rem" }}>
-                              • հիմնադրված {center.foundedYear}թ.
-                            </span>
-                          )}
-                        </div>
-                        <h3 className="center-card-title">{center.name}</h3>
-                        <p className="center-card-origin">{center.originalName}</p>
-                      </div>
-
-                      <p className="center-card-desc">{center.description}</p>
-                    </div>
-
-                    <div>
-                      <div className="center-tags">
-                        {center.focusAreas.map((tag, idx) => (
-                          <span key={idx} className="center-tag">
-                            #{tag}
-                          </span>
-                        ))}
-                      </div>
-
-                      <div className="center-card-footer">
-                        <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>
-                          Գիտական հենք
-                        </span>
-                        {center.website ? (
-                          <a
-                            href={center.website}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="center-link-btn"
-                          >
-                            <span>Պաշտոնական կայք</span>
-                            <span>↗</span>
-                          </a>
-                        ) : (
-                          <span className="center-link-btn" style={{ cursor: "default" }}>
-                            Գործընկեր ինստիտուտ
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </article>
-                ))}
-              </div>
             )}
           </div>
         )}
@@ -489,7 +749,313 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
         {/* Tab 2 Content: [Հեղինակներ] */}
         {activeTab === "authors" && (
           <div className="tab-content-panel" role="tabpanel" aria-label="Հեղինակներ">
-            {filteredAuthors.length === 0 ? (
+            <div className="cards-grid-subpage">
+              {/* Dashed Add Card when in Edit Mode */}
+              {isEditMode && (
+                <div
+                  onClick={() =>
+                    setEditingAuthor({
+                      author: {
+                        id: "author-" + Date.now(),
+                        name: "",
+                        nameOriginal: "",
+                        title: "",
+                        bio: "",
+                        quote: "",
+                        publications: [],
+                      },
+                      isNew: true,
+                    })
+                  }
+                  role="button"
+                  tabIndex={0}
+                  style={{
+                    border: "2px dashed var(--gold-accent)",
+                    borderRadius: "1.25rem",
+                    padding: "2.5rem 1.5rem",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    textAlign: "center",
+                    cursor: "pointer",
+                    background: "rgba(183, 121, 31, 0.04)",
+                    transition: "all 0.25s ease",
+                    minHeight: "280px",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "rgba(183, 121, 31, 0.1)";
+                    e.currentTarget.style.borderColor = "var(--gold-accent)";
+                    e.currentTarget.style.transform = "translateY(-3px)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "rgba(183, 121, 31, 0.04)";
+                    e.currentTarget.style.borderColor = "var(--gold-accent)";
+                    e.currentTarget.style.transform = "translateY(0)";
+                  }}
+                >
+                  <div style={{ fontSize: "2.8rem", marginBottom: "0.8rem", color: "var(--gold-accent)" }}>
+                    🖋➕
+                  </div>
+                  <h3
+                    style={{
+                      margin: "0 0 0.5rem 0",
+                      color: "var(--gold-accent)",
+                      fontSize: "1.2rem",
+                      fontFamily: "var(--font-serif)",
+                    }}
+                  >
+                    + Ավելացնել Նոր Հեղինակ
+                  </h3>
+                  <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-secondary)", maxWidth: "240px" }}>
+                    Սեղմեք՝ նոր մտածող, փիլիսոփա կամ գիտնական ավելացնելու համար
+                  </p>
+                </div>
+              )}
+
+              {filteredAuthors.map((author) => (
+                <article key={author.id} className="author-card" style={{ position: "relative" }}>
+                  {isEditMode && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: "1rem",
+                        right: "1rem",
+                        display: "flex",
+                        gap: "0.5rem",
+                        zIndex: 10,
+                      }}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => setEditingAuthor({ author, isNew: false })}
+                        className="credo-action-btn"
+                        style={{ padding: "0.3rem 0.6rem", fontSize: "0.75rem", background: "var(--bg-secondary)" }}
+                        title="Խմբագրել հեղինակի տվյալները"
+                      >
+                        ✏️ Խմբագրել
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteAuthor(author)}
+                        style={{
+                          background: "rgba(239, 68, 68, 0.1)",
+                          border: "1px solid rgba(239, 68, 68, 0.4)",
+                          color: "#ef4444",
+                          padding: "0.3rem 0.6rem",
+                          borderRadius: "0.4rem",
+                          cursor: "pointer",
+                          fontSize: "0.75rem",
+                          fontWeight: "600",
+                        }}
+                        title="Հեռացնել հեղինակին"
+                      >
+                        🗑 Ջնջել
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="author-header-flex">
+                    <div className="author-avatar" aria-hidden="true">
+                      {author.name ? author.name.charAt(0) : "M"}
+                    </div>
+                    <div style={{ paddingRight: isEditMode ? "140px" : "0" }}>
+                      <h3 className="author-name">
+                        <Link href={`/authors/${author.id}`} style={{ color: "inherit", textDecoration: "none" }}>
+                          {author.name || "Անանուն հեղինակ"}
+                        </Link>
+                      </h3>
+                      {author.nameOriginal && (
+                        <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "0.2rem" }}>
+                          {author.nameOriginal}
+                        </div>
+                      )}
+                      <p className="author-title">{author.title}</p>
+                      {(() => {
+                        const affiliatedCenters = (civ.centers || []).filter(
+                          (c) =>
+                            (c.authorIds || []).includes(author.id) ||
+                            (c.authors || []).some((a) => a.id === author.id)
+                        );
+                        if (affiliatedCenters.length === 0) return null;
+                        return (
+                          <div style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap", marginTop: "0.4rem" }}>
+                            {affiliatedCenters.map((c) => (
+                              <Link
+                                key={c.id}
+                                href={`/centers/${c.id}`}
+                                style={{
+                                  fontSize: "0.72rem",
+                                  color: "var(--gold-accent)",
+                                  background: "rgba(183, 121, 31, 0.12)",
+                                  border: "1px solid var(--card-border)",
+                                  padding: "0.15rem 0.5rem",
+                                  borderRadius: "999px",
+                                  textDecoration: "none",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "0.25rem",
+                                  fontWeight: "600",
+                                }}
+                                title={`Կենտրոն՝ ${c.name}`}
+                              >
+                                <span>🏛</span>
+                                <span>{c.name}</span>
+                              </Link>
+                            ))}
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  </div>
+
+                  <p className="author-bio">{author.bio}</p>
+
+                  {author.quote && (
+                    <div className="author-quote-box">
+                      {author.quote}
+                    </div>
+                  )}
+
+                  {/* Publications section: Show only 1 key work */}
+                  <div className="author-publications-section">
+                    <div className="publications-header-title">
+                      <span>Առանցքային Աշխատություն</span>
+                      <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                        <span style={{ fontSize: "0.75rem", color: "var(--gold-accent)" }}>
+                          {author.publications ? author.publications.length : 0} նյութ
+                        </span>
+                        {isEditMode && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setAddingPubAuthor(author);
+                            }}
+                            style={{
+                              background: "rgba(183, 121, 31, 0.15)",
+                              border: "1px solid var(--gold-accent)",
+                              color: "var(--gold-accent)",
+                              padding: "0.2rem 0.55rem",
+                              borderRadius: "0.35rem",
+                              fontSize: "0.75rem",
+                              cursor: "pointer",
+                              fontWeight: "600",
+                            }}
+                            title="Ավելացնել աշխատություն այս հեղինակին"
+                          >
+                            + Աշխատություն
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {author.publications && author.publications.length > 0 ? (
+                      <>
+                        {author.publications.slice(0, 1).map((pub, idx) => (
+                          <div key={idx} style={{ position: "relative" }}>
+                            <div
+                              className="publication-card-item"
+                              onClick={() =>
+                                setSelectedPublication({ pub, authorName: author.name })
+                              }
+                              role="button"
+                              tabIndex={0}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter" || e.key === " ") {
+                                  setSelectedPublication({ pub, authorName: author.name });
+                                }
+                              }}
+                            >
+                              <div className="pub-title-col">
+                                <h4 className="pub-title-text">{pub.title}</h4>
+                                <p className="pub-meta-text">
+                                  {pub.year && `${pub.year}թ.`}
+                                  {pub.pages && ` • ${pub.pages} էջ`}
+                                </p>
+                              </div>
+                              <span className="pub-tag-badge">
+                                📄 {pub.type}
+                              </span>
+                            </div>
+
+                            {isEditMode && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeletePublication(author, 0);
+                                }}
+                                style={{
+                                  position: "absolute",
+                                  right: "0.5rem",
+                                  top: "50%",
+                                  transform: "translateY(-50%)",
+                                  background: "rgba(239, 68, 68, 0.15)",
+                                  color: "#ef4444",
+                                  border: "1px solid rgba(239, 68, 68, 0.4)",
+                                  borderRadius: "0.35rem",
+                                  padding: "0.25rem 0.5rem",
+                                  fontSize: "0.75rem",
+                                  cursor: "pointer",
+                                  zIndex: 5,
+                                }}
+                                title="Ջնջել այս աշխատությունը"
+                              >
+                                🗑
+                              </button>
+                            )}
+                          </div>
+                        ))}
+
+                        {author.publications.length > 1 && (
+                          <div style={{ marginTop: "0.5rem", textAlign: "right" }}>
+                            <Link
+                              href={`/authors/${author.id}`}
+                              style={{
+                                fontSize: "0.8rem",
+                                color: "var(--gold-accent)",
+                                textDecoration: "none",
+                                fontWeight: "600",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "0.3rem",
+                              }}
+                            >
+                              <span>+ ևս {author.publications.length - 1} աշխատություն հեղինակի էջում</span>
+                              <span>→</span>
+                            </Link>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)", fontStyle: "italic", padding: "0.5rem 0" }}>
+                        Առանցքային աշխատություն նշված չէ
+                      </div>
+                    )}
+                  </div>
+
+                  <div style={{ marginTop: "1.2rem", paddingTop: "0.8rem", borderTop: "1px solid var(--card-border)", display: "flex", justifyContent: "flex-end" }}>
+                    <Link
+                      href={`/authors/${author.id}`}
+                      style={{
+                        fontSize: "0.85rem",
+                        color: "var(--gold-accent)",
+                        fontWeight: "600",
+                        textDecoration: "none",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "0.25rem",
+                      }}
+                    >
+                      <span>Մանրամասն հեղինակի էջը →</span>
+                    </Link>
+                  </div>
+                </article>
+              ))}
+            </div>
+
+            {filteredAuthors.length === 0 && !isEditMode && (
               <div
                 style={{
                   textAlign: "center",
@@ -502,112 +1068,259 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
               >
                 Որոնմանը համապատասխանող մտածող չգտնվեց:
               </div>
-            ) : (
-              <div className="cards-grid-subpage">
-                {filteredAuthors.map((author) => (
-                  <article key={author.id} className="author-card" style={{ position: "relative" }}>
-                    {isEditMode && (
-                      <div
-                        style={{
-                          position: "absolute",
-                          top: "1rem",
-                          right: "1rem",
-                          display: "flex",
-                          gap: "0.5rem",
-                          zIndex: 10,
-                        }}
-                      >
-                        <button
-                          type="button"
-                          onClick={() => setEditingAuthor({ author, isNew: false })}
-                          className="credo-action-btn"
-                          style={{ padding: "0.3rem 0.6rem", fontSize: "0.75rem", background: "var(--bg-secondary)" }}
-                          title="Խմբագրել հեղինակի տվյալները"
-                        >
-                          ✏️ Խմբագրել
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteAuthor(author.id)}
-                          style={{
-                            background: "transparent",
-                            border: "1px solid rgba(239, 68, 68, 0.3)",
-                            color: "#ef4444",
-                            padding: "0.3rem 0.5rem",
-                            borderRadius: "0.4rem",
-                            cursor: "pointer",
-                            fontSize: "0.75rem",
-                          }}
-                          title="Հեռացնել հեղինակին"
-                        >
-                          🗑
-                        </button>
-                      </div>
-                    )}
+            )}
+          </div>
+        )}
 
-                    <div className="author-header-flex">
-                      <div className="author-avatar" aria-hidden="true">
-                        {author.name.charAt(0)}
-                      </div>
-                      <div>
-                        <h3 className="author-name">{author.name}</h3>
-                        {author.nameOriginal && (
-                          <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "0.2rem" }}>
-                            {author.nameOriginal}
-                          </div>
-                        )}
-                        <p className="author-title">{author.title}</p>
-                      </div>
+        {/* Tab 3 Content: [Գիտական Աշխատություններ] */}
+        {activeTab === "publications" && (
+          <div className="tab-content-panel" role="tabpanel" aria-label="Գիտական Աշխատություններ">
+            <div className="cards-grid-subpage">
+              {/* Dashed Add Card when in Edit Mode */}
+              {isEditMode && (
+                <div
+                  onClick={() =>
+                    setEditingLibraryPub({
+                      pub: {
+                        id: "pub-" + Date.now(),
+                        civId: civ.id,
+                        title: "",
+                        year: String(new Date().getFullYear()),
+                        type: "Զեկույց",
+                        pages: 100,
+                        description: "",
+                        downloadUrl: "",
+                        authorIds: [],
+                        centerIds: [],
+                      },
+                      isNew: true,
+                    })
+                  }
+                  role="button"
+                  tabIndex={0}
+                  style={{
+                    border: "2px dashed var(--gold-accent)",
+                    borderRadius: "1.25rem",
+                    padding: "2.5rem 1.5rem",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    textAlign: "center",
+                    cursor: "pointer",
+                    background: "rgba(183, 121, 31, 0.04)",
+                    transition: "all 0.25s ease",
+                    minHeight: "280px",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "rgba(183, 121, 31, 0.1)";
+                    e.currentTarget.style.borderColor = "var(--gold-accent)";
+                    e.currentTarget.style.transform = "translateY(-3px)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "rgba(183, 121, 31, 0.04)";
+                    e.currentTarget.style.borderColor = "var(--gold-accent)";
+                    e.currentTarget.style.transform = "translateY(0)";
+                  }}
+                >
+                  <div style={{ fontSize: "2.8rem", marginBottom: "0.8rem", color: "var(--gold-accent)" }}>
+                    📚➕
+                  </div>
+                  <h3
+                    style={{
+                      margin: "0 0 0.5rem 0",
+                      color: "var(--gold-accent)",
+                      fontSize: "1.2rem",
+                      fontFamily: "var(--font-serif)",
+                    }}
+                  >
+                    + Ավելացնել Նոր Աշխատություն
+                  </h3>
+                  <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-secondary)", maxWidth: "240px" }}>
+                    Սեղմեք՝ քաղաքակրթության գրադարանում նոր զեկույց, մենագրություն կամ հոդված ավելացնելու համար
+                  </p>
+                </div>
+              )}
+
+              {filteredPublications.map((pub, idx) => (
+                <article
+                  key={pub.id || idx}
+                  className="glass-card"
+                  style={{
+                    padding: "1.8rem",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "space-between",
+                    position: "relative",
+                  }}
+                >
+                  {isEditMode && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: "1rem",
+                        right: "1rem",
+                        display: "flex",
+                        gap: "0.5rem",
+                        zIndex: 10,
+                      }}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => setEditingLibraryPub({ pub, isNew: false })}
+                        className="credo-action-btn"
+                        style={{ padding: "0.3rem 0.6rem", fontSize: "0.75rem", background: "var(--bg-secondary)" }}
+                        title="Խմբագրել աշխատությունը"
+                      >
+                        ✏️ Խմբագրել
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteLibraryPub(pub)}
+                        style={{
+                          background: "rgba(239, 68, 68, 0.1)",
+                          border: "1px solid rgba(239, 68, 68, 0.4)",
+                          color: "#ef4444",
+                          padding: "0.3rem 0.6rem",
+                          borderRadius: "0.4rem",
+                          cursor: "pointer",
+                          fontSize: "0.75rem",
+                          fontWeight: "600",
+                        }}
+                        title="Հեռացնել աշխատությունը"
+                      >
+                        🗑 Ջնջել
+                      </button>
+                    </div>
+                  )}
+
+                  <div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginBottom: "0.6rem", flexWrap: "wrap" }}>
+                      <span className="pub-tag-badge">📄 {pub.type || "Զեկույց"}</span>
+                      <span style={{ fontSize: "0.85rem", color: "var(--gold-accent)", fontWeight: "600" }}>
+                        {pub.year && `${pub.year}թ.`}
+                        {pub.pages && ` • ${pub.pages} էջ`}
+                      </span>
+                      {pub.downloadUrl && (
+                        <span style={{ fontSize: "0.78rem", color: "#10b981", background: "rgba(16, 185, 129, 0.12)", padding: "0.15rem 0.5rem", borderRadius: "999px", border: "1px solid rgba(16, 185, 129, 0.3)" }}>
+                          ✓ Առցանց
+                        </span>
+                      )}
                     </div>
 
-                    <p className="author-bio">{author.bio}</p>
+                    <h3 style={{ margin: "0 0 0.6rem 0", color: "var(--text-primary)", fontSize: "1.2rem", fontFamily: "var(--font-serif)", lineHeight: "1.35", paddingRight: isEditMode ? "140px" : "0" }}>
+                      {pub.title}
+                    </h3>
 
-                    {author.quote && (
-                      <div className="author-quote-box">
-                        {author.quote}
-                      </div>
+                    {pub.description && (
+                      <p style={{ margin: "0 0 1rem 0", color: "var(--text-secondary)", fontSize: "0.92rem", lineHeight: "1.6" }}>
+                        {pub.description}
+                      </p>
                     )}
 
-                    {author.publications && author.publications.length > 0 && (
-                      <div className="author-publications-section">
-                        <div className="publications-header-title">
-                          <span>Առանցքային Աշխատություններ</span>
-                          <span style={{ fontSize: "0.75rem", color: "var(--gold-accent)" }}>
-                            {author.publications.length} նյութ
-                          </span>
+                    {/* Attached Authors and Centers */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", marginBottom: "1rem" }}>
+                      {pub.authorIds && pub.authorIds.length > 0 && (
+                        <div style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap", alignItems: "center" }}>
+                          <span style={{ fontSize: "0.78rem", color: "var(--text-secondary)" }}>Հեղինակ՝</span>
+                          {pub.authorIds.map((aId) => {
+                            const authorObj = (civ.authors || []).find((a) => a.id === aId);
+                            return (
+                              <Link
+                                key={aId}
+                                href={`/authors/${aId}`}
+                                style={{
+                                  fontSize: "0.75rem",
+                                  color: "var(--gold-accent)",
+                                  background: "rgba(183, 121, 31, 0.12)",
+                                  padding: "0.15rem 0.5rem",
+                                  borderRadius: "999px",
+                                  border: "1px solid var(--card-border)",
+                                  textDecoration: "none",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "0.25rem",
+                                  fontWeight: "600",
+                                }}
+                              >
+                                <span>🖋</span>
+                                <span>{authorObj?.name || aId}</span>
+                              </Link>
+                            );
+                          })}
                         </div>
+                      )}
 
-                        {author.publications.map((pub, idx) => (
-                          <div
-                            key={idx}
-                            className="publication-card-item"
-                            onClick={() =>
-                              setSelectedPublication({ pub, authorName: author.name })
-                            }
-                            role="button"
-                            tabIndex={0}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter" || e.key === " ") {
-                                setSelectedPublication({ pub, authorName: author.name });
-                              }
-                            }}
-                          >
-                            <div className="pub-title-col">
-                              <h4 className="pub-title-text">{pub.title}</h4>
-                              <p className="pub-meta-text">
-                                {pub.year && `${pub.year}թ.`}
-                                {pub.pages && ` • ${pub.pages} էջ`}
-                              </p>
-                            </div>
-                            <span className="pub-tag-badge">
-                              📄 {pub.type}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
+                      {pub.centerIds && pub.centerIds.length > 0 && (
+                        <div style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap", alignItems: "center" }}>
+                          <span style={{ fontSize: "0.78rem", color: "var(--text-secondary)" }}>Կենտրոն՝</span>
+                          {pub.centerIds.map((cId) => {
+                            const centerObj = (civ.centers || []).find((c) => c.id === cId);
+                            return (
+                              <Link
+                                key={cId}
+                                href={`/centers/${cId}`}
+                                style={{
+                                  fontSize: "0.75rem",
+                                  color: "var(--gold-accent)",
+                                  background: "rgba(183, 121, 31, 0.1)",
+                                  padding: "0.15rem 0.5rem",
+                                  borderRadius: "999px",
+                                  border: "1px solid var(--card-border)",
+                                  textDecoration: "none",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "0.25rem",
+                                  fontWeight: "600",
+                                }}
+                              >
+                                <span>🏛</span>
+                                <span>{centerObj?.name || cId}</span>
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div style={{ paddingTop: "0.8rem", borderTop: "1px solid var(--card-border)", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.5rem" }}>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedPublication({ pub, authorName: civ.nameHy })}
+                      className="credo-action-btn"
+                      style={{ padding: "0.45rem 0.9rem", fontSize: "0.82rem" }}
+                    >
+                      Դիտել Մանրամասն
+                    </button>
+
+                    {pub.downloadUrl && (
+                      <a
+                        href={pub.downloadUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ color: "var(--gold-accent)", fontSize: "0.82rem", fontWeight: "600", textDecoration: "none" }}
+                      >
+                        Բացել Հղումը ↗
+                      </a>
                     )}
-                  </article>
-                ))}
+                  </div>
+                </article>
+              ))}
+            </div>
+
+            {filteredPublications.length === 0 && !isEditMode && (
+              <div
+                style={{
+                  textAlign: "center",
+                  padding: "3rem",
+                  color: "var(--text-secondary)",
+                  background: "var(--card-bg)",
+                  borderRadius: "1rem",
+                  border: "1px dashed var(--card-border)",
+                }}
+              >
+                Որոնմանը համապատասխանող գիտական աշխատություն չգտնվեց:
               </div>
             )}
           </div>
@@ -615,45 +1328,95 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
       </section>
 
       {/* =========================================================
-          Edit Center Modal
+          Edit / Add Center Modal
           ========================================================= */}
       {editingCenter && (
         <EditCardModal
-          title={editingCenter.isNew ? "Ավելացնել Նոր Կենտրոն" : `Խմբագրել՝ ${editingCenter.center.name}`}
+          title={editingCenter.isNew ? "Ավելացնել Նոր Ուղեղային Կենտրոն" : `Խմբագրել՝ ${editingCenter.center.name || "Կենտրոն"}`}
           initialData={editingCenter.center}
           fields={[
-            { key: "name", label: "Կենտրոնի Անվանում (Հայերեն)", placeholder: "օրինակ՝ Մատենադարան" },
-            { key: "originalName", label: "Բնօրինակ / Անգլերեն Անվանում", placeholder: "e.g. Mesrop Mashtots Institute" },
+            { key: "name", label: "Կենտրոնի Անվանում (Հայերեն)", placeholder: "օրինակ՝ ԳԱԱ Փիլիսոփայության ինստիտուտ" },
+            { key: "originalName", label: "Բնօրինակ / Անգլերեն Անվանում", placeholder: "e.g. Institute of Philosophy" },
             { key: "city", label: "Քաղաք", placeholder: "օրինակ՝ Երևան" },
             { key: "country", label: "Երկիր", placeholder: "օրինակ՝ Հայաստան" },
-            { key: "foundedYear", label: "Հիմնադրման Տարեթիվ", placeholder: "օրինակ՝ 1959" },
-            { key: "description", label: "Գործունեության և Առաքելության Նկարագրություն", type: "textarea" },
-            { key: "focusAreas", label: "Գիտական Ուղղություններ (#tags բաժանված ստորակետով)", type: "tags" },
+            { key: "foundedYear", label: "Հիմնադրման Տարեթիվ", placeholder: "օրինակ՝ 1969" },
+            { key: "description", label: "Գործունեության և Առաքելության Նկարագրություն", type: "textarea", placeholder: "Կենտրոնի հետազոտական ուղղությունները..." },
+            { key: "focusAreas", label: "Գիտական Ուղղություններ (#tags բաժանված ստորակետով)", type: "tags", placeholder: "Փիլիսոփայություն, Քաղաքակրթական երկխոսություն..." },
             { key: "website", label: "Պաշտոնական Կայքի Հղում (URL)", placeholder: "https://..." },
           ]}
           onSave={handleSaveCenter}
           onClose={() => setEditingCenter(null)}
-          onDelete={!editingCenter.isNew ? () => handleDeleteCenter(editingCenter.center.id) : undefined}
+          onDelete={!editingCenter.isNew ? () => handleDeleteCenter(editingCenter.center) : undefined}
         />
       )}
 
       {/* =========================================================
-          Edit Author Modal
+          Edit / Add Author Modal
           ========================================================= */}
       {editingAuthor && (
         <EditCardModal
-          title={editingAuthor.isNew ? "Ավելացնել Նոր Հեղինակ" : `Խմբագրել՝ ${editingAuthor.author.name}`}
+          title={editingAuthor.isNew ? "Ավելացնել Նոր Մտածող / Հեղինակ" : `Խմբագրել՝ ${editingAuthor.author.name || "Հեղինակ"}`}
           initialData={editingAuthor.author}
           fields={[
-            { key: "name", label: "Անուն Ազգանուն (Հայերեն)", placeholder: "օրինակ՝ Վարդան Գրիգորյան" },
-            { key: "nameOriginal", label: "Բնօրինակ / Լատիներեն Անուն", placeholder: "e.g. Vartan Gregorian" },
-            { key: "title", label: "Գիտական Կոչում / Դեր", placeholder: "օրինակ՝ Պատմաբան, Փիլիսոփա" },
-            { key: "bio", label: "Կենսագրություն և Նշանակություն", type: "textarea" },
+            { key: "name", label: "Անուն Ազգանուն (Հայերեն)", placeholder: "օրինակ՝ Շանթ Մկրտչյան" },
+            { key: "nameOriginal", label: "Բնօրինակ / Լատիներեն Անուն", placeholder: "e.g. Shant Mkrtchyan" },
+            { key: "title", label: "Գիտական Կոչում / Դեր", placeholder: "օրինակ՝ Փիլիսոփա, Քաղաքագետ" },
+            { key: "bio", label: "Կենսագրություն և Նշանակություն", type: "textarea", placeholder: "Հեղինակի գիտական ավանդը և ուսումնասիրությունները..." },
             { key: "quote", label: "Նշանավոր Մեջբերում", type: "textarea", placeholder: "«...»" },
           ]}
           onSave={handleSaveAuthor}
           onClose={() => setEditingAuthor(null)}
-          onDelete={!editingAuthor.isNew ? () => handleDeleteAuthor(editingAuthor.author.id) : undefined}
+          onDelete={!editingAuthor.isNew ? () => handleDeleteAuthor(editingAuthor.author) : undefined}
+        />
+      )}
+
+      {/* =========================================================
+          Edit / Add Publication Modal (Library)
+          ========================================================= */}
+      {editingLibraryPub && (
+        <EditCardModal
+          title={
+            editingLibraryPub.isNew
+              ? `Ավելացնել Նոր Գիտական Աշխատություն (${civ.nameHy})`
+              : `Խմբագրել՝ ${editingLibraryPub.pub.title || "Աշխատություն"}`
+          }
+          initialData={editingLibraryPub.pub}
+          fields={[
+            { key: "title", label: "Աշխատության Վերնագիր", placeholder: "օրինակ՝ Ռազմավարական Ինքնիշխանության Հիմունքները" },
+            { key: "type", label: "Տեսակ (Զեկույց / Մենագրություն / Հոդված / PDF / Գիրք)", placeholder: "Զեկույց" },
+            { key: "year", label: "Հրատարակման Տարեթիվ", placeholder: "2026" },
+            { key: "pages", label: "Էջերի Քանակ", placeholder: "120" },
+            { key: "downloadUrl", label: "Առցանց Հղում / PDF URL", placeholder: "https://..." },
+            { key: "description", label: "Ամփոփագիր և Գիտական Թեզիսներ", type: "textarea", placeholder: "Հիմնական դրույթները..." },
+          ]}
+          onSave={handleSaveLibraryPub}
+          onClose={() => setEditingLibraryPub(null)}
+          onDelete={!editingLibraryPub.isNew ? () => handleDeleteLibraryPub(editingLibraryPub.pub) : undefined}
+        />
+      )}
+
+      {/* =========================================================
+          Add Publication Modal
+          ========================================================= */}
+      {addingPubAuthor && (
+        <EditCardModal
+          title={`Ավելացնել Աշխատություն՝ ${addingPubAuthor.name}`}
+          initialData={{
+            title: "",
+            year: String(new Date().getFullYear()),
+            type: "PDF",
+            pages: 100,
+            description: "",
+          }}
+          fields={[
+            { key: "title", label: "Աշխատության Վերնագիր", placeholder: "օրինակ՝ Քաղաքակրթությունների Համարարչություն" },
+            { key: "year", label: "Հրատարակման Տարեթիվ", placeholder: "2026" },
+            { key: "type", label: "Տեսակ (PDF / Մենագրություն / Հոդված / Զեկույց)", placeholder: "PDF" },
+            { key: "pages", label: "Էջերի Քանակ", placeholder: "150" },
+            { key: "description", label: "Ամփոփագիր և Նկարագրություն", type: "textarea", placeholder: "Աշխատության հիմնական դրույթները..." },
+          ]}
+          onSave={handleSaveNewPublication}
+          onClose={() => setAddingPubAuthor(null)}
         />
       )}
 

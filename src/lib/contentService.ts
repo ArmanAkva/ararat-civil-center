@@ -11,8 +11,12 @@ import {
   Civilization,
   ThinkTank,
   Thinker,
+  Publication,
   civilizationsData,
   getCivilizationBySlug,
+  findCenterById,
+  findAuthorById,
+  findPublicationById,
 } from "./civilizationsData";
 import {
   defaultHomeContent,
@@ -38,10 +42,12 @@ export async function getCivilizationContent(
     // Fetch subcollections in parallel
     const centersRef = collection(db, "civilizations", civId, "centers");
     const authorsRef = collection(db, "civilizations", civId, "authors");
+    const publicationsRef = collection(db, "civilizations", civId, "publications");
 
-    const [centersSnap, authorsSnap] = await Promise.all([
+    const [centersSnap, authorsSnap, publicationsSnap] = await Promise.all([
       getDocs(centersRef).catch(() => null),
       getDocs(authorsRef).catch(() => null),
+      getDocs(publicationsRef).catch(() => null),
     ]);
 
     // Parse centers subcollection
@@ -57,6 +63,14 @@ export async function getCivilizationContent(
     if (authorsSnap && !authorsSnap.empty) {
       authorsSnap.forEach((d) => {
         fetchedAuthors.push(d.data() as Thinker);
+      });
+    }
+
+    // Parse publications subcollection
+    let fetchedPublications: Publication[] = [];
+    if (publicationsSnap && !publicationsSnap.empty) {
+      publicationsSnap.forEach((d) => {
+        fetchedPublications.push(d.data() as Publication);
       });
     }
 
@@ -84,13 +98,20 @@ export async function getCivilizationContent(
             : (Array.isArray(parentData.authors) && parentData.authors.length > 0)
             ? parentData.authors
             : localCiv?.authors || [],
+        publications:
+          fetchedPublications.length > 0
+            ? fetchedPublications
+            : (Array.isArray(parentData.publications) && parentData.publications.length > 0)
+            ? parentData.publications
+            : localCiv?.publications || [],
       };
-    } else if (fetchedCenters.length > 0 || fetchedAuthors.length > 0) {
+    } else if (fetchedCenters.length > 0 || fetchedAuthors.length > 0 || fetchedPublications.length > 0) {
       // Subcollections exist even if parent doc wasn't fetched
       return {
         ...(localCiv || civilizationsData[0]),
         centers: fetchedCenters.length > 0 ? fetchedCenters : localCiv?.centers || [],
         authors: fetchedAuthors.length > 0 ? fetchedAuthors : localCiv?.authors || [],
+        publications: fetchedPublications.length > 0 ? fetchedPublications : localCiv?.publications || [],
       };
     }
   } catch (error) {
@@ -203,6 +224,40 @@ export async function deleteAuthorDoc(
 }
 
 /**
+ * Subcollection: Saves or updates a Publication document
+ * Path: /civilizations/{civId}/publications/{pub.id}
+ */
+export async function savePublicationDoc(
+  civId: string,
+  pub: Publication
+): Promise<void> {
+  const pubId = pub.id || `pub-${Date.now()}`;
+  const docRef = doc(db, "civilizations", civId, "publications", pubId);
+  await setDoc(
+    docRef,
+    {
+      ...pub,
+      id: pubId,
+      civId,
+      updatedAt: new Date().toISOString(),
+    },
+    { merge: true }
+  );
+}
+
+/**
+ * Subcollection: Deletes a Publication document
+ * Path: /civilizations/{civId}/publications/{pubId}
+ */
+export async function deletePublicationDoc(
+  civId: string,
+  pubId: string
+): Promise<void> {
+  const docRef = doc(db, "civilizations", civId, "publications", pubId);
+  await deleteDoc(docRef);
+}
+
+/**
  * Reads page content from site_content/{pageKey}
  */
 export async function getPageContent<T>(
@@ -297,6 +352,24 @@ export async function seedAllContentToFirestore(): Promise<{
           { merge: true }
         );
       }
+
+      // 1.4 Subcollection: publications
+      if (civ.publications && Array.isArray(civ.publications)) {
+        for (const pub of civ.publications) {
+          const pubId = pub.id || `pub-${Date.now()}`;
+          const pubRef = doc(db, "civilizations", civ.id, "publications", pubId);
+          await setDoc(
+            pubRef,
+            {
+              ...pub,
+              id: pubId,
+              civId: civ.id,
+              updatedAt: new Date().toISOString(),
+            },
+            { merge: true }
+          );
+        }
+      }
     }
 
     // 2. Seed Pages in site_content
@@ -333,4 +406,86 @@ export async function seedAllContentToFirestore(): Promise<{
       message: `Չհաջողվեց ստեղծել բովանդակությունը. ${error.message || error}`,
     };
   }
+}
+
+/**
+ * Reads a single center and its parent civilization
+ */
+export async function getCenterContent(
+  centerId: string
+): Promise<{ center: ThinkTank; civ: Civilization } | undefined> {
+  const local = findCenterById(centerId);
+  const civId = local?.civ.id;
+
+  if (civId) {
+    try {
+      const docRef = doc(db, "civilizations", civId, "centers", centerId);
+      const snap = await getDoc(docRef);
+      if (snap.exists()) {
+        const fullCiv = await getCivilizationContent(civId);
+        return {
+          center: snap.data() as ThinkTank,
+          civ: fullCiv || local.civ,
+        };
+      }
+    } catch (e) {
+      console.warn(`Firestore center ${centerId} fetch failed, using fallback:`, e);
+    }
+  }
+
+  // Search all civilizations if not found directly
+  try {
+    const allCivs = await getAllCivilizationsContent();
+    for (const c of allCivs) {
+      const found = c.centers?.find((ct) => ct.id.toLowerCase() === centerId.toLowerCase());
+      if (found) {
+        return { center: found, civ: c };
+      }
+    }
+  } catch (e) {
+    console.warn("Global search for center failed:", e);
+  }
+
+  return local;
+}
+
+/**
+ * Reads a single author and their parent civilization
+ */
+export async function getAuthorContent(
+  authorId: string
+): Promise<{ author: Thinker; civ: Civilization } | undefined> {
+  const local = findAuthorById(authorId);
+  const civId = local?.civ.id;
+
+  if (civId) {
+    try {
+      const docRef = doc(db, "civilizations", civId, "authors", authorId);
+      const snap = await getDoc(docRef);
+      if (snap.exists()) {
+        const fullCiv = await getCivilizationContent(civId);
+        return {
+          author: snap.data() as Thinker,
+          civ: fullCiv || local.civ,
+        };
+      }
+    } catch (e) {
+      console.warn(`Firestore author ${authorId} fetch failed, using fallback:`, e);
+    }
+  }
+
+  // Search all civilizations if not found directly
+  try {
+    const allCivs = await getAllCivilizationsContent();
+    for (const c of allCivs) {
+      const found = c.authors?.find((a) => a.id.toLowerCase() === authorId.toLowerCase());
+      if (found) {
+        return { author: found, civ: c };
+      }
+    }
+  } catch (e) {
+    console.warn("Global search for author failed:", e);
+  }
+
+  return local;
 }
