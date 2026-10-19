@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { USER_ROLES } from "@/types/auth";
 import { DialogueTopicItem, DialogueComment } from "@/types/dialogue";
+import { getAllCivilCenters } from "@/lib/civilizationsData";
 import {
   getTopicComments,
   addDialogueComment,
@@ -15,6 +16,7 @@ import {
   approveDialogueTopic,
   rejectDialogueTopic,
 } from "@/lib/dialogueService";
+import PersonWithLoupeIcon from "@/components/icons/PersonWithLoupeIcon";
 
 interface Props {
   initialTopic: DialogueTopicItem;
@@ -23,6 +25,8 @@ interface Props {
 export default function DialogueTopicDetailView({ initialTopic }: Props) {
   const router = useRouter();
   const { user, profile, role, isAdmin } = useAuth();
+
+  const civilCenters = useMemo(() => getAllCivilCenters(), []);
 
   const [topic, setTopic] = useState<DialogueTopicItem>(initialTopic);
   const [comments, setComments] = useState<DialogueComment[]>([]);
@@ -45,6 +49,7 @@ export default function DialogueTopicDetailView({ initialTopic }: Props) {
   const [topicFormTitle, setTopicFormTitle] = useState(topic.title);
   const [topicFormDescription, setTopicFormDescription] = useState(topic.description);
   const [topicFormTag, setTopicFormTag] = useState(topic.civilizationTag || "Ընդհանուր");
+  const [topicFormCenterId, setTopicFormCenterId] = useState(topic.centerId || "");
   const [topicFormDate, setTopicFormDate] = useState(topic.date);
   const [topicFormStatus, setTopicFormStatus] = useState<"active" | "archived" | "closed" | "pending" | "rejected">(topic.status);
   const [savingTopic, setSavingTopic] = useState(false);
@@ -203,11 +208,17 @@ export default function DialogueTopicDetailView({ initialTopic }: Props) {
 
     setSavingTopic(true);
     try {
+      const selectedCenter = topicFormCenterId
+        ? civilCenters.find((c) => c.id === topicFormCenterId)
+        : undefined;
+
       const partial: Partial<DialogueTopicItem> = {
         number: topicFormNumber.trim(),
         title: topicFormTitle.trim(),
         description: topicFormDescription.trim(),
         civilizationTag: topicFormTag.trim(),
+        centerId: selectedCenter ? selectedCenter.id : "",
+        centerName: selectedCenter ? selectedCenter.name : "",
         date: topicFormDate.trim(),
         status: topicFormStatus,
       };
@@ -569,6 +580,32 @@ export default function DialogueTopicDetailView({ initialTopic }: Props) {
               </span>
             </>
           )}
+          {topic.centerName && (
+            <>
+              <span>•</span>
+              <Link
+                href={topic.centerId ? `/centers/${topic.centerId}` : "#"}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.35rem",
+                  background: "rgba(183, 121, 31, 0.2)",
+                  color: "var(--gold-accent)",
+                  padding: "0.15rem 0.65rem",
+                  borderRadius: "999px",
+                  fontSize: "0.78rem",
+                  textDecoration: "none",
+                  border: "1px solid rgba(183, 121, 31, 0.35)",
+                  fontWeight: "600",
+                  textTransform: "none",
+                }}
+                title={`Ուղեղային Կենտրոն՝ ${topic.centerName}`}
+              >
+                <span>🏛️</span>
+                <span>{topic.centerName}</span>
+              </Link>
+            </>
+          )}
           <span
             style={{
               padding: "0.15rem 0.55rem",
@@ -648,6 +685,26 @@ export default function DialogueTopicDetailView({ initialTopic }: Props) {
           </span>
           <span>•</span>
           <span>💬 {comments.length} մեկնաբանություն</span>
+          {topic.expertResponses && topic.expertResponses.length > 0 && (
+            <>
+              <span>•</span>
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.35rem",
+                  padding: "0.2rem 0.6rem",
+                  borderRadius: "999px",
+                  background: "var(--input-bg)",
+                  color: "var(--gold-accent)",
+                  fontWeight: "600",
+                }}
+              >
+                <PersonWithLoupeIcon size={14} color="var(--gold-accent)" />
+                <span>{topic.expertResponses.length} փորձագետ</span>
+              </span>
+            </>
+          )}
         </div>
       </div>
 
@@ -662,9 +719,13 @@ export default function DialogueTopicDetailView({ initialTopic }: Props) {
               paddingBottom: "1rem",
               marginBottom: "2rem",
               fontSize: "1.65rem",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.65rem",
             }}
           >
-            Հրավիրյալ Մտածողների Պատասխանները
+            <PersonWithLoupeIcon size={26} color="var(--gold-accent)" />
+            <span>Հրավիրյալ Մտածողների Պատասխանները</span>
           </h2>
 
           <div className="cards-grid">
@@ -688,11 +749,10 @@ export default function DialogueTopicDetailView({ initialTopic }: Props) {
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      fontSize: "1.3rem",
                       border: "1px solid var(--gold-accent)",
                     }}
                   >
-                    🏛
+                    <PersonWithLoupeIcon size={24} color="var(--gold-accent)" />
                   </div>
                   <div>
                     <h3 style={{ margin: 0, fontSize: "1.05rem" }}>{exp.name}</h3>
@@ -1374,6 +1434,38 @@ export default function DialogueTopicDetailView({ initialTopic }: Props) {
                     }}
                   />
                 </div>
+              </div>
+
+              <div>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: "0.85rem",
+                    fontWeight: "600",
+                    marginBottom: "0.35rem",
+                  }}
+                >
+                  🏛️ Քաղաքակրթական / Ուղեղային Կենտրոն (Կամընտրական)
+                </label>
+                <select
+                  value={topicFormCenterId}
+                  onChange={(e) => setTopicFormCenterId(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "0.75rem",
+                    background: "var(--input-bg)",
+                    border: "1px solid var(--card-border)",
+                    borderRadius: "0.5rem",
+                    color: "var(--text-primary)",
+                  }}
+                >
+                  <option value="">— Չընտրել (առանց կենտրոնի) —</option>
+                  {civilCenters.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.civSymbol} {c.name} ({c.civName})
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div>

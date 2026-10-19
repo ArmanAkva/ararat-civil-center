@@ -26,6 +26,8 @@ export const defaultTopics: DialogueTopicItem[] = [
     description:
       "Արհեստական բանականության սրընթաց զարգացումը ստեղծում է մարդակենտրոն արժեքների ոչնչացման վտանգ։ Կազմկոմիտեն հրավիրում է մտածողներին գտնել հավասարակշռության նոր բանաձևեր և քաղաքակրթական զսպաշապիկներ։",
     civilizationTag: "Համաշխարհային Էթիկա & AI",
+    centerId: "matenadaran",
+    centerName: "Մատենադարան",
     status: "active",
     createdAt: "2026-09-01T12:00:00.000Z",
     authorName: "Արարատյան Կենտրոն",
@@ -41,6 +43,8 @@ export const defaultTopics: DialogueTopicItem[] = [
     description:
       "Գլոբալիզացիայի ճգնաժամը և ինքնիշխան քաղաքակրթությունների վերելքը. ինչպիսի՞ն պետք է լինի ուժերի, արժեքների և հոգևոր կոդերի նոր հավասարակշռությունը։",
     civilizationTag: "Քաղաքական Փիլիսոփայություն",
+    centerId: "cass",
+    centerName: "ՉՀԳԱ (CASS)",
     status: "active",
     createdAt: "2026-04-10T10:00:00.000Z",
     authorName: "Արարատյան Կենտրոն",
@@ -242,19 +246,41 @@ export function markAllLocalNotificationsAsRead(
 }
 
 // ----------------------------------------------------
-// 1. TOPICS API
+// FIRESTORE COLLECTIONS & SUBCOLLECTIONS
+// ----------------------------------------------------
+export const DIALOGUES_COLLECTION = "dialogues";
+export const COMMENTS_SUBCOLLECTION = "comments";
+export const LEGACY_TOPICS_COLLECTION = "dialogue_topics";
+export const LEGACY_COMMENTS_COLLECTION = "dialogue_comments";
+
+// ----------------------------------------------------
+// 1. TOPICS & DIALOGUES API
 // ----------------------------------------------------
 
 /**
- * Fetches all topics from Firestore, merges with local cache and defaultTopics
+ * Fetches all topics/dialogues from Firestore (dialogues collection), merges with local cache and defaultTopics
  */
 export async function getDialogueTopics(): Promise<DialogueTopicItem[]> {
   const localList = getLocalTopics();
 
   try {
-    const topicsRef = collection(db, "dialogue_topics");
+    const topicsRef = collection(db, DIALOGUES_COLLECTION);
     const q = query(topicsRef, orderBy("createdAt", "desc"));
-    const snap = await getDocs(q);
+    let snap = await getDocs(q);
+
+    // If 'dialogues' collection is empty, check legacy 'dialogue_topics'
+    if (snap.empty) {
+      try {
+        const legacyRef = collection(db, LEGACY_TOPICS_COLLECTION);
+        const legacyQ = query(legacyRef, orderBy("createdAt", "desc"));
+        const legacySnap = await getDocs(legacyQ);
+        if (!legacySnap.empty) {
+          snap = legacySnap;
+        }
+      } catch {
+        // ignore legacy error
+      }
+    }
 
     if (!snap.empty) {
       const firestoreList: DialogueTopicItem[] = [];
@@ -280,7 +306,7 @@ export async function getDialogueTopics(): Promise<DialogueTopicItem[]> {
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     }
   } catch (err) {
-    console.warn("Could not fetch dialogue_topics from Firestore, using local/default:", err);
+    console.warn("Could not fetch dialogues from Firestore, using local/default:", err);
   }
 
   const mergedMap = new Map<string, DialogueTopicItem>();
@@ -301,20 +327,28 @@ export async function getDialogueTopics(): Promise<DialogueTopicItem[]> {
 }
 
 /**
- * Fetches a single topic by ID from Firestore, local storage, or defaults
+ * Fetches a single topic/dialogue by ID from Firestore (dialogues or legacy dialogue_topics), local storage, or defaults
  */
 export async function getDialogueTopicById(
   topicId: string
 ): Promise<DialogueTopicItem | null> {
   let found: DialogueTopicItem | null = null;
   try {
-    const docRef = doc(db, "dialogue_topics", topicId);
-    const snap = await getDoc(docRef);
+    const docRef = doc(db, DIALOGUES_COLLECTION, topicId);
+    let snap = await getDoc(docRef);
+    if (!snap.exists()) {
+      // Fallback check in legacy 'dialogue_topics'
+      const legacyRef = doc(db, LEGACY_TOPICS_COLLECTION, topicId);
+      const legacySnap = await getDoc(legacyRef);
+      if (legacySnap.exists()) {
+        snap = legacySnap;
+      }
+    }
     if (snap.exists()) {
       found = { id: snap.id, ...(snap.data() as Omit<DialogueTopicItem, "id">) };
     }
   } catch (err) {
-    console.warn(`Could not fetch topic ${topicId} from Firestore:`, err);
+    console.warn(`Could not fetch dialogue ${topicId} from Firestore:`, err);
   }
 
   // Fallback to local storage cache
@@ -344,7 +378,7 @@ export async function getDialogueTopicById(
 }
 
 /**
- * Creates a new topic (Admin only)
+ * Creates a new dialogue topic in 'dialogues' collection (Admin only)
  */
 export async function createDialogueTopic(
   topicData: Omit<DialogueTopicItem, "id" | "createdAt" | "commentsCount">
@@ -372,15 +406,17 @@ export async function createDialogueTopic(
     authorName: newTopic.authorName || "Ադմին",
   };
   if (newTopic.civilizationTag) firestoreData.civilizationTag = newTopic.civilizationTag;
+  if (newTopic.centerId) firestoreData.centerId = newTopic.centerId;
+  if (newTopic.centerName) firestoreData.centerName = newTopic.centerName;
   if (newTopic.authorUid) firestoreData.authorUid = newTopic.authorUid;
   if (newTopic.authorRole) firestoreData.authorRole = newTopic.authorRole;
   if (newTopic.authorEmail) firestoreData.authorEmail = newTopic.authorEmail;
 
   try {
-    const docRef = doc(db, "dialogue_topics", newId);
+    const docRef = doc(db, DIALOGUES_COLLECTION, newId);
     await setDoc(docRef, firestoreData);
   } catch (err) {
-    console.warn("Error creating topic in Firestore, cached locally:", err);
+    console.warn("Error creating dialogue in Firestore, cached locally:", err);
   }
 
   saveLocalTopic(newTopic);
@@ -388,7 +424,7 @@ export async function createDialogueTopic(
 }
 
 /**
- * Updates an existing topic (Admin only)
+ * Updates an existing dialogue topic (Admin only)
  */
 export async function updateDialogueTopic(
   topicId: string,
@@ -402,10 +438,16 @@ export async function updateDialogueTopic(
   }
 
   try {
-    const docRef = doc(db, "dialogue_topics", topicId);
+    const docRef = doc(db, DIALOGUES_COLLECTION, topicId);
     await updateDoc(docRef, cleanData);
   } catch (err) {
-    console.warn("Could not update topic in Firestore:", err);
+    // If updating in dialogues fails, attempt legacy dialogue_topics update
+    try {
+      const legacyRef = doc(db, LEGACY_TOPICS_COLLECTION, topicId);
+      await updateDoc(legacyRef, cleanData);
+    } catch {
+      console.warn("Could not update dialogue in Firestore:", err);
+    }
   }
 
   // Update local cache
@@ -476,41 +518,91 @@ export async function rejectDialogueTopic(
 }
 
 /**
- * Deletes a topic (Admin only)
+ * Deletes a topic and its comments subcollection (Admin only)
  */
 export async function deleteDialogueTopic(topicId: string): Promise<void> {
   try {
-    const docRef = doc(db, "dialogue_topics", topicId);
+    // 1. Delete all comments in subcollection: dialogues/{topicId}/comments
+    try {
+      const commentsRef = collection(db, DIALOGUES_COLLECTION, topicId, COMMENTS_SUBCOLLECTION);
+      const commentsSnap = await getDocs(commentsRef);
+      const deletePromises = commentsSnap.docs.map((docSnap) => deleteDoc(docSnap.ref));
+      await Promise.all(deletePromises);
+    } catch (subErr) {
+      console.warn("Could not delete comments subcollection:", subErr);
+    }
+
+    // 2. Also delete from legacy dialogue_comments if any exist
+    try {
+      const legacyCommRef = collection(db, LEGACY_COMMENTS_COLLECTION);
+      const legacyQ = query(legacyCommRef, where("topicId", "==", topicId));
+      const legacySnap = await getDocs(legacyQ);
+      await Promise.all(legacySnap.docs.map((d) => deleteDoc(d.ref)));
+    } catch {
+      // ignore
+    }
+
+    // 3. Delete the dialogue document itself from 'dialogues'
+    const docRef = doc(db, DIALOGUES_COLLECTION, topicId);
     await deleteDoc(docRef);
+
+    // Also clean up legacy dialogue_topics if existed
+    try {
+      await deleteDoc(doc(db, LEGACY_TOPICS_COLLECTION, topicId));
+    } catch {
+      // ignore
+    }
   } catch (err) {
-    console.warn("Could not delete topic from Firestore:", err);
+    console.warn("Could not delete dialogue from Firestore:", err);
   }
 
   removeLocalTopic(topicId);
 }
 
 // ----------------------------------------------------
-// 2. COMMENTS & REPLIES API
+// 2. COMMENTS & REPLIES API (SUBCOLLECTION)
 // ----------------------------------------------------
 
 /**
- * Fetches all comments for a specific topic (merging Firestore, local cache, and default)
+ * Fetches all comments for a specific dialogue topic from its subcollection dialogues/{topicId}/comments
+ * (merging Firestore, local cache, and default)
  */
 export async function getTopicComments(topicId: string): Promise<DialogueComment[]> {
   const localList = getLocalComments(topicId);
   const defaultList = defaultComments.filter((c) => c.topicId === topicId);
 
   try {
-    const commRef = collection(db, "dialogue_comments");
-    const q = query(commRef, where("topicId", "==", topicId));
-    const snap = await getDocs(q);
+    // 1. Check subcollection: dialogues/{topicId}/comments
+    const commRef = collection(db, DIALOGUES_COLLECTION, topicId, COMMENTS_SUBCOLLECTION);
+    let snap: any;
+    try {
+      const q = query(commRef, orderBy("createdAt", "asc"));
+      snap = await getDocs(q);
+    } catch {
+      // fallback without orderBy in case composite index isn't needed
+      snap = await getDocs(commRef);
+    }
 
+    let firestoreList: DialogueComment[] = [];
     if (!snap.empty) {
-      const firestoreList: DialogueComment[] = [];
-      snap.forEach((d) => {
+      snap.forEach((d: any) => {
         firestoreList.push({ id: d.id, ...(d.data() as Omit<DialogueComment, "id">) });
       });
+    } else {
+      // 2. Check legacy root collection 'dialogue_comments' for backward compatibility
+      try {
+        const legacyRef = collection(db, LEGACY_COMMENTS_COLLECTION);
+        const legacyQ = query(legacyRef, where("topicId", "==", topicId));
+        const legacySnap = await getDocs(legacyQ);
+        legacySnap.forEach((d) => {
+          firestoreList.push({ id: d.id, ...(d.data() as Omit<DialogueComment, "id">) });
+        });
+      } catch {
+        // ignore legacy error
+      }
+    }
 
+    if (firestoreList.length > 0) {
       const mergedMap = new Map<string, DialogueComment>();
       defaultList.forEach((c) => mergedMap.set(c.id, c));
       localList.forEach((c) => mergedMap.set(c.id, c));
@@ -521,7 +613,7 @@ export async function getTopicComments(topicId: string): Promise<DialogueComment
       );
     }
   } catch (err) {
-    console.warn(`Could not fetch comments from Firestore for ${topicId}, using fallback:`, err);
+    console.warn(`Could not fetch comments from Firestore for dialogue ${topicId}, using fallback:`, err);
   }
 
   const mergedMap = new Map<string, DialogueComment>();
@@ -534,7 +626,7 @@ export async function getTopicComments(topicId: string): Promise<DialogueComment
 }
 
 /**
- * Adds a new comment or reply to a topic
+ * Adds a new comment or reply into the subcollection: dialogues/{topicId}/comments/{commentId}
  * Completely sanitized of undefined values so Firestore never throws!
  */
 export async function addDialogueComment(
@@ -580,19 +672,28 @@ export async function addDialogueComment(
     newComment.civilizationAffiliation = commentData.civilizationAffiliation;
 
   try {
-    const docRef = doc(db, "dialogue_comments", newId);
+    // 1. Save to subcollection dialogues/{topicId}/comments/{newId}
+    const docRef = doc(db, DIALOGUES_COLLECTION, commentData.topicId, COMMENTS_SUBCOLLECTION, newId);
     await setDoc(docRef, firestoreData);
 
-    // Update topic count in Firestore if topic exists
+    // 2. Update dialogue commentsCount in Firestore if dialogue exists
     try {
-      const topicRef = doc(db, "dialogue_topics", commentData.topicId);
+      const topicRef = doc(db, DIALOGUES_COLLECTION, commentData.topicId);
       const topicSnap = await getDoc(topicRef);
       if (topicSnap.exists()) {
         const cur = topicSnap.data().commentsCount || 0;
         await updateDoc(topicRef, { commentsCount: cur + 1 });
+      } else {
+        // Fallback for legacy dialogue_topics document
+        const legacyTopicRef = doc(db, LEGACY_TOPICS_COLLECTION, commentData.topicId);
+        const legSnap = await getDoc(legacyTopicRef);
+        if (legSnap.exists()) {
+          const cur = legSnap.data().commentsCount || 0;
+          await updateDoc(legacyTopicRef, { commentsCount: cur + 1 });
+        }
       }
     } catch (err) {
-      console.warn("Could not update topic commentsCount in Firestore:", err);
+      console.warn("Could not update dialogue commentsCount in Firestore:", err);
     }
   } catch (err) {
     console.warn("Firestore setDoc failed, saving to local cache:", err);
@@ -644,23 +745,38 @@ export async function addDialogueComment(
 }
 
 /**
- * Deletes a comment
+ * Deletes a comment from subcollection dialogues/{topicId}/comments/{commentId}
  */
 export async function deleteDialogueComment(
   commentId: string,
   topicId: string
 ): Promise<void> {
   try {
-    const docRef = doc(db, "dialogue_comments", commentId);
+    // 1. Delete from subcollection dialogues/{topicId}/comments/{commentId}
+    const docRef = doc(db, DIALOGUES_COLLECTION, topicId, COMMENTS_SUBCOLLECTION, commentId);
     await deleteDoc(docRef);
 
-    // Decrement commentsCount if topic exists in Firestore
+    // 2. Also try deleting from legacy dialogue_comments collection if present
     try {
-      const topicRef = doc(db, "dialogue_topics", topicId);
+      await deleteDoc(doc(db, LEGACY_COMMENTS_COLLECTION, commentId));
+    } catch {
+      // ignore
+    }
+
+    // 3. Decrement commentsCount if dialogue exists in Firestore
+    try {
+      const topicRef = doc(db, DIALOGUES_COLLECTION, topicId);
       const snap = await getDoc(topicRef);
       if (snap.exists()) {
         const cur = snap.data().commentsCount || 1;
         await updateDoc(topicRef, { commentsCount: Math.max(0, cur - 1) });
+      } else {
+        const legacyTopicRef = doc(db, LEGACY_TOPICS_COLLECTION, topicId);
+        const legSnap = await getDoc(legacyTopicRef);
+        if (legSnap.exists()) {
+          const cur = legSnap.data().commentsCount || 1;
+          await updateDoc(legacyTopicRef, { commentsCount: Math.max(0, cur - 1) });
+        }
       }
     } catch {
       // ignore
@@ -883,23 +999,75 @@ export async function markAllNotificationsAsRead(
 
 /**
  * Seeds default dialogue topics & comments into Firestore
+ * (dialogues collection and nested comments subcollection)
  */
 export async function seedDialogueTopicsToFirestore(): Promise<{
   success: boolean;
   message: string;
 }> {
   try {
+    let topicsSeeded = 0;
+    let commentsSeeded = 0;
+
     for (const t of defaultTopics) {
-      const topicRef = doc(db, "dialogue_topics", t.id);
-      await setDoc(topicRef, t, { merge: true });
+      const topicComments = defaultComments.filter((c) => c.topicId === t.id);
+
+      // 1. Build clean, sanitized payload for the dialogue topic (no undefined values)
+      const topicData: Record<string, any> = {
+        id: t.id,
+        number: t.number || `ՀԱՐՑԱԴՐՈՒՄ #${t.id}`,
+        title: t.title,
+        description: t.description,
+        date: t.date || new Date().toLocaleDateString("hy-AM"),
+        status: t.status || "active",
+        createdAt: t.createdAt || new Date().toISOString(),
+        authorName: t.authorName || "Արարատյան Կենտրոն",
+        authorRole: t.authorRole || "super-admin",
+        commentsCount: topicComments.length,
+      };
+      if (t.civilizationTag) topicData.civilizationTag = t.civilizationTag;
+      if (t.centerId) topicData.centerId = t.centerId;
+      if (t.centerName) topicData.centerName = t.centerName;
+      if (t.authorUid) topicData.authorUid = t.authorUid;
+      if (t.authorEmail) topicData.authorEmail = t.authorEmail;
+      if (t.expertResponses && t.expertResponses.length > 0) {
+        topicData.expertResponses = t.expertResponses;
+      }
+
+      // Seed topic document in 'dialogues' collection
+      const topicRef = doc(db, DIALOGUES_COLLECTION, t.id);
+      await setDoc(topicRef, topicData, { merge: true });
+      topicsSeeded++;
+
+      // 2. Seed comments directly as subcollections: dialogues/{topicId}/comments/{commentId}
+      for (const c of topicComments) {
+        const commData: Record<string, any> = {
+          id: c.id,
+          topicId: c.topicId,
+          parentId: c.parentId || null,
+          authorName: c.authorName || "Անդամ",
+          authorRole: c.authorRole || "scholar",
+          text: c.text,
+          createdAt: c.createdAt || new Date().toISOString(),
+        };
+        if (c.authorUid) commData.authorUid = c.authorUid;
+        if (c.authorEmail) commData.authorEmail = c.authorEmail;
+        if (c.authorAffiliation) commData.authorAffiliation = c.authorAffiliation;
+        if (c.civilizationAffiliation) commData.civilizationAffiliation = c.civilizationAffiliation;
+
+        const commRef = doc(db, DIALOGUES_COLLECTION, t.id, COMMENTS_SUBCOLLECTION, c.id);
+        await setDoc(commRef, commData, { merge: true });
+        saveLocalComment(c);
+        commentsSeeded++;
+      }
+
+      // Sync local cache
+      saveLocalTopic({ ...t, commentsCount: topicComments.length });
     }
-    for (const c of defaultComments) {
-      const commRef = doc(db, "dialogue_comments", c.id);
-      await setDoc(commRef, c, { merge: true });
-    }
+
     return {
       success: true,
-      message: "✓ Երկխոսության նախնական հարցադրումներն ու մեկնաբանությունները գրանցվեցին Firestore-ում:",
+      message: `✓ ${topicsSeeded} հարցադրում և ${commentsSeeded} մեկնաբանություն հաջողությամբ գրանցվեցին Firestore-ում (dialogues/{id}/comments):`,
     };
   } catch (err: any) {
     console.error("Seed dialogue error:", err);

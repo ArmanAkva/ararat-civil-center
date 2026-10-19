@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { DialogueTopicItem } from "@/types/dialogue";
+import { getAllCivilCenters } from "@/lib/civilizationsData";
 import {
   getDialogueTopics,
   createDialogueTopic,
@@ -14,10 +15,14 @@ import {
   rejectDialogueTopic,
   seedDialogueTopicsToFirestore,
 } from "@/lib/dialogueService";
+import PersonWithLoupeIcon from "@/components/icons/PersonWithLoupeIcon";
 
 function DialogueHubContent() {
   const router = useRouter();
   const { user, profile, role, isAdmin, isSuperAdmin } = useAuth();
+
+  // Civil Centers List for optional selection
+  const civilCenters = useMemo(() => getAllCivilCenters(), []);
 
   // Topics State
   const [topics, setTopics] = useState<DialogueTopicItem[]>([]);
@@ -35,6 +40,7 @@ function DialogueHubContent() {
   const [topicFormTitle, setTopicFormTitle] = useState("");
   const [topicFormDescription, setTopicFormDescription] = useState("");
   const [topicFormTag, setTopicFormTag] = useState("Ընդհանուր Քաղաքակրթական");
+  const [topicFormCenterId, setTopicFormCenterId] = useState("");
   const [topicFormDate, setTopicFormDate] = useState("2026թ. ԱՇՈՒՆ");
   const [topicFormStatus, setTopicFormStatus] = useState<"active" | "archived" | "closed" | "pending">("active");
   const [guestAuthorName, setGuestAuthorName] = useState("");
@@ -168,6 +174,7 @@ function DialogueHubContent() {
     setTopicFormTitle("");
     setTopicFormDescription("");
     setTopicFormTag("Ընդհանուր Քաղաքակրթական");
+    setTopicFormCenterId("");
     setTopicFormDate("2026թ. ԱՇՈՒՆ");
     setTopicFormStatus(isAdmin ? "active" : "pending");
     setGuestAuthorName("");
@@ -197,11 +204,17 @@ function DialogueHubContent() {
         ? topicFormStatus
         : "pending";
 
+      const selectedCenter = topicFormCenterId
+        ? civilCenters.find((c) => c.id === topicFormCenterId)
+        : undefined;
+
       const created = await createDialogueTopic({
         number: topicFormNumber.trim() || `ՀԱՐՑԱԴՐՈՒՄ #${topics.length + 1}`,
         title: topicFormTitle.trim(),
         description: topicFormDescription.trim(),
         civilizationTag: topicFormTag.trim() || "Ընդհանուր",
+        centerId: selectedCenter ? selectedCenter.id : undefined,
+        centerName: selectedCenter ? selectedCenter.name : undefined,
         date: topicFormDate.trim() || new Date().toLocaleDateString("hy-AM"),
         status: statusToSet,
         authorUid: user?.uid,
@@ -274,6 +287,7 @@ function DialogueHubContent() {
     setTopicFormTitle(t.title);
     setTopicFormDescription(t.description);
     setTopicFormTag(t.civilizationTag || "Ընդհանուր");
+    setTopicFormCenterId(t.centerId || "");
     setTopicFormDate(t.date);
     setTopicFormStatus(t.status as any);
   };
@@ -284,11 +298,17 @@ function DialogueHubContent() {
 
     setSavingTopic(true);
     try {
+      const selectedCenter = topicFormCenterId
+        ? civilCenters.find((c) => c.id === topicFormCenterId)
+        : undefined;
+
       const partial: Partial<DialogueTopicItem> = {
         number: topicFormNumber.trim(),
         title: topicFormTitle.trim(),
         description: topicFormDescription.trim(),
         civilizationTag: topicFormTag.trim(),
+        centerId: selectedCenter ? selectedCenter.id : "",
+        centerName: selectedCenter ? selectedCenter.name : "",
         date: topicFormDate.trim(),
         status: topicFormStatus,
       };
@@ -327,9 +347,13 @@ function DialogueHubContent() {
   const handleSeedTopics = async () => {
     if (!confirm("Սերմացնե՞լ հարցադրումները Firestore բազայում:")) return;
     try {
-      await seedDialogueTopicsToFirestore();
+      const res = await seedDialogueTopicsToFirestore();
       await fetchTopics();
-      showToast("success", "✓ Հարցադրումները հաջողությամբ սերմացվեցին:");
+      if (res.success) {
+        showToast("success", res.message);
+      } else {
+        showToast("error", res.message);
+      }
     } catch (err: any) {
       showToast("error", `Սխալ. ${err.message || err}`);
     }
@@ -514,8 +538,18 @@ function DialogueHubContent() {
             >
               {topics.reduce((acc, t) => acc + (t.expertResponses?.length || 0), 0)}
             </div>
-            <div style={{ fontSize: "0.82rem", color: "var(--text-secondary)", marginTop: "0.25rem" }}>
-              Փորձագիտական Կարծիքներ
+            <div
+              style={{
+                fontSize: "0.82rem",
+                color: "var(--text-secondary)",
+                marginTop: "0.25rem",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "0.3rem",
+              }}
+            >
+              <PersonWithLoupeIcon size={14} color="var(--gold-accent)" />
+              <span>Փորձագիտական Կարծիքներ</span>
             </div>
           </div>
         </div>
@@ -1069,23 +1103,67 @@ function DialogueHubContent() {
                     </span>
                   </div>
 
-                  {/* Discipline / Tag */}
-                  {topic.civilizationTag && (
-                    <div
-                      style={{
-                        display: "inline-block",
-                        fontSize: "0.75rem",
-                        fontWeight: "500",
-                        color: "var(--text-secondary)",
-                        marginBottom: "0.75rem",
-                        background: "var(--input-bg)",
-                        padding: "0.2rem 0.55rem",
-                        borderRadius: "0.3rem",
-                      }}
-                    >
-                      🏷️ {topic.civilizationTag}
-                    </div>
-                  )}
+                  {/* Discipline / Tag & Optional Civil Center */}
+                  <div
+                    style={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      alignItems: "center",
+                      gap: "0.4rem",
+                      marginBottom: "0.75rem",
+                    }}
+                  >
+                    {topic.civilizationTag && (
+                      <span
+                        style={{
+                          display: "inline-block",
+                          fontSize: "0.75rem",
+                          fontWeight: "500",
+                          color: "var(--text-secondary)",
+                          background: "var(--input-bg)",
+                          padding: "0.2rem 0.55rem",
+                          borderRadius: "0.3rem",
+                          border: "1px solid var(--card-border)",
+                        }}
+                      >
+                        🏷️ {topic.civilizationTag}
+                      </span>
+                    )}
+
+                    {topic.centerName && (
+                      <Link
+                        href={topic.centerId ? `/centers/${topic.centerId}` : "#"}
+                        onClick={(e) => {
+                          if (!topic.centerId) e.preventDefault();
+                          e.stopPropagation();
+                        }}
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "0.35rem",
+                          fontSize: "0.75rem",
+                          fontWeight: "600",
+                          color: "var(--gold-accent)",
+                          background: "rgba(183, 121, 31, 0.12)",
+                          padding: "0.2rem 0.65rem",
+                          borderRadius: "0.3rem",
+                          border: "1px solid rgba(183, 121, 31, 0.28)",
+                          textDecoration: "none",
+                          transition: "all 0.2s ease",
+                        }}
+                        title={`Ուղեղային Կենտրոն՝ ${topic.centerName}`}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = "rgba(183, 121, 31, 0.22)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = "rgba(183, 121, 31, 0.12)";
+                        }}
+                      >
+                        <span>🏛️</span>
+                        <span>{topic.centerName}</span>
+                      </Link>
+                    )}
+                  </div>
 
                   {/* Title */}
                   <h3
@@ -1204,7 +1282,7 @@ function DialogueHubContent() {
                         }}
                         title="Հրապարակված փորձագիտական դիրքորոշումներ"
                       >
-                        <span>🏛</span>
+                        <PersonWithLoupeIcon size={15} color="var(--gold-accent)" />
                         <span>{expertCount} փորձագետ</span>
                       </span>
                     )}
@@ -1622,6 +1700,38 @@ function DialogueHubContent() {
                     marginBottom: "0.35rem",
                   }}
                 >
+                  🏛️ Քաղաքակրթական / Ուղեղային Կենտրոն (Կամընտրական)
+                </label>
+                <select
+                  value={topicFormCenterId}
+                  onChange={(e) => setTopicFormCenterId(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "0.75rem",
+                    background: "var(--input-bg)",
+                    border: "1px solid var(--card-border)",
+                    borderRadius: "0.5rem",
+                    color: "var(--text-primary)",
+                  }}
+                >
+                  <option value="">— Չընտրել (առանց կենտրոնի) —</option>
+                  {civilCenters.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.civSymbol} {c.name} ({c.civName})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: "0.85rem",
+                    fontWeight: "600",
+                    marginBottom: "0.35rem",
+                  }}
+                >
                   Հարցադրման Խնդիրը և Նկարագրությունը
                 </label>
                 <textarea
@@ -1890,6 +2000,38 @@ function DialogueHubContent() {
                     }}
                   />
                 </div>
+              </div>
+
+              <div>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: "0.85rem",
+                    fontWeight: "600",
+                    marginBottom: "0.35rem",
+                  }}
+                >
+                  🏛️ Քաղաքակրթական / Ուղեղային Կենտրոն (Կամընտրական)
+                </label>
+                <select
+                  value={topicFormCenterId}
+                  onChange={(e) => setTopicFormCenterId(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "0.75rem",
+                    background: "var(--input-bg)",
+                    border: "1px solid var(--card-border)",
+                    borderRadius: "0.5rem",
+                    color: "var(--text-primary)",
+                  }}
+                >
+                  <option value="">— Չընտրել (առանց կենտրոնի) —</option>
+                  {civilCenters.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.civSymbol} {c.name} ({c.civName})
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div>

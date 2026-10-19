@@ -8,11 +8,36 @@ import NotificationBell from "@/components/notifications/NotificationBell";
 
 export default function Header() {
   const [theme, setTheme] = useState("light");
+  const [isScrolled, setIsScrolled] = useState(false);
   const { user, profile, role, isAdmin } = useAuth();
 
   useEffect(() => {
     const currentTheme = document.documentElement.getAttribute("data-theme") || "light";
     setTheme(currentTheme);
+
+    let ticking = false;
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const scrollY = window.scrollY;
+          setIsScrolled((prev) => {
+            // Hysteresis threshold to eliminate any transition jitter/flicker
+            if (!prev && scrollY > 40) return true;
+            if (prev && scrollY < 12) return false;
+            return prev;
+          });
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
   }, []);
 
   const toggleTheme = () => {
@@ -24,17 +49,55 @@ export default function Header() {
 
   const roleConfig = USER_ROLES[role] || USER_ROLES.member;
 
+  const getUserInitials = () => {
+    const name = profile?.displayName?.trim();
+    if (name) {
+      const parts = name.split(/\s+/).filter(Boolean);
+      if (parts.length >= 2) {
+        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+      }
+      return parts[0].slice(0, 2).toUpperCase();
+    }
+    if (user?.email) {
+      const prefix = user.email.split("@")[0];
+      const parts = prefix.split(/[._-]/).filter(Boolean);
+      if (parts.length >= 2) {
+        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+      }
+      return prefix.slice(0, 2).toUpperCase();
+    }
+    return "U";
+  };
+
   return (
-    <header className="header">
-      <Link href="/" className="header-logo">
-        Քաղաքակրթական համագործակցության<br />Արարատյան կենտրոն
+    <header className={`header ${isScrolled ? "is-scrolled" : ""}`}>
+      <Link href="/" className="header-logo" aria-label="Արարատյան Կենտրոն" title="Արարատյան Կենտրոն">
+        <span className="logo-icon" aria-hidden="true">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="logo-key-svg"
+          >
+            <circle cx="7.5" cy="15.5" r="4.5" />
+            <path d="m21 3-9.5 9.5" />
+            <path d="m15.5 7.5 2.5 2.5" />
+            <path d="m18 5 2.5 2.5" />
+            <circle cx="7.5" cy="15.5" r="1.5" />
+          </svg>
+        </span>
       </Link>
-      <div className="header-nav">
+      <nav className="header-nav-links">
         <Link href="/about" className="nav-link">Մեր մասին</Link>
         <Link href="/civilizations" className="nav-link">Քաղաքակրթական բևեռներ</Link>
         <Link href="/dialogue" className="nav-link">Երկխոսության հարթակ</Link>
         <Link href="/forum" className="nav-link">Ֆորում</Link>
+      </nav>
 
+      <div className="header-actions">
         {/* User Auth Section */}
         {user ? (
           <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
@@ -42,49 +105,27 @@ export default function Header() {
             <Link
               href="/profile"
               style={{
+                width: "36px",
+                height: "36px",
+                borderRadius: "50%",
+                background: roleConfig.badgeBg,
+                color: roleConfig.badgeColor,
+                border: `1.5px solid ${roleConfig.badgeBorder}`,
                 display: "inline-flex",
                 alignItems: "center",
-                gap: "0.5rem",
-                padding: "0.35rem 0.75rem",
-                borderRadius: "999px",
-                background: "var(--card-bg)",
-                border: "1px solid var(--card-border)",
-                transition: "all 0.2s ease",
+                justifyContent: "center",
+                fontSize: "0.82rem",
+                fontWeight: "700",
+                letterSpacing: "0.5px",
+                textDecoration: "none",
+                transition: "all 0.25s ease",
+                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.08)",
+                flexShrink: 0,
               }}
-              title="Բացել Պրոֆիլը"
+              title={`Պրոֆիլ (${profile?.displayName || user.email})`}
+              aria-label="Բացել Պրոֆիլը"
             >
-              <div
-                style={{
-                  width: "26px",
-                  height: "26px",
-                  borderRadius: "50%",
-                  background: roleConfig.badgeBg,
-                  color: roleConfig.badgeColor,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "0.8rem",
-                  fontWeight: "bold",
-                }}
-              >
-                {(profile?.displayName || user.email || "U").charAt(0).toUpperCase()}
-              </div>
-              <span style={{ fontSize: "0.85rem", fontWeight: "600", color: "var(--text-primary)" }}>
-                {profile?.displayName || user.email?.split("@")[0]}
-              </span>
-              <span
-                style={{
-                  fontSize: "0.7rem",
-                  fontWeight: "700",
-                  padding: "0.15rem 0.45rem",
-                  borderRadius: "999px",
-                  background: roleConfig.badgeBg,
-                  color: roleConfig.badgeColor,
-                  border: `1px solid ${roleConfig.badgeBorder}`,
-                }}
-              >
-                {role === "super-admin" ? "Գերադմին" : role === "admin" ? "Ադմին" : role === "scholar" ? "Մտածող" : "Անդամ"}
-              </span>
+              {getUserInitials()}
             </Link>
 
             {isAdmin && (
@@ -136,7 +177,7 @@ export default function Header() {
             width: "36px",
             height: "36px",
             cursor: "pointer",
-            marginLeft: "0.5rem",
+            marginLeft: "0.25rem",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",

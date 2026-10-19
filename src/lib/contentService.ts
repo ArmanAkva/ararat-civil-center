@@ -25,6 +25,7 @@ import {
   defaultDialogueContent,
   defaultForumContent,
 } from "./defaultSiteContent";
+import { seedDialogueTopicsToFirestore } from "./dialogueService";
 
 /**
  * Reads a single civilization and its subcollections (centers & authors)
@@ -400,10 +401,17 @@ export async function seedAllContentToFirestore(): Promise<{
       { merge: true }
     );
 
+    // 3. Seed dialogues collection & comments subcollections
+    try {
+      await seedDialogueTopicsToFirestore();
+    } catch (e) {
+      console.warn("Could not seed dialogue topics during seedAll:", e);
+    }
+
     return {
       success: true,
       message:
-        "✓ Բոլոր 8 քաղաքակրթությունները, նրանց կենտրոններն ու հեղինակները (ենթահավաքածուներում) և 5 հիմնական էջերը հաջողությամբ գրանցվեցին Firestore-ում:",
+        "✓ Բոլոր 8 քաղաքակրթությունները, նրանց կենտրոններն ու հեղինակները, 5 հիմնական էջերը և երկխոսությունները (ենթահավաքածուներով) հաջողությամբ գրանցվեցին Firestore-ում:",
     };
   } catch (error: any) {
     console.error("Seed error:", error);

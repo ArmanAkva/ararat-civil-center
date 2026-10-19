@@ -1288,3 +1288,32 @@ export function getAllPublicationIds(): string[] {
   return Array.from(ids);
 }
 
+export interface CivilCenterOption {
+  id: string;
+  name: string;
+  originalName?: string;
+  city?: string;
+  civName: string;
+  civSymbol: string;
+  civSlug: string;
+}
+
+export function getAllCivilCenters(): CivilCenterOption[] {
+  const list: CivilCenterOption[] = [];
+  for (const civ of civilizationsData) {
+    if (civ.centers) {
+      for (const c of civ.centers) {
+        list.push({
+          id: c.id,
+          name: c.name,
+          originalName: c.originalName,
+          city: c.city,
+          civName: civ.nameHy,
+          civSymbol: civ.symbol,
+          civSlug: civ.slug,
+        });
+      }
+    }
+  }
+  return list;
+}

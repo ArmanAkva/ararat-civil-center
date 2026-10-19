@@ -7,6 +7,8 @@ export interface DialogueTopicItem {
   title: string;
   description: string;
   civilizationTag?: string;
+  centerId?: string;
+  centerName?: string;
   status: "active" | "archived" | "closed" | "pending" | "rejected";
   createdAt: string;
   authorUid?: string;
