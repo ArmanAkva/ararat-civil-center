@@ -1,9 +1,17 @@
 import {
   HomePageContent,
+  CivilizationsPageContent,
   AboutPageContent,
   DialoguePageContent,
   ForumPageContent,
 } from "@/types/content";
+
+export const defaultCivilizationsContent: CivilizationsPageContent = {
+  badge: "Քաղաքակրթական Համարարչություն",
+  title: "8 Քաղաքակրթական Բևեռներ և Մտածողներ",
+  description:
+    "Ընտրեք 8 ավանդական քաղաքակրթություններից որևէ մեկը՝ ծանոթանալու նրանց գաղափարական կոդին (Core Credo), առաջատար ուղեղային կենտրոններին և մեծագույն մտածողների ժառանգությանը։",
+};
 
 export const defaultHomeContent: HomePageContent = {
   heroTitle: "Քաղաքակրթական Երկխոսությունների Արարատյան Ֆորում",

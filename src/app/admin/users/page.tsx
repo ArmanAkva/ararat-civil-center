@@ -87,7 +87,7 @@ export default function AdminUsersPage() {
     setUpdatingUid(targetUid);
 
     try {
-      await updateUserRole(targetUid, newRole, role);
+      await updateUserRole(targetUid, newRole, role, targetCurrentRole);
       setUsers((prev) =>
         prev.map((u) => (u.uid === targetUid ? { ...u, role: newRole } : u))
       );
@@ -134,6 +134,11 @@ export default function AdminUsersPage() {
           <h1 style={{ fontFamily: "var(--font-serif)", fontSize: "2.2rem", margin: 0, color: "var(--text-primary)" }}>
             Օգտատերերի և Դերերի Կառավարում
           </h1>
+          <p style={{ color: "var(--text-secondary)", fontSize: "0.92rem", margin: "0.4rem 0 0" }}>
+            {isSuperAdmin
+              ? "👑 Որպես Գերադմին՝ Դուք կարող եք շնորհել բոլոր դերերը (այդ թվում՝ Գերադմին):"
+              : "🛡 Որպես Ադմինիստրատոր՝ Դուք կարող եք շնորհել Ադմին, Մտածող կամ Անդամ դերեր (Գերադմին շնորհել չի թույլատրվում):"}
+          </p>
         </div>
 
         <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
@@ -337,7 +342,7 @@ export default function AdminUsersPage() {
                     {/* Action Selector */}
                     <td style={{ padding: "1rem 0.85rem", textAlign: "right" }}>
                       <select
-                        disabled={isUpdating || (!isSuperAdmin && (u.role === "super-admin" || u.role === "admin"))}
+                        disabled={isUpdating || (!isSuperAdmin && u.role === "super-admin")}
                         value={u.role}
                         onChange={(e) => handleRoleChange(u.uid, u.role, e.target.value as UserRole)}
                         style={{
@@ -347,12 +352,14 @@ export default function AdminUsersPage() {
                           borderRadius: "0.4rem",
                           color: "var(--text-primary)",
                           fontSize: "0.85rem",
-                          cursor: "pointer",
+                          cursor: (!isSuperAdmin && u.role === "super-admin") ? "not-allowed" : "pointer",
+                          opacity: (!isSuperAdmin && u.role === "super-admin") ? 0.65 : 1,
                           outline: "none",
                         }}
+                        title={(!isSuperAdmin && u.role === "super-admin") ? "Գերադմինի դերը կարող է փոխել միայն Գերադմինը" : undefined}
                       >
                         {isSuperAdmin && <option value="super-admin">👑 Գերադմին (Super-Admin)</option>}
-                        {isSuperAdmin && <option value="admin">🛡 Ադմին (Admin)</option>}
+                        <option value="admin">🛡 Ադմին (Admin)</option>
                         <option value="scholar">🖋 Մտածող (Scholar)</option>
                         <option value="member">👤 Անդամ (Member)</option>
                       </select>

@@ -108,11 +108,22 @@ export async function updateUserProfile(
 export async function updateUserRole(
   targetUid: string,
   newRole: UserRole,
-  currentAdminRole: UserRole
+  currentAdminRole: UserRole,
+  targetCurrentRole?: UserRole
 ): Promise<void> {
-  // Only super-admin can assign or demote super-admin or admin roles
-  if (currentAdminRole !== "super-admin" && (newRole === "super-admin" || newRole === "admin")) {
-    throw new Error("Միայն Գերադմինը կարող է շնորհել Ադմինիստրատորի կամ Գերադմինի դեր:");
+  // Only admins and super-admins can modify roles
+  if (currentAdminRole !== "super-admin" && currentAdminRole !== "admin") {
+    throw new Error("Միայն Ադմինիստրատորները կարող են փոխել օգտատերերի դերերը:");
+  }
+
+  // Only super-admin can assign the super-admin role
+  if (currentAdminRole !== "super-admin" && newRole === "super-admin") {
+    throw new Error("Միայն Գերադմինը (Super-Admin) կարող է շնորհել Գերադմինի դեր:");
+  }
+
+  // Only super-admin can modify a super-admin user's role
+  if (currentAdminRole !== "super-admin" && targetCurrentRole === "super-admin") {
+    throw new Error("Միայն Գերադմինը (Super-Admin) կարող է փոփոխել Գերադմինի դերը:");
   }
 
   const userDocRef = doc(db, "users", targetUid);

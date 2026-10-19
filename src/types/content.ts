@@ -12,6 +12,12 @@ export interface HomePageContent {
   }>;
 }
 
+export interface CivilizationsPageContent {
+  badge: string;
+  title: string;
+  description: string;
+}
+
 export interface AboutPageContent {
   headerTitle: string;
   headerSubtitle: string;

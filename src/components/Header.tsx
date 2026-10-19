@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { USER_ROLES } from "@/types/auth";
+import NotificationBell from "@/components/notifications/NotificationBell";
 
 export default function Header() {
   const [theme, setTheme] = useState("light");
@@ -37,6 +38,7 @@ export default function Header() {
         {/* User Auth Section */}
         {user ? (
           <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+            <NotificationBell />
             <Link
               href="/profile"
               style={{

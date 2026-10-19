@@ -81,6 +81,7 @@ export default function EditableText({
   if (isEditing) {
     return (
       <Wrapper
+        onClick={(e: React.MouseEvent) => e.stopPropagation()}
         style={{
           position: "relative",
           margin: isInline ? "0.2rem 0" : "0.5rem 0",
@@ -200,11 +201,19 @@ export default function EditableText({
   // 3. Edit Mode is ON, but not yet opened: show interactive hoverable container
   return (
     <Wrapper
-      onClick={() => setIsEditing(true)}
+      onClick={(e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsEditing(true);
+      }}
       role="button"
       tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") setIsEditing(true);
+      onKeyDown={(e: React.KeyboardEvent) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          e.stopPropagation();
+          setIsEditing(true);
+        }
       }}
       style={{
         position: "relative",

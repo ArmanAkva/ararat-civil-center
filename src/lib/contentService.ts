@@ -19,6 +19,7 @@ import {
   findPublicationById,
 } from "./civilizationsData";
 import {
+  defaultCivilizationsContent,
   defaultHomeContent,
   defaultAboutContent,
   defaultDialogueContent,
@@ -261,7 +262,7 @@ export async function deletePublicationDoc(
  * Reads page content from site_content/{pageKey}
  */
 export async function getPageContent<T>(
-  pageKey: "home" | "about" | "dialogue" | "forum",
+  pageKey: "home" | "about" | "dialogue" | "forum" | "civilizations",
   defaultData: T
 ): Promise<T> {
   try {
@@ -282,7 +283,7 @@ export async function getPageContent<T>(
  * Updates page content in site_content/{pageKey}
  */
 export async function updatePageContent<T>(
-  pageKey: "home" | "about" | "dialogue" | "forum",
+  pageKey: "home" | "about" | "dialogue" | "forum" | "civilizations",
   partialData: Partial<T>
 ): Promise<void> {
   const docRef = doc(db, "site_content", pageKey);
@@ -393,11 +394,16 @@ export async function seedAllContentToFirestore(): Promise<{
       { ...defaultForumContent, updatedAt: new Date().toISOString() },
       { merge: true }
     );
+    await setDoc(
+      doc(db, "site_content", "civilizations"),
+      { ...defaultCivilizationsContent, updatedAt: new Date().toISOString() },
+      { merge: true }
+    );
 
     return {
       success: true,
       message:
-        "✓ Բոլոր 8 քաղաքակրթությունները, նրանց կենտրոններն ու հեղինակները (ենթահավաքածուներում) և 4 հիմնական էջերը հաջողությամբ գրանցվեցին Firestore-ում:",
+        "✓ Բոլոր 8 քաղաքակրթությունները, նրանց կենտրոններն ու հեղինակները (ենթահավաքածուներում) և 5 հիմնական էջերը հաջողությամբ գրանցվեցին Firestore-ում:",
     };
   } catch (error: any) {
     console.error("Seed error:", error);
