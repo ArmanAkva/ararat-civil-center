@@ -16,6 +16,7 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   updateProfile,
+  sendPasswordResetEmail,
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { syncUserProfile } from "@/lib/authService";
@@ -39,6 +40,7 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<void>;
   signOutUser: () => Promise<void>;
   refreshProfile: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -78,12 +80,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signInWithEmail = async (email: string, pass: string) => {
     setLoading(true);
     try {
-      const res = await signInWithEmailAndPassword(auth, email, pass);
+      const res = await signInWithEmailAndPassword(auth, email.trim(), pass);
       const synced = await syncUserProfile(res.user);
       setProfile(synced);
     } finally {
       setLoading(false);
     }
+  };
+
+  const resetPassword = async (email: string) => {
+    await sendPasswordResetEmail(auth, email.trim());
   };
 
   const signUpWithEmail = async (
@@ -94,7 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   ) => {
     setLoading(true);
     try {
-      const res = await createUserWithEmailAndPassword(auth, email, pass);
+      const res = await createUserWithEmailAndPassword(auth, email.trim(), pass);
       await updateProfile(res.user, { displayName });
       const synced = await syncUserProfile(res.user, {
         displayName,
@@ -144,6 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signInWithGoogle,
         signOutUser,
         refreshProfile,
+        resetPassword,
       }}
     >
       {children}

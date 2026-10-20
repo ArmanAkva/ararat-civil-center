@@ -77,10 +77,49 @@ export interface ForumMessageItem {
   content: string;
 }
 
+export interface ForumOrganizer {
+  id: string;
+  name: string;
+  role: string;
+  affiliation: string;
+  isOwner?: boolean;
+  email?: string;
+  phone?: string;
+  photoURL?: string;
+  bio?: string;
+}
+
+export interface ForumSuggestion {
+  id: string;
+  type: "date_location" | "manifesto" | "message" | "agenda" | "general";
+  targetId?: string | number;
+  targetTitle?: string;
+  authorName: string;
+  authorEmail?: string;
+  authorRole?: string;
+  authorAffiliation?: string;
+  authorUid?: string;
+  title?: string;
+  content: string;
+  category?: "suggestion" | "comment" | "amendment" | "attendance";
+  status?: "pending" | "approved" | "reviewed" | "implemented";
+  likesCount?: number;
+  likedBy?: string[];
+  createdAt: string;
+  replies?: Array<{
+    id: string;
+    authorName: string;
+    authorRole?: string;
+    content: string;
+    createdAt: string;
+  }>;
+}
+
 export interface ForumPageContent {
   datesTitle: string;
   locationTitle: string;
   countdown: string;
+  targetDateTime?: string;
   manifestoTitle: string;
   manifestoWhat: string;
   messages: ForumMessageItem[];
@@ -88,4 +127,9 @@ export interface ForumPageContent {
   consensusTitle: string;
   consensusSubtitle: string;
   consensusPercent: number;
+  organizerOwner?: ForumOrganizer;
+  organizers?: ForumOrganizer[];
+  suggestions?: ForumSuggestion[];
 }
+
+

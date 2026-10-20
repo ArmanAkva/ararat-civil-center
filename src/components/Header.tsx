@@ -12,7 +12,16 @@ export default function Header() {
   const { user, profile, role, isAdmin } = useAuth();
 
   useEffect(() => {
-    const currentTheme = document.documentElement.getAttribute("data-theme") || "light";
+    let currentTheme = "light";
+    try {
+      const localTheme = localStorage.getItem("theme");
+      currentTheme =
+        localTheme ||
+        (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", currentTheme);
+    } catch {
+      currentTheme = document.documentElement.getAttribute("data-theme") || "light";
+    }
     setTheme(currentTheme);
 
     let ticking = false;

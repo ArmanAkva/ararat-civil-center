@@ -8,7 +8,7 @@ import { civilizationsData } from "@/lib/civilizationsData";
 
 export default function AuthPage() {
   const router = useRouter();
-  const { user, signInWithEmail, signUpWithEmail, signInWithGoogle } = useAuth();
+  const { user, signInWithEmail, signUpWithEmail, signInWithGoogle, resetPassword } = useAuth();
 
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
@@ -16,7 +16,9 @@ export default function AuthPage() {
   const [displayName, setDisplayName] = useState("");
   const [affiliation, setAffiliation] = useState(civilizationsData[0].nameHy);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [resettingPassword, setResettingPassword] = useState(false);
 
   // If already logged in, provide link or auto-redirect
   if (user) {
@@ -46,6 +48,7 @@ export default function AuthPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
+    setSuccessMsg(null);
     setSubmitting(true);
 
     try {
@@ -59,16 +62,27 @@ export default function AuthPage() {
       }
       router.push("/profile");
     } catch (err: any) {
-      console.error(err);
-      let msg = err.message || "Տեղի ունեցավ սխալ:";
-      if (err.code === "auth/invalid-credential" || err.code === "auth/wrong-password") {
-        msg = "Էլ. հասցեն կամ գաղտնաբառը սխալ է:";
-      } else if (err.code === "auth/email-already-in-use") {
-        msg = "Այս էլ. հասցեով օգտատեր արդեն գոյություն ունի:";
-      } else if (err.code === "auth/weak-password") {
+      const code = err?.code || "";
+      let msg = "Մուտքագրված էլ. հասցեն կամ գաղտնաբառը սխալ է: Խնդրում ենք ստուգել մուտքագրված տվյալները:";
+
+      if (
+        code === "auth/invalid-credential" ||
+        code === "auth/wrong-password" ||
+        code === "auth/user-not-found"
+      ) {
+        msg = "Մուտքագրված էլ. հասցեն կամ գաղտնաբառը սխալ է: Խնդրում ենք ստուգել մուտքագրված տվյալները կամ վերականգնել գաղտնաբառը:";
+      } else if (code === "auth/email-already-in-use") {
+        msg = "Այս էլ. հասցեով օգտատեր արդեն գոյություն ունի: Կարող եք մուտք գործել:";
+      } else if (code === "auth/weak-password") {
         msg = "Գաղտնաբառը պետք է լինի առնվազն 6 նիշ:";
-      } else if (err.code === "auth/invalid-email") {
+      } else if (code === "auth/invalid-email") {
         msg = "Խնդրում ենք մուտքագրել վավեր էլ. հասցե:";
+      } else if (code === "auth/too-many-requests") {
+        msg = "Չափազանց շատ անհաջող փորձեր: Խնդրում ենք փորձել մի փոքր ուշ կամ վերականգնել գաղտնաբառը:";
+      } else if (code === "auth/user-disabled") {
+        msg = "Այս հաշիվը կասեցված է: Խնդրում ենք կապ հաստատել ադմինիստրատորի հետ:";
+      } else if (err?.message && !err?.message.includes("Firebase")) {
+        msg = err.message;
       }
       setErrorMsg(msg);
     } finally {
@@ -76,15 +90,43 @@ export default function AuthPage() {
     }
   };
 
+  const handleForgotPassword = async () => {
+    if (!email.trim()) {
+      setErrorMsg("Գաղտնաբառը վերականգնելու համար նախ մուտքագրեք Ձեր էլ. հասցեն վերևի դաշտում:");
+      return;
+    }
+    setResettingPassword(true);
+    setErrorMsg(null);
+    setSuccessMsg(null);
+    try {
+      await resetPassword(email);
+      setSuccessMsg(`Գաղտնաբառի վերականգնման հղումն ուղարկվեց ${email.trim()} հասցեին: Ստուգեք Ձեր էլ. փոստը:`);
+    } catch (err: any) {
+      if (err?.code === "auth/invalid-email") {
+        setErrorMsg("Խնդրում ենք մուտքագրել վավեր էլ. հասցե:");
+      } else if (err?.code === "auth/user-not-found") {
+        setErrorMsg("Այս էլ. հասցեով գրանցված օգտատեր չի գտնվել:");
+      } else {
+        setErrorMsg("Գաղտնաբառը վերականգնել չհաջողվեց: Խնդրում ենք փորձել մի փոքր ուշ:");
+      }
+    } finally {
+      setResettingPassword(false);
+    }
+  };
+
   const handleGoogleSignIn = async () => {
     setErrorMsg(null);
+    setSuccessMsg(null);
     setSubmitting(true);
     try {
       await signInWithGoogle();
       router.push("/profile");
     } catch (err: any) {
-      console.error(err);
-      setErrorMsg("Google-ով մուտք գործելը ձախողվեց: " + (err.message || ""));
+      if (err?.code === "auth/popup-closed-by-user") {
+        // User closed popup, no error needed
+      } else {
+        setErrorMsg("Google-ով մուտք գործելը ձախողվեց: " + (err?.message || ""));
+      }
     } finally {
       setSubmitting(false);
     }
@@ -188,11 +230,54 @@ export default function AuthPage() {
               fontSize: "0.9rem",
               display: "flex",
               alignItems: "center",
+              justifyContent: "space-between",
+              gap: "0.75rem",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+              <span>⚠️</span>
+              <span>{errorMsg}</span>
+            </div>
+            {mode === "signin" && (
+              <button
+                type="button"
+                onClick={handleForgotPassword}
+                disabled={resettingPassword}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  color: "#ef4444",
+                  fontSize: "0.82rem",
+                  textDecoration: "underline",
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                  fontWeight: "600",
+                }}
+              >
+                {resettingPassword ? "..." : "Վերականգնե՞լ"}
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Success Alert */}
+        {successMsg && (
+          <div
+            style={{
+              background: "rgba(34, 197, 94, 0.12)",
+              border: "1px solid rgba(34, 197, 94, 0.4)",
+              color: "#22c55e",
+              borderRadius: "0.6rem",
+              padding: "0.9rem 1.2rem",
+              marginBottom: "1.5rem",
+              fontSize: "0.9rem",
+              display: "flex",
+              alignItems: "center",
               gap: "0.6rem",
             }}
           >
-            <span>⚠️</span>
-            <span>{errorMsg}</span>
+            <span>✅</span>
+            <span>{successMsg}</span>
           </div>
         )}
 
@@ -265,17 +350,43 @@ export default function AuthPage() {
           </div>
 
           <div>
-            <label
+            <div
               style={{
-                display: "block",
-                fontSize: "0.88rem",
-                fontWeight: "600",
-                color: "var(--text-primary)",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
                 marginBottom: "0.4rem",
               }}
             >
-              Գաղտնաբառ (Password)
-            </label>
+              <label
+                style={{
+                  fontSize: "0.88rem",
+                  fontWeight: "600",
+                  color: "var(--text-primary)",
+                  margin: 0,
+                }}
+              >
+                Գաղտնաբառ (Password)
+              </label>
+              {mode === "signin" && (
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  disabled={resettingPassword}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "var(--gold-accent)",
+                    fontSize: "0.82rem",
+                    cursor: "pointer",
+                    padding: 0,
+                    textDecoration: "underline",
+                  }}
+                >
+                  {resettingPassword ? "Ուղարկվում է..." : "Մոռացե՞լ եք գաղտնաբառը"}
+                </button>
+              )}
+            </div>
             <input
               type="password"
               required

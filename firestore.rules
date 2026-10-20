@@ -80,11 +80,57 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // Public Feedback & Dialogue Comments
+    // Dialogues & Comments Subcollection (dialogues/{dialogueId}/comments/{commentId})
+    match /dialogues/{dialogueId} {
+      allow read: if true;
+      allow create: if isAdmin() || (request.resource.data.status == 'pending');
+      allow update, delete: if isAdmin();
+
+      // Comments Subcollection
+      match /comments/{commentId} {
+        allow read: if true;
+        allow create: if true;
+        allow update, delete: if isAdmin() || (isAuthenticated() && resource != null && request.auth.uid == resource.data.authorUid);
+      }
+    }
+
+    // Collection Group queries across all dialogues' comments
+    match /{path=**}/comments/{commentId} {
+      allow read: if true;
+    }
+
+    // Legacy Dialogue Topics (compatibility)
+    match /dialogue_topics/{topicId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+
+      match /comments/{commentId} {
+        allow read: if true;
+        allow create: if true;
+        allow update, delete: if isAdmin() || (isAuthenticated() && resource != null && request.auth.uid == resource.data.authorUid);
+      }
+    }
+
+    // Legacy Public Feedback & Dialogue Comments (compatibility)
     match /dialogue_comments/{id} {
       allow read: if true;
       allow create: if true;
-      allow update, delete: if isAdmin();
+      allow update, delete: if isAdmin() || (isAuthenticated() && resource != null && request.auth.uid == resource.data.authorUid);
+    }
+
+    // Forum Public Suggestions, Proposals & Comments
+    match /forum_suggestions/{suggestionId} {
+      allow read: if true;
+      allow create: if true;
+      allow update: if true;
+      allow delete: if isAdmin() || (isAuthenticated() && resource != null && request.auth.uid == resource.data.authorUid);
+    }
+
+    // Notifications
+    match /notifications/{notifId} {
+      allow read: if isAuthenticated() && (resource == null || resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if true;
+      allow update, delete: if isAuthenticated() && (resource != null && (resource.data.userId == request.auth.uid || isAdmin()));
     }
   }
 }

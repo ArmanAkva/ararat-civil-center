@@ -1116,3 +1116,122 @@ a {
   border-color: var(--gold-accent);
 }
 
+/* =========================================================
+   Forum Page: Leadership, Organizers & Interactive Suggestions
+   ========================================================= */
+
+.forum-owner-hero {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.12) 0%, rgba(10, 14, 26, 0.85) 100%);
+  border: 1px solid var(--gold-accent);
+  border-radius: 1.25rem;
+  padding: 2.5rem;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.forum-owner-hero:hover {
+  box-shadow: 0 14px 40px rgba(212, 175, 55, 0.18);
+}
+
+.forum-organizer-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.forum-organizer-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  position: relative;
+  transition: all 0.25s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.forum-organizer-card:hover {
+  border-color: var(--gold-accent);
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+}
+
+.forum-organizer-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 2px solid var(--gold-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.35rem;
+  color: var(--gold-accent);
+  background: rgba(212, 175, 55, 0.1);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.forum-suggestion-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 1rem;
+  padding: 1.6rem;
+  transition: all 0.25s ease;
+}
+
+.forum-suggestion-card:hover {
+  border-color: rgba(212, 175, 55, 0.5);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.forum-pill-btn {
+  padding: 0.5rem 1.1rem;
+  border-radius: 999px;
+  font-size: 0.88rem;
+  cursor: pointer;
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.forum-pill-btn:hover {
+  border-color: var(--gold-accent);
+  color: var(--text-primary);
+}
+
+.forum-pill-btn.active {
+  background: var(--gold-accent);
+  color: #000;
+  font-weight: 600;
+  border-color: var(--gold-accent);
+}
+
+.forum-like-btn {
+  background: var(--input-bg);
+  border: 1px solid var(--card-border);
+  color: var(--text-secondary);
+  border-radius: 999px;
+  padding: 0.35rem 0.85rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.2s ease;
+}
+
+.forum-like-btn:hover,
+.forum-like-btn.liked {
+  background: rgba(212, 175, 55, 0.18);
+  border-color: var(--gold-accent);
+  color: var(--gold-accent);
+}
+
+
