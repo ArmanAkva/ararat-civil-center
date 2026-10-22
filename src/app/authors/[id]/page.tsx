@@ -4,6 +4,8 @@ import AuthorDetailView from "@/components/AuthorDetailView";
 import { findAuthorById, getAllAuthorIds } from "@/lib/civilizationsData";
 import { getAuthorContent } from "@/lib/contentService";
 
+export const dynamic = "force-dynamic";
+
 interface PageProps {
   params: Promise<{ id: string }>;
 }

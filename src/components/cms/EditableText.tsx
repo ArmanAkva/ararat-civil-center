@@ -12,6 +12,7 @@ interface EditableTextProps {
   multiline?: boolean;
   label?: string;
   id?: string;
+  title?: string;
 }
 
 export default function EditableText({
@@ -23,6 +24,7 @@ export default function EditableText({
   multiline = false,
   label,
   id,
+  title,
 }: EditableTextProps) {
   const { isEditMode } = useEditMode();
   const [mounted, setMounted] = useState(false);
@@ -71,7 +73,7 @@ export default function EditableText({
   // This guarantees SSR output matches client hydration 100%
   if (!mounted || !isEditMode) {
     return (
-      <Component id={id} className={className} style={style}>
+      <Component id={id} className={className} style={style} title={title}>
         {value}
       </Component>
     );
@@ -225,7 +227,7 @@ export default function EditableText({
         transition: "all 0.2s ease",
         display: isInline ? "inline-block" : "block",
       }}
-      title="Սեղմեք՝ տեքստը խմբագրելու համար"
+      title={title ? `${title} (Սեղմեք՝ խմբագրելու համար)` : "Սեղմեք՝ տեքստը խմբագրելու համար"}
       onMouseEnter={(e) => {
         e.currentTarget.style.borderColor = "var(--gold-accent)";
         e.currentTarget.style.background = "rgba(183, 121, 31, 0.08)";
@@ -253,7 +255,7 @@ export default function EditableText({
       >
         ✏️ Խմբագրել
       </span>
-      <Component id={id} className={className} style={style}>
+      <Component id={id} className={className} style={style} title={title}>
         {value}
       </Component>
     </Wrapper>

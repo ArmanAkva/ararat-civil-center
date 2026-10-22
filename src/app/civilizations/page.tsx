@@ -9,30 +9,51 @@ import { CivilizationsPageContent } from "@/types/content";
 import { useEditMode } from "@/context/EditModeContext";
 import EditableText from "@/components/cms/EditableText";
 import EditCardModal from "@/components/cms/EditCardModal";
+import { PageHeaderSkeleton, CivilizationsGridSkeleton } from "@/components/ui/Skeleton";
+
+export const dynamic = "force-dynamic";
 
 export default function Civilizations() {
   const [civilizations, setCivilizations] = useState<Civilization[]>(civilizationsData);
   const [content, setContent] = useState<CivilizationsPageContent>(defaultCivilizationsContent);
   const [editingCiv, setEditingCiv] = useState<Civilization | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const { isEditMode, savePageField, saveCivilizationField, saveCivilizationFull } = useEditMode();
 
   useEffect(() => {
     let isMounted = true;
-    getPageContent<CivilizationsPageContent>("civilizations", defaultCivilizationsContent).then((data) => {
-      if (isMounted && data) {
-        setContent(data);
-      }
-    });
-    getAllCivilizationsContent().then((data) => {
-      if (isMounted && data && data.length > 0) {
-        setCivilizations(data);
-      }
-    });
+    Promise.all([
+      getPageContent<CivilizationsPageContent>("civilizations", defaultCivilizationsContent),
+      getAllCivilizationsContent(),
+    ])
+      .then(([contentData, civsData]) => {
+        if (isMounted) {
+          setContent(contentData || defaultCivilizationsContent);
+          setCivilizations(civsData && civsData.length > 0 ? civsData : civilizationsData);
+          setLoading(false);
+        }
+      })
+      .catch((err) => {
+        console.error("Error loading civilizations:", err);
+        if (isMounted) {
+          setLoading(false);
+        }
+      });
+
     return () => {
       isMounted = false;
     };
   }, []);
+
+  if (loading) {
+    return (
+      <main className="container" style={{ paddingBottom: "5rem" }}>
+        <PageHeaderSkeleton hasBadge maxWidth="760px" />
+        <CivilizationsGridSkeleton count={8} />
+      </main>
+    );
+  }
 
   return (
     <main className="container" style={{ paddingBottom: "5rem" }}>
@@ -133,7 +154,7 @@ export default function Civilizations() {
                 </button>
               )}
 
-              <div>
+              <div style={{ flex: "1 1 auto", display: "flex", flexDirection: "column", minHeight: 0 }}>
                 {/* Symbol / Icon with glowing backdrop & Badge */}
                 <div
                   style={{
@@ -227,16 +248,20 @@ export default function Civilizations() {
                   multiline
                   label={`«${civ.nameHy}» Կրեդո`}
                   value={civ.credo}
+                  title={civ.credo}
                   style={{
                     fontSize: "0.92rem",
                     color: "var(--text-secondary)",
                     lineHeight: "1.65",
                     margin: "0 0 1.5rem 0",
                     fontStyle: "italic",
+                    flex: "1 1 auto",
                     display: "-webkit-box",
-                    WebkitLineClamp: isEditMode ? undefined : 3,
+                    WebkitLineClamp: 5,
                     WebkitBoxOrient: "vertical",
-                    overflow: isEditMode ? "visible" : "hidden",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    wordBreak: "break-word",
                   }}
                   onSave={async (val) => {
                     setCivilizations((prev) =>

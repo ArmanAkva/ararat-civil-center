@@ -4,6 +4,7 @@ import {
   AboutPageContent,
   DialoguePageContent,
   ForumPageContent,
+  FooterContent,
 } from "@/types/content";
 
 export const defaultCivilizationsContent: CivilizationsPageContent = {
@@ -71,6 +72,15 @@ export const defaultAboutContent: AboutPageContent = {
 };
 
 export const defaultDialogueContent: DialoguePageContent = {
+  heroBadge: "Արարատյան Կենտրոն · Փիլիսոփայական Ֆորում",
+  heroTitle: "Քաղաքակրթական Երկխոսություն & Հարցադրումներ",
+  heroDescription:
+    "Բաց փիլիսոփայական հարթակ արդի մարտահրավերների, արժեքային համակարգերի և քաղաքակրթական ինքնության շուրջ։ Յուրաքանչյուր հարցադրում ունի իր առանձին քննարկման էջը, որտեղ ներկայացված են փորձագիտական դիրքորոշումները և բաց երկխոսությունը։",
+  kpiPublishedLabel: "Հրապարակված Հարցադրումներ",
+  kpiActiveLabel: "Ակտիվ Բանավեճեր",
+  kpiCommentsLabel: "Գրանցված Կարծիքներ",
+  kpiExpertsLabel: "Փորձագիտական Կարծիքներ",
+  suggestButtonText: "Առաջարկել Նոր Հարցադրում",
   activeTopic: {
     number: "ՀԱՐՑԱԴՐՈՒՄ #12",
     date: "2026թ. ԱՇՈՒՆ",
@@ -281,4 +291,25 @@ export const defaultForumContent: ForumPageContent = {
       createdAt: "2026-10-20T08:00:00.000Z",
     },
   ],
+};
+
+export const defaultFooterContent: FooterContent = {
+  callToActionEyebrow: "✧ ՀԱՄԱՐԱՐՉԱԿԱՆ ԿՈՉ ✧",
+  callToActionTitle: "Միացե՛ք Համարարչությանը",
+  callToActionDesc:
+    "«Արարատյան Ֆորումը» բաց է բոլոր նրանց համար, ովքեր հավատում են մարդկային մտքի ստեղծարար ներուժին և քաղաքակրթությունների խաղաղ համակեցությանը։ Դարձե՛ք մեր ցանցի մասնակիցը։",
+  callToActionQuote: "«Մենք չենք կանխատեսում ապագան, մենք այն համարարում ենք միասին․․․»",
+  callToActionBtn1: "💬 Միանալ Քննարկումներին",
+  callToActionBtn2: "🏛️ Դիտել Քաղաքակրթությունները",
+  brandName: "ԱՐԱՐԱՏՅԱՆ ՖՈՐՈՒՄ",
+  brandTagline: "Քաղաքակրթական երկխոսությունների, գիտական հետազոտությունների և համարարչության բազմաբևեռ միջավայր։",
+  navTitle: "Հիմնական Բաժիններ",
+  valuesTitle: "Արժեհամակարգ",
+  valueItem1: "✦ Քաղաքակրթական Ինքնիշխանություն",
+  valueItem2: "✦ Բազմաբևեռ Ներդաշնակություն",
+  valueItem3: "✦ Հոգևոր-Գիտական Սինթեզ",
+  valueItem4: "✦ Համարարչության Տեսլական",
+  copyrightText: "© 2026 Արարատյան Ֆորում / Քաղաքակրթական Կենտրոն: Բոլոր իրավունքները պաշտպանված են:",
+  linkContactText: "Կոնտակտներ",
+  linkCharterText: "Կանոնադրություն",
 };

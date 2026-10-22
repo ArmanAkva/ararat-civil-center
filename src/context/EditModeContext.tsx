@@ -31,7 +31,7 @@ interface EditModeContextType {
   statusMessage: { type: "success" | "error"; text: string } | null;
   clearStatusMessage: () => void;
   savePageField: (
-    pageKey: "home" | "about" | "dialogue" | "forum" | "civilizations",
+    pageKey: "home" | "about" | "dialogue" | "forum" | "civilizations" | "footer",
     field: string,
     value: any
   ) => Promise<void>;
@@ -123,7 +123,7 @@ export function EditModeProvider({ children }: { children: ReactNode }) {
   const clearStatusMessage = () => setStatusMessage(null);
 
   const savePageField = async (
-    pageKey: "home" | "about" | "dialogue" | "forum" | "civilizations",
+    pageKey: "home" | "about" | "dialogue" | "forum" | "civilizations" | "footer",
     field: string,
     value: any
   ) => {

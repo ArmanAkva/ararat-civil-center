@@ -8,6 +8,9 @@ import { useEditMode } from "@/context/EditModeContext";
 import EditableText from "@/components/cms/EditableText";
 import EditCardModal from "@/components/cms/EditCardModal";
 import { getCenterContent } from "@/lib/contentService";
+import CenterLoading from "@/app/centers/[id]/loading";
+import { MemberAvatar } from "@/components/ui/MemberCard";
+import { AutoTruncateQuote } from "@/components/ui/AutoTruncateQuote";
 
 interface Props {
   initialCenter: ThinkTank;
@@ -17,6 +20,7 @@ interface Props {
 export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
   const [center, setCenter] = useState<ThinkTank>(initialCenter);
   const [civ, setCiv] = useState<Civilization>(initialCiv);
+  const [loading, setLoading] = useState(true);
   const { user, isAdmin } = useAuth();
   const { isEditMode, toggleEditMode, saveCenter, saveAuthor, savePublication, deletePublication } = useEditMode();
 
@@ -55,12 +59,20 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
 
   useEffect(() => {
     let isMounted = true;
-    getCenterContent(initialCenter.id).then((res) => {
-      if (isMounted && res) {
-        setCenter(res.center);
-        setCiv(res.civ);
-      }
-    });
+    getCenterContent(initialCenter.id)
+      .then((res) => {
+        if (isMounted) {
+          if (res) {
+            setCenter(res.center);
+            setCiv(res.civ);
+          }
+          setLoading(false);
+        }
+      })
+      .catch((err) => {
+        console.error("Error loading center:", err);
+        if (isMounted) setLoading(false);
+      });
     return () => {
       isMounted = false;
     };
@@ -401,6 +413,10 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
 
     setEditingAuthor(null);
   };
+
+  if (loading) {
+    return <CenterLoading />;
+  }
 
   return (
     <main className="container" style={{ paddingBottom: "5rem", maxWidth: "1000px" }}>
@@ -899,11 +915,9 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
                   </div>
                 )}
 
-                <div>
+                <div style={{ flex: "1 1 auto", display: "flex", flexDirection: "column", minHeight: 0 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1rem" }}>
-                    <div className="author-avatar" aria-hidden="true">
-                      {author.name ? author.name.charAt(0) : "M"}
-                    </div>
+                    <MemberAvatar name={author.name} size={54} glow />
                     <div>
                       <h3 style={{ margin: "0 0 0.2rem 0", color: "var(--text-primary)", fontSize: "1.15rem" }}>
                         {author.name}
@@ -914,20 +928,22 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
                     </div>
                   </div>
                   {author.quote && (
-                    <blockquote
-                      style={{
+                    <AutoTruncateQuote
+                      quote={author.quote}
+                      containerStyle={{
                         margin: "0 0 0.8rem 0",
-                        padding: "0.5rem 0.8rem",
+                        padding: "0.6rem 0.9rem",
                         background: "rgba(183, 121, 31, 0.08)",
                         borderLeft: "2px solid var(--gold-accent)",
                         borderRadius: "0.25rem",
+                      }}
+                      textStyle={{
                         fontSize: "0.85rem",
                         fontStyle: "italic",
                         color: "var(--text-primary)",
                       }}
-                    >
-                      {author.quote}
-                    </blockquote>
+                      lineHeightPx={20}
+                    />
                   )}
                   {author.bio && (
                     <p
@@ -1031,9 +1047,7 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
               >
                 <div>
                   <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1rem" }}>
-                    <div className="author-avatar" aria-hidden="true">
-                      {author.name ? author.name.charAt(0) : "M"}
-                    </div>
+                    <MemberAvatar name={author.name} size={54} glow />
                     <div>
                       <h3 style={{ margin: "0 0 0.2rem 0", color: "var(--text-primary)", fontSize: "1.15rem" }}>
                         {author.name}

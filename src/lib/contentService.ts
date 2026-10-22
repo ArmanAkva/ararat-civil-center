@@ -263,7 +263,7 @@ export async function deletePublicationDoc(
  * Reads page content from site_content/{pageKey}
  */
 export async function getPageContent<T>(
-  pageKey: "home" | "about" | "dialogue" | "forum" | "civilizations",
+  pageKey: "home" | "about" | "dialogue" | "forum" | "civilizations" | "footer",
   defaultData: T
 ): Promise<T> {
   try {
@@ -284,7 +284,7 @@ export async function getPageContent<T>(
  * Updates page content in site_content/{pageKey}
  */
 export async function updatePageContent<T>(
-  pageKey: "home" | "about" | "dialogue" | "forum" | "civilizations",
+  pageKey: "home" | "about" | "dialogue" | "forum" | "civilizations" | "footer",
   partialData: Partial<T>
 ): Promise<void> {
   const docRef = doc(db, "site_content", pageKey);

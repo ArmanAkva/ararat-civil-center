@@ -1,27 +1,44 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { defaultAboutContent } from "@/lib/defaultSiteContent";
 import { AboutPageContent } from "@/types/content";
 import { getPageContent } from "@/lib/contentService";
 import { useEditMode } from "@/context/EditModeContext";
 import EditableText from "@/components/cms/EditableText";
+import AboutLoading from "./loading";
+
+export const dynamic = "force-dynamic";
 
 export default function About() {
   const [content, setContent] = useState<AboutPageContent>(defaultAboutContent);
+  const [loading, setLoading] = useState(true);
   const { savePageField } = useEditMode();
 
   useEffect(() => {
     let isMounted = true;
-    getPageContent<AboutPageContent>("about", defaultAboutContent).then((data) => {
-      if (isMounted && data) {
-        setContent(data);
-      }
-    });
+    getPageContent<AboutPageContent>("about", defaultAboutContent)
+      .then((data) => {
+        if (isMounted) {
+          setContent(data || defaultAboutContent);
+          setLoading(false);
+        }
+      })
+      .catch((err) => {
+        console.error("Error loading about page content:", err);
+        if (isMounted) {
+          setLoading(false);
+        }
+      });
     return () => {
       isMounted = false;
     };
   }, []);
+
+  if (loading) {
+    return <AboutLoading />;
+  }
 
   return (
     <main className="container" style={{ paddingBottom: "5rem" }}>
@@ -219,41 +236,184 @@ export default function About() {
         </div>
       </div>
 
-      {/* Call to Action */}
-      <div style={{ textAlign: "center", padding: "4rem 2rem", background: "linear-gradient(135deg, var(--gradient-overlay-1) 0%, var(--bg-color) 100%)", borderRadius: "1rem", border: "1px solid var(--card-border)", marginTop: "4rem" }}>
-        <EditableText
-          tag="h2"
-          label="Կոչ Վերնագիր"
-          value={content.callToActionTitle}
-          style={{ fontFamily: "var(--font-serif)", color: "var(--gold-accent)", margin: "0 0 1rem 0" }}
-          onSave={async (val) => {
-            setContent((prev) => ({ ...prev, callToActionTitle: val }));
-            await savePageField("about", "callToActionTitle", val);
+      {/* Call to Action: «Միացե՛ք Համարարչությանը» */}
+      <div
+        style={{
+          textAlign: "center",
+          padding: "4.5rem 2.5rem 4rem",
+          background: "linear-gradient(145deg, var(--gradient-overlay-1) 0%, var(--card-bg) 60%, var(--gradient-overlay-2) 100%)",
+          borderRadius: "1.5rem",
+          border: "1px solid var(--card-border)",
+          boxShadow: "0 20px 45px rgba(0, 0, 0, 0.08)",
+          position: "relative",
+          overflow: "hidden",
+          marginTop: "4.5rem",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
+        }}
+      >
+        {/* Subtle decorative glow watermark */}
+        <div
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            top: "-50px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            width: "360px",
+            height: "180px",
+            background: "radial-gradient(circle, rgba(183, 121, 31, 0.22) 0%, transparent 70%)",
+            filter: "blur(40px)",
+            pointerEvents: "none",
+            zIndex: 0,
           }}
         />
-        <EditableText
-          tag="p"
-          multiline
-          label="Կոչ Նկարագրություն"
-          value={content.callToActionDesc}
-          style={{ fontSize: "1.1rem", lineHeight: "1.8", maxWidth: "800px", margin: "0 auto 3rem", color: "var(--text-secondary)" }}
-          onSave={async (val) => {
-            setContent((prev) => ({ ...prev, callToActionDesc: val }));
-            await savePageField("about", "callToActionDesc", val);
-          }}
-        />
-        <div style={{ margin: "0 auto", padding: "1.5rem 2rem", borderTop: "2px solid var(--gold-accent)", borderBottom: "2px solid var(--gold-accent)", display: "inline-block" }}>
+
+        <div style={{ position: "relative", zIndex: 1 }}>
+          {/* Eyebrow badge */}
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.45rem",
+              fontSize: "0.78rem",
+              fontWeight: "700",
+              textTransform: "uppercase",
+              letterSpacing: "0.15em",
+              color: "var(--gold-accent)",
+              padding: "0.3rem 0.9rem",
+              borderRadius: "999px",
+              background: "rgba(183, 121, 31, 0.1)",
+              border: "1px solid rgba(183, 121, 31, 0.25)",
+              marginBottom: "1.5rem",
+            }}
+          >
+            <span>✧</span>
+            <span>ՀԱՄԱՐԱՐՉԱԿԱՆ ԿՈՉ</span>
+            <span>✧</span>
+          </div>
+
           <EditableText
-            tag="span"
-            multiline
-            label="Եզրափակիչ Մեջբերում"
-            value={content.callToActionQuote}
-            style={{ fontFamily: "var(--font-serif)", fontSize: "1.35rem", fontStyle: "italic", color: "var(--text-primary)" }}
+            tag="h2"
+            label="Կոչ Վերնագիր"
+            value={content.callToActionTitle || defaultAboutContent.callToActionTitle}
+            style={{
+              fontFamily: "var(--font-serif)",
+              color: "var(--gold-accent)",
+              fontSize: "clamp(1.85rem, 3.5vw, 2.5rem)",
+              fontWeight: "700",
+              margin: "0 0 1.25rem 0",
+              lineHeight: "1.3",
+            }}
             onSave={async (val) => {
-              setContent((prev) => ({ ...prev, callToActionQuote: val }));
-              await savePageField("about", "callToActionQuote", val);
+              setContent((prev) => ({ ...prev, callToActionTitle: val }));
+              await savePageField("about", "callToActionTitle", val);
             }}
           />
+
+          <EditableText
+            tag="p"
+            multiline
+            label="Կոչ Նկարագրություն"
+            value={content.callToActionDesc || defaultAboutContent.callToActionDesc}
+            style={{
+              fontSize: "1.08rem",
+              lineHeight: "1.85",
+              maxWidth: "820px",
+              margin: "0 auto 2.5rem",
+              color: "var(--text-secondary)",
+            }}
+            onSave={async (val) => {
+              setContent((prev) => ({ ...prev, callToActionDesc: val }));
+              await savePageField("about", "callToActionDesc", val);
+            }}
+          />
+
+          <div
+            style={{
+              margin: "0 auto 2.5rem",
+              padding: "1.5rem 2.5rem",
+              borderTop: "2px solid var(--gold-accent)",
+              borderBottom: "2px solid var(--gold-accent)",
+              background: "rgba(183, 121, 31, 0.04)",
+              borderRadius: "0.4rem",
+              display: "inline-block",
+              maxWidth: "780px",
+            }}
+          >
+            <EditableText
+              tag="span"
+              multiline
+              label="Եզրափակիչ Մեջբերում"
+              value={content.callToActionQuote || defaultAboutContent.callToActionQuote}
+              style={{
+                fontFamily: "var(--font-serif)",
+                fontSize: "clamp(1.15rem, 2vw, 1.35rem)",
+                fontStyle: "italic",
+                color: "var(--text-primary)",
+                lineHeight: "1.75",
+                display: "block",
+              }}
+              onSave={async (val) => {
+                setContent((prev) => ({ ...prev, callToActionQuote: val }));
+                await savePageField("about", "callToActionQuote", val);
+              }}
+            />
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: "1rem",
+            }}
+          >
+            <Link
+              href="/dialogue"
+              className="btn-primary"
+              style={{
+                padding: "0.75rem 1.6rem",
+                fontSize: "0.95rem",
+                textDecoration: "none",
+                fontWeight: "600",
+                borderRadius: "0.5rem",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "0.4rem",
+              }}
+            >
+              <span>💬 Միանալ Քննարկումներին</span>
+            </Link>
+            <Link
+              href="/civilizations"
+              style={{
+                padding: "0.75rem 1.6rem",
+                fontSize: "0.95rem",
+                textDecoration: "none",
+                fontWeight: "600",
+                borderRadius: "0.5rem",
+                color: "var(--text-primary)",
+                background: "var(--input-bg)",
+                border: "1px solid var(--card-border)",
+                transition: "all 0.2s ease",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "0.4rem",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = "var(--gold-accent)";
+                e.currentTarget.style.color = "var(--gold-accent)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = "var(--card-border)";
+                e.currentTarget.style.color = "var(--text-primary)";
+              }}
+            >
+              <span>🏛️ Դիտել Քաղաքակրթությունները</span>
+            </Link>
+          </div>
         </div>
       </div>
     </main>

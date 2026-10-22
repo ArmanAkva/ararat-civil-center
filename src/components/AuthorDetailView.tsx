@@ -8,6 +8,7 @@ import { useEditMode } from "@/context/EditModeContext";
 import EditableText from "@/components/cms/EditableText";
 import EditCardModal from "@/components/cms/EditCardModal";
 import { getAuthorContent } from "@/lib/contentService";
+import AuthorLoading from "@/app/authors/[id]/loading";
 
 interface Props {
   initialAuthor: Thinker;
@@ -17,6 +18,7 @@ interface Props {
 export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
   const [author, setAuthor] = useState<Thinker>(initialAuthor);
   const [civ, setCiv] = useState<Civilization>(initialCiv);
+  const [loading, setLoading] = useState(true);
   const { user, isAdmin } = useAuth();
   const { isEditMode, toggleEditMode, saveAuthor, saveCenter, savePublication, deletePublication } = useEditMode();
 
@@ -39,12 +41,20 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
 
   useEffect(() => {
     let isMounted = true;
-    getAuthorContent(initialAuthor.id).then((res) => {
-      if (isMounted && res) {
-        setAuthor(res.author);
-        setCiv(res.civ);
-      }
-    });
+    getAuthorContent(initialAuthor.id)
+      .then((res) => {
+        if (isMounted) {
+          if (res) {
+            setAuthor(res.author);
+            setCiv(res.civ);
+          }
+          setLoading(false);
+        }
+      })
+      .catch((err) => {
+        console.error("Error loading author:", err);
+        if (isMounted) setLoading(false);
+      });
     return () => {
       isMounted = false;
     };
@@ -249,6 +259,10 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
     setCiv({ ...civ, centers: updatedCivCenters });
     await saveCenter(civ.id, updatedCenter);
   };
+
+  if (loading) {
+    return <AuthorLoading />;
+  }
 
   return (
     <main className="container" style={{ paddingBottom: "5rem", maxWidth: "1000px" }}>

@@ -4,6 +4,8 @@ import CenterDetailView from "@/components/CenterDetailView";
 import { findCenterById, getAllCenterIds } from "@/lib/civilizationsData";
 import { getCenterContent } from "@/lib/contentService";
 
+export const dynamic = "force-dynamic";
+
 interface PageProps {
   params: Promise<{ id: string }>;
 }

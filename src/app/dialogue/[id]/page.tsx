@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import DialogueTopicDetailView from "@/components/DialogueTopicDetailView";
 import { getDialogueTopicById, defaultTopics } from "@/lib/dialogueService";
 
+export const dynamic = "force-dynamic";
+
 interface PageProps {
   params: Promise<{ id: string }>;
 }

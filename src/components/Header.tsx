@@ -101,7 +101,7 @@ export default function Header() {
       </Link>
       <nav className="header-nav-links">
         <Link href="/about" className="nav-link">Մեր մասին</Link>
-        <Link href="/civilizations" className="nav-link">Քաղաքակրթական բևեռներ</Link>
+        <Link href="/civilizations" className="nav-link">Քաղաքակրթություններ</Link>
         <Link href="/dialogue" className="nav-link">Երկխոսության հարթակ</Link>
         <Link href="/forum" className="nav-link">Ֆորում</Link>
       </nav>

@@ -328,14 +328,9 @@ export async function getDialogueTopics(): Promise<DialogueTopicItem[]> {
         firestoreList.push({ id: docSnap.id, ...(docSnap.data() as Omit<DialogueTopicItem, "id">) });
       });
 
-      const mergedMap = new Map<string, DialogueTopicItem>();
-      defaultTopics.forEach((t) => mergedMap.set(t.id, t));
-      localList.forEach((t) => mergedMap.set(t.id, t));
-      firestoreList.forEach((t) => mergedMap.set(t.id, t));
-
       const localComments = getAllLocalComments();
       const localExperts = getAllLocalExpertOpinions();
-      return Array.from(mergedMap.values())
+      return firestoreList
         .map((t) => {
           const topicLocalCount = localComments.filter((c) => c.topicId === t.id).length;
           const topicDefCount = defaultComments.filter((c) => c.topicId === t.id).length;

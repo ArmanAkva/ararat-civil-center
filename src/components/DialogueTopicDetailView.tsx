@@ -8,6 +8,7 @@ import { USER_ROLES } from "@/types/auth";
 import { DialogueTopicItem, DialogueComment, TopicExpertOpinion } from "@/types/dialogue";
 import { getAllCivilCenters, getAllThinkersOptions, ThinkerOption } from "@/lib/civilizationsData";
 import {
+  getDialogueTopicById,
   getTopicComments,
   addDialogueComment,
   deleteDialogueComment,
@@ -22,6 +23,9 @@ import {
 } from "@/lib/dialogueService";
 import PersonWithLoupeIcon from "@/components/icons/PersonWithLoupeIcon";
 import TopicStatusIconBadge from "@/components/dialogue/TopicStatusIconBadge";
+import EditableText from "@/components/cms/EditableText";
+import { Skeleton, TopicDetailSkeleton } from "@/components/ui/Skeleton";
+import { TopicAuthorSignature, MemberAvatar } from "@/components/ui/MemberCard";
 
 interface Props {
   initialTopic: DialogueTopicItem;
@@ -35,6 +39,7 @@ export default function DialogueTopicDetailView({ initialTopic }: Props) {
   const thinkerOptions = useMemo(() => getAllThinkersOptions(), []);
 
   const [topic, setTopic] = useState<DialogueTopicItem>(initialTopic);
+  const [loadingTopic, setLoadingTopic] = useState(true);
   const [comments, setComments] = useState<DialogueComment[]>([]);
   const [loadingComments, setLoadingComments] = useState(true);
 
@@ -92,11 +97,23 @@ export default function DialogueTopicDetailView({ initialTopic }: Props) {
     setTimeout(() => setToast(null), 4000);
   };
 
-  // Fetch comments and expert opinions on mount
+  // Fetch fresh topic, comments and expert opinions on mount
   useEffect(() => {
     let isMounted = true;
+    setLoadingTopic(true);
+    getDialogueTopicById(initialTopic.id)
+      .then((fresh) => {
+        if (isMounted && fresh) {
+          setTopic(fresh);
+        }
+      })
+      .catch((err) => console.error("Error loading fresh topic:", err))
+      .finally(() => {
+        if (isMounted) setLoadingTopic(false);
+      });
+
     setLoadingComments(true);
-    getTopicComments(topic.id)
+    getTopicComments(initialTopic.id)
       .then((list) => {
         if (isMounted) setComments(list);
       })
@@ -106,7 +123,7 @@ export default function DialogueTopicDetailView({ initialTopic }: Props) {
       });
 
     setLoadingExperts(true);
-    getTopicExpertOpinions(topic.id, topic.expertResponses)
+    getTopicExpertOpinions(initialTopic.id, initialTopic.expertResponses)
       .then((list) => {
         if (isMounted) setExpertOpinions(list);
       })
@@ -118,7 +135,7 @@ export default function DialogueTopicDetailView({ initialTopic }: Props) {
     return () => {
       isMounted = false;
     };
-  }, [topic.id, topic.expertResponses]);
+  }, [initialTopic.id]);
 
 
   // Handle post comment
@@ -417,6 +434,10 @@ export default function DialogueTopicDetailView({ initialTopic }: Props) {
 
   const getRepliesForComment = (parentId: string) =>
     comments.filter((c) => c.parentId === parentId);
+
+  if (loadingTopic) {
+    return <TopicDetailSkeleton />;
+  }
 
   // If topic is pending and current user is neither Admin nor the original Author, show review notice
   const isAuthor = user?.uid && topic.authorUid && user.uid === topic.authorUid;
@@ -764,7 +785,10 @@ export default function DialogueTopicDetailView({ initialTopic }: Props) {
         </div>
 
         {/* Title */}
-        <h1
+        <EditableText
+          tag="h1"
+          label="Հարցադրման Վերնագիր"
+          value={topic.title}
           style={{
             fontFamily: "var(--font-serif)",
             fontSize: "clamp(2rem, 3.8vw, 2.7rem)",
@@ -772,12 +796,19 @@ export default function DialogueTopicDetailView({ initialTopic }: Props) {
             lineHeight: "1.3",
             color: "var(--text-primary)",
           }}
-        >
-          {topic.title}
-        </h1>
+          onSave={async (val) => {
+            await updateDialogueTopic(topic.id, { title: val });
+            setTopic((prev) => ({ ...prev, title: val }));
+            showToast("success", "✓ Հարցադրման վերնագիրը թարմացվեց:");
+          }}
+        />
 
         {/* Full Problem Statement */}
-        <p
+        <EditableText
+          tag="p"
+          multiline
+          label="Հարցադրման Ամբողջական Նկարագրություն"
+          value={topic.description}
           style={{
             color: "var(--text-secondary)",
             fontSize: "1.18rem",
@@ -786,48 +817,24 @@ export default function DialogueTopicDetailView({ initialTopic }: Props) {
             margin: "0 0 2rem",
             whiteSpace: "pre-line",
           }}
-        >
-          {topic.description}
-        </p>
-
-        {/* Creator & Comments Count Footer */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "0.75rem",
-            fontSize: "0.85rem",
-            color: "var(--text-secondary)",
-            borderTop: "1px solid var(--card-border)",
-            paddingTop: "1.25rem",
-            flexWrap: "wrap",
+          onSave={async (val) => {
+            await updateDialogueTopic(topic.id, { description: val });
+            setTopic((prev) => ({ ...prev, description: val }));
+            showToast("success", "✓ Հարցադրման նկարագրությունը թարմացվեց:");
           }}
-        >
-          <span>
-            Առաջարկել է՝ <strong>{topic.authorName || "Արարատյան Կենտրոն"}</strong>
-          </span>
-          <span>•</span>
-          <span>💬 {comments.length} մեկնաբանություն</span>
-          {expertOpinions.length > 0 && (
-            <>
-              <span>•</span>
-              <span
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "0.35rem",
-                  padding: "0.2rem 0.6rem",
-                  borderRadius: "999px",
-                  background: "var(--input-bg)",
-                  color: "var(--gold-accent)",
-                  fontWeight: "600",
-                }}
-              >
-                <PersonWithLoupeIcon size={14} color="var(--gold-accent)" />
-                <span>{expertOpinions.length} փորձագետ</span>
-              </span>
-            </>
-          )}
+        />
+
+        {/* Creator & Meta Author Signature */}
+        <div style={{ marginTop: "1rem" }}>
+          <TopicAuthorSignature
+            authorName={topic.authorName || "Արարատյան Կենտրոն"}
+            authorRole={topic.authorRole}
+            date={topic.date}
+            centerName={topic.centerName}
+            centerId={topic.centerId}
+            commentsCount={comments.length}
+            expertsCount={expertOpinions.length}
+          />
         </div>
       </div>
 
@@ -900,15 +907,20 @@ export default function DialogueTopicDetailView({ initialTopic }: Props) {
         </div>
 
         {loadingExperts ? (
-          <div
-            style={{
-              padding: "2rem",
-              textAlign: "center",
-              color: "var(--text-secondary)",
-              fontSize: "0.95rem",
-            }}
-          >
-            Բեռնվում են փորձագիտական կարծիքները...
+          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+            {[1, 2].map((i) => (
+              <div key={i} className="skeleton-card" style={{ padding: "1.75rem" }}>
+                <div style={{ display: "flex", gap: "1rem", alignItems: "center", marginBottom: "1rem" }}>
+                  <Skeleton width="48px" height="48px" borderRadius="50%" />
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+                    <Skeleton width="180px" height="1.1rem" borderRadius="0.3rem" />
+                    <Skeleton width="130px" height="0.8rem" borderRadius="0.25rem" />
+                  </div>
+                </div>
+                <Skeleton width="96%" height="1rem" borderRadius="0.3rem" style={{ marginBottom: "0.4rem" }} />
+                <Skeleton width="75%" height="1rem" borderRadius="0.3rem" />
+              </div>
+            ))}
           </div>
         ) : expertOpinions.length === 0 ? (
           <div
@@ -1077,6 +1089,7 @@ export default function DialogueTopicDetailView({ initialTopic }: Props) {
 
                     {/* Quote / Opinion text */}
                     <blockquote
+                      title={exp.quote}
                       style={{
                         margin: "0 0 1rem 0",
                         padding: "0.85rem 1rem",
@@ -1087,6 +1100,12 @@ export default function DialogueTopicDetailView({ initialTopic }: Props) {
                         color: "var(--text-primary)",
                         lineHeight: "1.7",
                         fontSize: "0.98rem",
+                        display: "-webkit-box",
+                        WebkitLineClamp: 3,
+                        WebkitBoxOrient: "vertical",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        wordBreak: "break-word",
                       }}
                     >
                       {exp.quote}
@@ -1312,8 +1331,27 @@ export default function DialogueTopicDetailView({ initialTopic }: Props) {
 
         {/* Comments & Replies List */}
         {loadingComments ? (
-          <div style={{ textAlign: "center", padding: "3rem", color: "var(--text-secondary)" }}>
-            Բեռնվում են կարծիքները...
+          <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+            {[1, 2].map((i) => (
+              <div
+                key={i}
+                className="skeleton-card"
+                style={{
+                  padding: "1.75rem",
+                  borderLeft: "4px solid var(--gold-accent)",
+                }}
+              >
+                <div style={{ display: "flex", gap: "0.75rem", alignItems: "center", marginBottom: "0.85rem" }}>
+                  <Skeleton width="38px" height="38px" borderRadius="50%" />
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
+                    <Skeleton width="140px" height="1rem" borderRadius="0.3rem" />
+                    <Skeleton width="90px" height="0.75rem" borderRadius="0.25rem" />
+                  </div>
+                </div>
+                <Skeleton width="98%" height="0.95rem" borderRadius="0.3rem" style={{ marginBottom: "0.4rem" }} />
+                <Skeleton width="85%" height="0.95rem" borderRadius="0.3rem" />
+              </div>
+            ))}
           </div>
         ) : rootComments.length === 0 ? (
           <div
@@ -1375,24 +1413,11 @@ export default function DialogueTopicDetailView({ initialTopic }: Props) {
                       marginBottom: "0.85rem",
                     }}
                   >
-                    <div
-                      style={{
-                        width: "38px",
-                        height: "38px",
-                        borderRadius: "50%",
-                        background: "rgba(183, 121, 31, 0.15)",
-                        color: "var(--gold-accent)",
-                        border: "1px solid var(--gold-accent)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: "1rem",
-                        fontWeight: "bold",
-                        flexShrink: 0,
-                      }}
-                    >
-                      {comment.authorName.charAt(0).toUpperCase()}
-                    </div>
+                    <MemberAvatar
+                      name={comment.authorName}
+                      size={38}
+                      glow={comment.authorRole === "scholar" || comment.authorRole === "admin"}
+                    />
 
                     <div>
                       <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
@@ -1626,9 +1651,7 @@ export default function DialogueTopicDetailView({ initialTopic }: Props) {
                                 marginBottom: "0.4rem",
                               }}
                             >
-                              <span style={{ fontSize: "0.85rem", color: "var(--gold-accent)" }}>
-                                ↩
-                              </span>
+                              <MemberAvatar name={reply.authorName} size={24} />
                               <strong style={{ fontSize: "0.9rem", color: "var(--text-primary)" }}>
                                 {reply.authorName}
                               </strong>

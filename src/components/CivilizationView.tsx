@@ -13,6 +13,9 @@ import { useEditMode } from "@/context/EditModeContext";
 import EditableText from "@/components/cms/EditableText";
 import EditCardModal from "@/components/cms/EditCardModal";
 import { getCivilizationContent } from "@/lib/contentService";
+import SingleCivilizationLoading from "@/app/civilizations/[slug]/loading";
+import { MemberAvatarStack, MemberChip, MemberAvatar } from "@/components/ui/MemberCard";
+import { AutoTruncateQuote } from "@/components/ui/AutoTruncateQuote";
 
 interface Props {
   civilization: Civilization;
@@ -20,6 +23,7 @@ interface Props {
 
 export default function CivilizationView({ civilization: initialCiv }: Props) {
   const [civ, setCiv] = useState<Civilization>(initialCiv);
+  const [loading, setLoading] = useState(true);
   const {
     isEditMode,
     toggleEditMode,
@@ -51,11 +55,17 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
   // Sync latest from Firestore on mount
   useEffect(() => {
     let isMounted = true;
-    getCivilizationContent(initialCiv.id).then((data) => {
-      if (isMounted && data) {
-        setCiv(data);
-      }
-    });
+    getCivilizationContent(initialCiv.id)
+      .then((data) => {
+        if (isMounted) {
+          if (data) setCiv(data);
+          setLoading(false);
+        }
+      })
+      .catch((err) => {
+        console.error("Error loading civilization from Firestore:", err);
+        if (isMounted) setLoading(false);
+      });
     return () => {
       isMounted = false;
     };
@@ -193,6 +203,10 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
       (p.year && String(p.year).includes(q))
     );
   });
+
+  if (loading) {
+    return <SingleCivilizationLoading />;
+  }
 
   return (
     <main className="subpage-container">
@@ -669,25 +683,61 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
 
                     {(() => {
                       const pubCount = center.publications?.length || 0;
-                      const authorCount = new Set([
-                        ...(center.authorIds || []),
-                        ...(center.authors || []).map((a) => a.id),
-                      ]).size;
+                      // Resolve actual author objects
+                      const authorMap = new Map<string, Thinker>();
+                      (center.authors || []).forEach((a) => {
+                        if (a && a.name) authorMap.set(a.id, a);
+                      });
+                      (center.authorIds || []).forEach((id) => {
+                        const found = (civ.authors || []).find((a) => a.id.toLowerCase() === id.toLowerCase());
+                        if (found) authorMap.set(found.id, found);
+                      });
+                      const centerAuthors = Array.from(authorMap.values());
 
-                      if (pubCount === 0 && authorCount === 0) return null;
+                      if (pubCount === 0 && centerAuthors.length === 0) return null;
 
                       return (
-                        <div style={{ display: "flex", gap: "0.8rem", alignItems: "center", marginBottom: "0.8rem", fontSize: "0.82rem", color: "var(--text-secondary)" }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            gap: "0.8rem",
+                            marginBottom: "1rem",
+                            paddingTop: "0.6rem",
+                            borderTop: "1px solid var(--card-border)",
+                            flexWrap: "wrap",
+                          }}
+                        >
+                          {centerAuthors.length > 0 ? (
+                            <MemberAvatarStack
+                              members={centerAuthors}
+                              max={3}
+                              size={28}
+                              showLabel={true}
+                              labelSingular="գիտաշխատող"
+                              labelPlural="գիտաշխատողներ"
+                            />
+                          ) : (
+                            <div />
+                          )}
+
                           {pubCount > 0 && (
-                            <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
+                            <span
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "0.35rem",
+                                fontSize: "0.78rem",
+                                color: "var(--text-secondary)",
+                                background: "var(--input-bg)",
+                                padding: "0.2rem 0.55rem",
+                                borderRadius: "999px",
+                                border: "1px solid var(--card-border)",
+                              }}
+                            >
                               <span>📄</span>
                               <span>{pubCount} աշխատություն</span>
-                            </span>
-                          )}
-                          {authorCount > 0 && (
-                            <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
-                              <span>🖋</span>
-                              <span>{authorCount} հեղինակ</span>
                             </span>
                           )}
                         </div>
@@ -856,9 +906,7 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
                   )}
 
                   <div className="author-header-flex">
-                    <div className="author-avatar" aria-hidden="true">
-                      {author.name ? author.name.charAt(0) : "M"}
-                    </div>
+                    <MemberAvatar name={author.name} size={64} glow />
                     <div style={{ paddingRight: isEditMode ? "140px" : "0" }}>
                       <h3 className="author-name">
                         <Link href={`/authors/${author.id}`} style={{ color: "inherit", textDecoration: "none" }}>
@@ -912,9 +960,11 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
                   <p className="author-bio">{author.bio}</p>
 
                   {author.quote && (
-                    <div className="author-quote-box">
-                      {author.quote}
-                    </div>
+                    <AutoTruncateQuote
+                      quote={author.quote}
+                      className="author-quote-box"
+                      lineHeightPx={22}
+                    />
                   )}
 
                   {/* Publications section: Show only 1 key work */}

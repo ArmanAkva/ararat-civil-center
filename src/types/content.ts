@@ -55,13 +55,21 @@ export interface ExpertResponse {
 }
 
 export interface DialoguePageContent {
-  activeTopic: DialogueTopic;
-  expertResponses: ExpertResponse[];
-  publicFeed: Array<{
+  heroBadge?: string;
+  heroTitle?: string;
+  heroDescription?: string;
+  kpiPublishedLabel?: string;
+  kpiActiveLabel?: string;
+  kpiCommentsLabel?: string;
+  kpiExpertsLabel?: string;
+  suggestButtonText?: string;
+  activeTopic?: DialogueTopic;
+  expertResponses?: ExpertResponse[];
+  publicFeed?: Array<{
     author: string;
     text: string;
   }>;
-  archiveTopics: string[];
+  archiveTopics?: string[];
 }
 
 export interface ForumAgendaItem {
@@ -130,6 +138,26 @@ export interface ForumPageContent {
   organizerOwner?: ForumOrganizer;
   organizers?: ForumOrganizer[];
   suggestions?: ForumSuggestion[];
+}
+
+export interface FooterContent {
+  callToActionEyebrow?: string;
+  callToActionTitle: string;
+  callToActionDesc: string;
+  callToActionQuote: string;
+  callToActionBtn1?: string;
+  callToActionBtn2?: string;
+  brandName?: string;
+  brandTagline?: string;
+  navTitle?: string;
+  valuesTitle?: string;
+  valueItem1?: string;
+  valueItem2?: string;
+  valueItem3?: string;
+  valueItem4?: string;
+  copyrightText?: string;
+  linkContactText?: string;
+  linkCharterText?: string;
 }
 
 

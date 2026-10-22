@@ -4,6 +4,20 @@ import React, { useState, useEffect, useMemo, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
+import { useEditMode } from "@/context/EditModeContext";
+import EditableText from "@/components/cms/EditableText";
+import DialogueLoading from "./loading";
+import {
+  PageHeaderSkeleton,
+  StatsBarSkeleton,
+  FilterBarSkeleton,
+  TopicGridSkeleton,
+} from "@/components/ui/Skeleton";
+import { getPageContent } from "@/lib/contentService";
+
+export const dynamic = "force-dynamic";
+import { defaultDialogueContent } from "@/lib/defaultSiteContent";
+import { DialoguePageContent } from "@/types/content";
 import { DialogueTopicItem } from "@/types/dialogue";
 import { getAllCivilCenters } from "@/lib/civilizationsData";
 import {
@@ -16,17 +30,24 @@ import {
 } from "@/lib/dialogueService";
 import PersonWithLoupeIcon from "@/components/icons/PersonWithLoupeIcon";
 import TopicStatusIconBadge from "@/components/dialogue/TopicStatusIconBadge";
+import { MemberChip } from "@/components/ui/MemberCard";
+
 function DialogueHubContent() {
   const router = useRouter();
 
   const { user, profile, role, isAdmin, isSuperAdmin } = useAuth();
+  const { isEditMode, savePageField } = useEditMode();
 
   // Civil Centers List for optional selection
   const civilCenters = useMemo(() => getAllCivilCenters(), []);
 
+  // Page Content State (Editable via CMS)
+  const [content, setContent] = useState<DialoguePageContent | null>(null);
+  const [loadingContent, setLoadingContent] = useState(true);
+
   // Topics State
   const [topics, setTopics] = useState<DialogueTopicItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingTopics, setLoadingTopics] = useState(true);
 
   // Search & Filtering State
   const [searchQuery, setSearchQuery] = useState("");
@@ -60,19 +81,43 @@ function DialogueHubContent() {
 
   // Fetch topics on mount
   const fetchTopics = async () => {
-    setLoading(true);
+    setLoadingTopics(true);
     try {
       const list = await getDialogueTopics();
       setTopics(list);
     } catch (err) {
       console.error("Error loading dialogue topics:", err);
     } finally {
-      setLoading(false);
+      setLoadingTopics(false);
     }
   };
 
   useEffect(() => {
+    let isMounted = true;
     fetchTopics();
+
+    setLoadingContent(true);
+    getPageContent<DialoguePageContent>("dialogue", defaultDialogueContent)
+      .then((data) => {
+        if (isMounted) {
+          setContent(data || defaultDialogueContent);
+        }
+      })
+      .catch((err) => {
+        console.error("Error loading dialogue content:", err);
+        if (isMounted) {
+          setContent(defaultDialogueContent);
+        }
+      })
+      .finally(() => {
+        if (isMounted) {
+          setLoadingContent(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Extract unique category tags
@@ -350,6 +395,24 @@ function DialogueHubContent() {
     setSortBy("recent");
   };
 
+  if (loadingContent || loadingTopics || !content) {
+    return (
+      <main className="container" style={{ paddingBottom: "6rem", maxWidth: "1200px" }}>
+        {/* Hero Header Skeleton */}
+        <PageHeaderSkeleton hasBadge maxWidth="880px" />
+
+        {/* KPI Stats Bar Skeleton */}
+        <StatsBarSkeleton count={4} />
+
+        {/* Search & Filter Bar Skeleton */}
+        <FilterBarSkeleton />
+
+        {/* Topics Grid Skeleton */}
+        <TopicGridSkeleton count={6} />
+      </main>
+    );
+  }
+
   return (
     <main className="container" style={{ paddingBottom: "6rem", maxWidth: "1200px" }}>
       {/* Toast Alert */}
@@ -387,20 +450,29 @@ function DialogueHubContent() {
           margin: "0 auto",
         }}
       >
-        <span
-          style={{
-            display: "inline-block",
-            fontSize: "0.85rem",
-            fontWeight: "700",
-            letterSpacing: "0.15em",
-            textTransform: "uppercase",
-            color: "var(--gold-accent)",
-            marginBottom: "0.75rem",
-          }}
-        >
-          Արարատյան Կենտրոն · Փիլիսոփայական Ֆորում
-        </span>
-        <h1
+        <div style={{ display: "inline-block", marginBottom: "0.75rem" }}>
+          <EditableText
+            tag="span"
+            label="Էջի Տիտղոս / Բեյջ (Eyebrow)"
+            value={content.heroBadge || defaultDialogueContent.heroBadge || "Արարատյան Կենտրոն · Փիլիսոփայական Ֆորում"}
+            style={{
+              display: "inline-block",
+              fontSize: "0.85rem",
+              fontWeight: "700",
+              letterSpacing: "0.15em",
+              textTransform: "uppercase",
+              color: "var(--gold-accent)",
+            }}
+            onSave={async (val) => {
+              setContent((prev) => ({ ...prev, heroBadge: val }));
+              await savePageField("dialogue", "heroBadge", val);
+            }}
+          />
+        </div>
+        <EditableText
+          tag="h1"
+          label="Էջի Գլխավոր Վերնագիր"
+          value={content.heroTitle || defaultDialogueContent.heroTitle || "Քաղաքակրթական Երկխոսություն & Հարցադրումներ"}
           style={{
             fontFamily: "var(--font-serif)",
             fontSize: "clamp(2rem, 4vw, 3rem)",
@@ -409,10 +481,16 @@ function DialogueHubContent() {
             color: "var(--text-primary)",
             marginBottom: "1rem",
           }}
-        >
-          Քաղաքակրթական Երկխոսություն & Հարցադրումներ
-        </h1>
-        <p
+          onSave={async (val) => {
+            setContent((prev) => ({ ...prev, heroTitle: val }));
+            await savePageField("dialogue", "heroTitle", val);
+          }}
+        />
+        <EditableText
+          tag="p"
+          multiline
+          label="Էջի Նկարագրություն"
+          value={content.heroDescription || defaultDialogueContent.heroDescription || ""}
           style={{
             fontSize: "1.05rem",
             lineHeight: "1.7",
@@ -420,11 +498,11 @@ function DialogueHubContent() {
             margin: "0 auto 2rem auto",
             maxWidth: "760px",
           }}
-        >
-          Բաց փիլիսոփայական հարթակ արդի մարտահրավերների, արժեքային համակարգերի և
-          քաղաքակրթական ինքնության շուրջ։ Յուրաքանչյուր հարցադրում ունի իր առանձին քննարկման էջը,
-          որտեղ ներկայացված են փորձագիտական դիրքորոշումները և բաց երկխոսությունը։
-        </p>
+          onSave={async (val) => {
+            setContent((prev) => ({ ...prev, heroDescription: val }));
+            await savePageField("dialogue", "heroDescription", val);
+          }}
+        />
 
         {/* Stats KPI Cards Bar */}
         <div
@@ -453,9 +531,16 @@ function DialogueHubContent() {
             >
               {topics.filter((t) => t.status === "active" || t.status === "archived").length}
             </div>
-            <div style={{ fontSize: "0.82rem", color: "var(--text-secondary)", marginTop: "0.25rem" }}>
-              Հրապարակված Հարցադրումներ
-            </div>
+            <EditableText
+              tag="div"
+              label="KPI 1 Անվանում"
+              value={content.kpiPublishedLabel || defaultDialogueContent.kpiPublishedLabel || "Հրապարակված Հարցադրումներ"}
+              style={{ fontSize: "0.82rem", color: "var(--text-secondary)", marginTop: "0.25rem" }}
+              onSave={async (val) => {
+                setContent((prev) => ({ ...prev, kpiPublishedLabel: val }));
+                await savePageField("dialogue", "kpiPublishedLabel", val);
+              }}
+            />
           </div>
 
           <div
@@ -476,9 +561,16 @@ function DialogueHubContent() {
             >
               {activeCount}
             </div>
-            <div style={{ fontSize: "0.82rem", color: "var(--text-secondary)", marginTop: "0.25rem" }}>
-              Ակտիվ Բանավեճեր
-            </div>
+            <EditableText
+              tag="div"
+              label="KPI 2 Անվանում"
+              value={content.kpiActiveLabel || defaultDialogueContent.kpiActiveLabel || "Ակտիվ Բանավեճեր"}
+              style={{ fontSize: "0.82rem", color: "var(--text-secondary)", marginTop: "0.25rem" }}
+              onSave={async (val) => {
+                setContent((prev) => ({ ...prev, kpiActiveLabel: val }));
+                await savePageField("dialogue", "kpiActiveLabel", val);
+              }}
+            />
           </div>
 
           <div
@@ -499,9 +591,16 @@ function DialogueHubContent() {
             >
               {totalComments}
             </div>
-            <div style={{ fontSize: "0.82rem", color: "var(--text-secondary)", marginTop: "0.25rem" }}>
-              Գրանցված Կարծիքներ
-            </div>
+            <EditableText
+              tag="div"
+              label="KPI 3 Անվանում"
+              value={content.kpiCommentsLabel || defaultDialogueContent.kpiCommentsLabel || "Գրանցված Կարծիքներ"}
+              style={{ fontSize: "0.82rem", color: "var(--text-secondary)", marginTop: "0.25rem" }}
+              onSave={async (val) => {
+                setContent((prev) => ({ ...prev, kpiCommentsLabel: val }));
+                await savePageField("dialogue", "kpiCommentsLabel", val);
+              }}
+            />
           </div>
 
           <div
@@ -530,11 +629,21 @@ function DialogueHubContent() {
                 marginTop: "0.25rem",
                 display: "inline-flex",
                 alignItems: "center",
+                justifyContent: "center",
                 gap: "0.3rem",
               }}
             >
               <PersonWithLoupeIcon size={14} color="var(--gold-accent)" />
-              <span>Փորձագիտական Կարծիքներ</span>
+              <EditableText
+                tag="span"
+                label="KPI 4 Անվանում"
+                value={content.kpiExpertsLabel || defaultDialogueContent.kpiExpertsLabel || "Փորձագիտական Կարծիքներ"}
+                style={{ fontSize: "0.82rem", color: "var(--text-secondary)" }}
+                onSave={async (val) => {
+                  setContent((prev) => ({ ...prev, kpiExpertsLabel: val }));
+                  await savePageField("dialogue", "kpiExpertsLabel", val);
+                }}
+              />
             </div>
           </div>
         </div>
@@ -904,25 +1013,8 @@ function DialogueHubContent() {
       {/* ============================================================== */}
       {/* TOPIC CARDS GRID */}
       {/* ============================================================== */}
-      {loading ? (
-        <div
-          style={{
-            textAlign: "center",
-            padding: "5rem 0",
-            color: "var(--text-secondary)",
-          }}
-        >
-          <div
-            style={{
-              fontSize: "2rem",
-              marginBottom: "1rem",
-              animation: "pulse 1.5s infinite",
-            }}
-          >
-            🏛
-          </div>
-          <p>Բեռնվում են հարցադրումները...</p>
-        </div>
+      {loadingTopics ? (
+        <TopicGridSkeleton count={6} />
       ) : filteredTopics.length === 0 ? (
         <div
           className="glass-card"
@@ -1081,51 +1173,142 @@ function DialogueHubContent() {
 
 
 
-                  {/* Title */}
-                  <h3
-                    style={{
-                      fontFamily: "var(--font-serif)",
-                      fontSize: "1.25rem",
-                      fontWeight: "700",
-                      lineHeight: "1.4",
-                      color: "var(--text-primary)",
-                      marginBottom: "0.75rem",
-                      marginTop: 0,
-                      display: "-webkit-box",
-                      WebkitLineClamp: 3,
-                      WebkitBoxOrient: "vertical",
-                      overflow: "hidden",
-                    }}
-                  >
-                    <Link
-                      href={`/dialogue/${topic.id}`}
+                  {/* Edit mode card configuration button */}
+                  {isEditMode && (
+                    <div
                       style={{
-                        color: "inherit",
-                        textDecoration: "none",
-                        transition: "color 0.2s ease",
+                        display: "flex",
+                        justifyContent: "flex-end",
+                        marginBottom: "0.75rem",
                       }}
-                      onMouseEnter={(e) => (e.currentTarget.style.color = "var(--gold-accent)")}
-                      onMouseLeave={(e) => (e.currentTarget.style.color = "inherit")}
                     >
-                      {topic.title}
-                    </Link>
-                  </h3>
+                      <button
+                        type="button"
+                        onClick={(e) => handleOpenEditModal(topic, e)}
+                        style={{
+                          background: "rgba(183, 121, 31, 0.15)",
+                          color: "var(--gold-accent)",
+                          border: "1px solid var(--gold-accent)",
+                          borderRadius: "0.4rem",
+                          padding: "0.25rem 0.6rem",
+                          fontSize: "0.75rem",
+                          fontWeight: "600",
+                          cursor: "pointer",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "0.3rem",
+                        }}
+                        title={`Խմբագրել հարցադրման բոլոր դաշտերը (${topic.number})`}
+                      >
+                        ⚙️ Բոլոր դաշտերը (Կարգավիճակ, Թեգ, Ամսաթիվ...)
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Title */}
+                  {isEditMode ? (
+                    <div style={{ marginBottom: "0.75rem" }}>
+                      <EditableText
+                        tag="h3"
+                        label={`Հարցադրման Վերնագիր (${topic.number})`}
+                        value={topic.title}
+                        style={{
+                          fontFamily: "var(--font-serif)",
+                          fontSize: "1.25rem",
+                          fontWeight: "700",
+                          lineHeight: "1.4",
+                          color: "var(--text-primary)",
+                          margin: 0,
+                        }}
+                        onSave={async (val) => {
+                          await updateDialogueTopic(topic.id, { title: val });
+                          setTopics((prev) =>
+                            prev.map((t) => (t.id === topic.id ? { ...t, title: val } : t))
+                          );
+                          showToast("success", "✓ Հարցադրման վերնագիրը թարմացվեց:");
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    <h3
+                      style={{
+                        fontFamily: "var(--font-serif)",
+                        fontSize: "1.25rem",
+                        fontWeight: "700",
+                        lineHeight: "1.4",
+                        color: "var(--text-primary)",
+                        marginBottom: "0.75rem",
+                        marginTop: 0,
+                        display: "-webkit-box",
+                        WebkitLineClamp: 3,
+                        WebkitBoxOrient: "vertical",
+                        overflow: "hidden",
+                      }}
+                    >
+                      <Link
+                        href={`/dialogue/${topic.id}`}
+                        style={{
+                          color: "inherit",
+                          textDecoration: "none",
+                          transition: "color 0.2s ease",
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.color = "var(--gold-accent)")}
+                        onMouseLeave={(e) => (e.currentTarget.style.color = "inherit")}
+                      >
+                        {topic.title}
+                      </Link>
+                    </h3>
+                  )}
 
                   {/* Description preview */}
-                  <p
-                    style={{
-                      fontSize: "0.9rem",
-                      lineHeight: "1.6",
-                      color: "var(--text-secondary)",
-                      marginBottom: "1.25rem",
-                      display: "-webkit-box",
-                      WebkitLineClamp: 3,
-                      WebkitBoxOrient: "vertical",
-                      overflow: "hidden",
-                    }}
-                  >
-                    {topic.description}
-                  </p>
+                  {isEditMode ? (
+                    <div style={{ marginBottom: "1.25rem" }}>
+                      <EditableText
+                        tag="p"
+                        multiline
+                        label={`Հարցադրման Նկարագրություն (${topic.number})`}
+                        value={topic.description}
+                        title={topic.description}
+                        style={{
+                          fontSize: "0.9rem",
+                          lineHeight: "1.6",
+                          color: "var(--text-secondary)",
+                          margin: 0,
+                          display: "-webkit-box",
+                          WebkitLineClamp: 3,
+                          WebkitBoxOrient: "vertical",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          wordBreak: "break-word",
+                        }}
+                        onSave={async (val) => {
+                          await updateDialogueTopic(topic.id, { description: val });
+                          setTopics((prev) =>
+                            prev.map((t) => (t.id === topic.id ? { ...t, description: val } : t))
+                          );
+                          showToast("success", "✓ Հարցադրման նկարագրությունը թարմացվեց:");
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    <p
+                      title={topic.description}
+                      style={{
+                        fontSize: "0.9rem",
+                        lineHeight: "1.6",
+                        color: "var(--text-secondary)",
+                        marginBottom: "1.25rem",
+                        display: "-webkit-box",
+                        WebkitLineClamp: 3,
+                        WebkitBoxOrient: "vertical",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        wordBreak: "break-word",
+                      }}
+                    >
+                      {topic.description}
+                    </p>
+                  )}
                 </div>
 
                 {/* Details / Stats Bar */}
@@ -1219,20 +1402,13 @@ function DialogueHubContent() {
                       </span>
                     )}
 
-                    {/* Author */}
+                    {/* Author Member Chip */}
                     {topic.authorName && (
-                      <span
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: "0.35rem",
-                          color: "var(--text-secondary)",
-                          padding: "0.25rem 0.4rem",
-                        }}
-                      >
-                        <span>👤</span>
-                        <span>{topic.authorName}</span>
-                      </span>
+                      <MemberChip
+                        name={topic.authorName}
+                        role={topic.authorRole}
+                        size="sm"
+                      />
                     )}
                   </div>
 
@@ -2050,13 +2226,7 @@ function DialogueHubContent() {
 
 export default function DialogueHubPage() {
   return (
-    <Suspense
-      fallback={
-        <main className="container" style={{ textAlign: "center", padding: "5rem 0" }}>
-          <p style={{ color: "var(--text-secondary)" }}>Բեռնվում է երկխոսության հարթակը...</p>
-        </main>
-      }
-    >
+    <Suspense fallback={<DialogueLoading />}>
       <DialogueHubContent />
     </Suspense>
   );

@@ -5,6 +5,9 @@ import {
   civilizationsData,
   getCivilizationBySlug,
 } from "@/lib/civilizationsData";
+import { getCivilizationContent } from "@/lib/contentService";
+
+export const dynamic = "force-dynamic";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -47,5 +50,7 @@ export default async function HubCivilizationPage({ params }: PageProps) {
     notFound();
   }
 
-  return <CivilizationView civilization={civ} />;
+  const liveCiv = await getCivilizationContent(civ.id);
+
+  return <CivilizationView civilization={liveCiv || civ} />;
 }

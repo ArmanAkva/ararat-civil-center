@@ -30,6 +30,8 @@ import ForumManifestoProposalModal from "@/components/forum/ForumManifestoPropos
 import ForumCommentModal from "@/components/forum/ForumCommentModal";
 import ForumOwnerModal from "@/components/forum/ForumOwnerModal";
 import ForumOrganizerModal from "@/components/forum/ForumOrganizerModal";
+import ForumLoading from "./loading";
+import { MemberAvatarStack } from "@/components/ui/MemberCard";
 
 function formatDate(dateStr?: string): string {
   if (!dateStr) return "";
@@ -85,8 +87,11 @@ const STATIC_INITIAL_COUNTDOWN: CountdownValues = {
   formatted: "277 : 00 : 00 : 00",
 };
 
+export const dynamic = "force-dynamic";
+
 export default function Forum() {
   const [content, setContent] = useState<ForumPageContent>(defaultForumContent);
+  const [loadingContent, setLoadingContent] = useState(true);
   const [suggestions, setSuggestions] = useState<ForumSuggestion[]>(
     defaultForumContent.suggestions || []
   );
@@ -164,11 +169,20 @@ export default function Forum() {
     let isMounted = true;
 
     // Load page content
-    getPageContent<ForumPageContent>("forum", defaultForumContent).then((data) => {
-      if (isMounted && data) {
-        setContent(data);
-      }
-    });
+    getPageContent<ForumPageContent>("forum", defaultForumContent)
+      .then((data) => {
+        if (isMounted) {
+          setContent(data || defaultForumContent);
+          setLoadingContent(false);
+        }
+      })
+      .catch((err) => {
+        console.error("Error loading forum content:", err);
+        if (isMounted) {
+          setContent(defaultForumContent);
+          setLoadingContent(false);
+        }
+      });
 
     // Load forum suggestions
     getForumSuggestions().then((items) => {
@@ -393,6 +407,10 @@ export default function Forum() {
     if (suggestionFilter === "all") return true;
     return s.type === suggestionFilter;
   });
+
+  if (loadingContent || !content) {
+    return <ForumLoading />;
+  }
 
   const owner = content.organizerOwner || defaultForumContent.organizerOwner;
   const organizersList = content.organizers || defaultForumContent.organizers || [];
@@ -1489,9 +1507,20 @@ export default function Forum() {
               </p>
             )}
 
-            <p style={{ margin: 0, fontSize: "0.92rem", color: "var(--text-secondary)" }}>
+            <p style={{ margin: "0 0 0.85rem 0", fontSize: "0.92rem", color: "var(--text-secondary)" }}>
               Կազմկոմիտեն ներառում է {organizersList.length} անդամներ (գիտական քարտուղարություն, միջազգային հարաբերություններ, լոգիստիկա և թվային հարթակ)։
             </p>
+
+            {organizersList.length > 0 && (
+              <MemberAvatarStack
+                members={organizersList}
+                max={4}
+                size={32}
+                showLabel={true}
+                labelSingular="համակարգող"
+                labelPlural="համակարգողներ"
+              />
+            )}
           </div>
 
           <div style={{ display: "flex", gap: "0.75rem", alignItems: "center", flexWrap: "wrap" }}>

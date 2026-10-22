@@ -9,6 +9,7 @@ import { useEditMode } from "@/context/EditModeContext";
 import { useAuth } from "@/context/AuthContext";
 import ForumOwnerModal from "@/components/forum/ForumOwnerModal";
 import ForumOrganizerModal from "@/components/forum/ForumOrganizerModal";
+import { MemberAvatar } from "@/components/ui/MemberCard";
 
 export default function ForumOrganizersPage() {
   const [content, setContent] = useState<ForumPageContent>(defaultForumContent);
@@ -257,20 +258,12 @@ export default function ForumOrganizersPage() {
             }}
           >
             <div style={{ display: "flex", gap: "1.75rem", alignItems: "center", flexWrap: "wrap" }}>
-              <div
-                className="forum-organizer-avatar"
-                style={{ width: "95px", height: "95px", fontSize: "2.2rem" }}
-              >
-                {owner.photoURL ? (
-                  <img
-                    src={owner.photoURL}
-                    alt={owner.name}
-                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                  />
-                ) : (
-                  <span>👑</span>
-                )}
-              </div>
+              <MemberAvatar
+                name={owner.name}
+                photoURL={owner.photoURL}
+                size={88}
+                glow
+              />
 
               <div>
                 <div
@@ -550,21 +543,12 @@ export default function ForumOrganizersPage() {
                 )}
 
                 <div style={{ display: "flex", gap: "1rem", alignItems: "center", marginBottom: "1rem" }}>
-                  <div className="forum-organizer-avatar">
-                    {member.photoURL ? (
-                      <img
-                        src={member.photoURL}
-                        alt={member.name}
-                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                      />
-                    ) : (
-                      member.name
-                        .split(" ")
-                        .map((n) => n[0])
-                        .slice(0, 2)
-                        .join("")
-                    )}
-                  </div>
+                  <MemberAvatar
+                    name={member.name}
+                    photoURL={member.photoURL}
+                    size={58}
+                    glow
+                  />
 
                   <div>
                     <h3 style={{ margin: 0, fontSize: "1.15rem", color: "var(--text-primary)" }}>

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { UserProfile, UserRole, USER_ROLES } from "@/types/auth";
 import { getAllUsers, updateUserRole } from "@/lib/authService";
+import { MemberAvatar } from "@/components/ui/MemberCard";
 
 export default function AdminUsersPage() {
   const { user, role, isAdmin, isSuperAdmin, loading: authLoading } = useAuth();
@@ -246,23 +247,12 @@ export default function AdminUsersPage() {
                     {/* User display */}
                     <td style={{ padding: "1rem 0.85rem" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                        <div
-                          style={{
-                            width: "40px",
-                            height: "40px",
-                            borderRadius: "50%",
-                            background: uRoleConfig.badgeBg,
-                            border: `1px solid ${uRoleConfig.badgeBorder}`,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            color: uRoleConfig.badgeColor,
-                            fontWeight: "bold",
-                            fontSize: "1rem",
-                          }}
-                        >
-                          {(u.displayName || u.email || "U").charAt(0).toUpperCase()}
-                        </div>
+                        <MemberAvatar
+                          name={u.displayName || u.email || "Անդամ"}
+                          photoURL={u.photoURL}
+                          size={40}
+                          glow={u.role === "super-admin" || u.role === "admin"}
+                        />
                         <div>
                           <div style={{ fontWeight: "600", color: "var(--text-primary)" }}>
                             {u.displayName || "Անանուն"}
