@@ -1317,3 +1317,38 @@ export function getAllCivilCenters(): CivilCenterOption[] {
   }
   return list;
 }
+
+export interface ThinkerOption {
+  id: string;
+  name: string;
+  nameOriginal?: string;
+  title: string;
+  bio?: string;
+  quote?: string;
+  civName: string;
+  civSymbol: string;
+  civSlug: string;
+}
+
+export function getAllThinkersOptions(): ThinkerOption[] {
+  const list: ThinkerOption[] = [];
+  for (const civ of civilizationsData) {
+    if (civ.authors) {
+      for (const a of civ.authors) {
+        list.push({
+          id: a.id,
+          name: a.name,
+          nameOriginal: a.nameOriginal,
+          title: a.title,
+          bio: a.bio,
+          quote: a.quote,
+          civName: civ.nameHy,
+          civSymbol: civ.symbol,
+          civSlug: civ.slug,
+        });
+      }
+    }
+  }
+  return list;
+}
+

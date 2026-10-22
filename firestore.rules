@@ -92,12 +92,23 @@ service cloud.firestore {
         allow create: if true;
         allow update, delete: if isAdmin() || (isAuthenticated() && resource != null && request.auth.uid == resource.data.authorUid);
       }
+
+      // Expert Opinions Subcollection
+      match /expert_opinions/{opinionId} {
+        allow read: if true;
+        allow create: if isAdmin() || (isAuthenticated() && getUserData().role == 'scholar');
+        allow update, delete: if isAdmin() || (isAuthenticated() && resource != null && request.auth.uid == resource.data.authorUid);
+      }
     }
 
-    // Collection Group queries across all dialogues' comments
+    // Collection Group queries across all dialogues' comments and expert opinions
     match /{path=**}/comments/{commentId} {
       allow read: if true;
     }
+    match /{path=**}/expert_opinions/{opinionId} {
+      allow read: if true;
+    }
+
 
     // Legacy Dialogue Topics (compatibility)
     match /dialogue_topics/{topicId} {

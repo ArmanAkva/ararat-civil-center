@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="hy">
+<head>
+  <meta charset="UTF-8">
+  <title>Ararat Civil Center | Ադմինիստրատորի Ուղեցույց</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Noto+Sans+Armenian:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    @page {
+      size: A4;
+      margin: 18mm 16mm 20mm 16mm;
+      @bottom-right {
+        content: counter(page);
+        font-family: 'Inter', sans-serif;
+        font-size: 8pt;
+        color: #64748b;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    body {
+      font-family: 'Noto Sans Armenian', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: #0f172a;
+      background: #ffffff;
+      line-height: 1.65;
+      font-size: 10pt;
+      margin: 0;
+      padding: 0;
+    }
+
+    .doc-header {
+      border-bottom: 2px solid #c9a84c;
+      padding-bottom: 12px;
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .doc-badge {
+      font-family: 'Cinzel', serif;
+      font-size: 11pt;
+      font-weight: 700;
+      color: #b38938;
+      letter-spacing: 0.08em;
+    }
+
+    .doc-date {
+      font-size: 8.5pt;
+      color: #64748b;
+      font-family: 'Inter', sans-serif;
+    }
+
+    h1 {
+      font-family: 'Noto Sans Armenian', 'Cinzel', serif;
+      font-size: 19pt;
+      font-weight: 700;
+      color: #0f172a;
+      line-height: 1.3;
+      margin-top: 0;
+      margin-bottom: 16px;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 8px;
+    }
+
+    h2 {
+      font-family: 'Noto Sans Armenian', 'Cinzel', serif;
+      font-size: 13pt;
+      font-weight: 700;
+      color: #1e293b;
+      margin-top: 22px;
+      margin-bottom: 10px;
+      border-left: 3.5px solid #c9a84c;
+      padding-left: 9px;
+      page-break-after: avoid;
+    }
+
+    h3 {
+      font-size: 11pt;
+      font-weight: 600;
+      color: #334155;
+      margin-top: 14px;
+      margin-bottom: 6px;
+      page-break-after: avoid;
+    }
+
+    p, li {
+      color: #1e293b;
+      font-size: 9.8pt;
+    }
+
+    ul, ol {
+      padding-left: 20px;
+      margin-top: 6px;
+      margin-bottom: 10px;
+    }
+
+    li {
+      margin-bottom: 4px;
+    }
+
+    strong {
+      color: #0f172a;
+      font-weight: 600;
+    }
+
+    a {
+      color: #b38938;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    code {
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      font-size: 8.5pt;
+      background: #f1f5f9;
+      color: #0f172a;
+      padding: 1.5px 5px;
+      border-radius: 4px;
+      border: 1px solid #e2e8f0;
+    }
+
+    pre code {
+      display: block;
+      padding: 8px 12px;
+      background: #0f172a;
+      color: #f8fafc;
+      border-radius: 6px;
+      overflow-x: auto;
+      font-size: 8.5pt;
+    }
+
+    blockquote {
+      margin: 12px 0;
+      padding: 10px 14px;
+      background: #fdfbf7;
+      border-left: 4px solid #c9a84c;
+      color: #475569;
+      font-size: 9.5pt;
+      border-radius: 0 6px 6px 0;
+      page-break-inside: avoid;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14px 0;
+      font-size: 9pt;
+      page-break-inside: avoid;
+    }
+
+    th {
+      background: #0f172a;
+      color: #ffffff;
+      text-align: left;
+      padding: 8px 10px;
+      font-weight: 600;
+      border: 1px solid #0f172a;
+    }
+
+    td {
+      padding: 7px 10px;
+      border: 1px solid #cbd5e1;
+      vertical-align: top;
+    }
+
+    tr:nth-child(even) td {
+      background: #f8fafc;
+    }
+
+    hr {
+      border: none;
+      border-top: 1px solid #e2e8f0;
+      margin: 18px 0;
+    }
+
+    .footer-note {
+      margin-top: 28px;
+      padding-top: 10px;
+      border-top: 1px solid #e2e8f0;
+      font-size: 8pt;
+      color: #94a3b8;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="doc-header">
+    <div class="doc-badge">ARARAT CIVIL CENTER | ԱՐԱՐԱՏՅԱՆ ՖՈՐՈՒՄ</div>
+    <div class="doc-date">Վավերական՝ 2026 թ. | Պաշտոնական Ուղեցույց</div>
+  </div>
+
+  <h1>Ararat Civil Center | Ադմինիստրատորի և Բովանդակության Կառավարման Ուղեցույց (Admin Workflow Guide)</h1>
+<p>Սույն փաստաթուղթը նախատեսված է <strong>«Արարատյան Քաղաքակրթական Կենտրոն» (Ararat Civil Center)</strong> պլատֆորմի ադմինիստրատորների, խմբագիրների և մոդերատորների համար։ Այն մանրամասն ներկայացնում է, թե ինչպես մուտք գործել համակարգ, միացնել խմբագրման ռեժիմը (Edit Mode) և ավելացնել կամ թարմացնել կենտրոնները, հեղինակներին, գիտական աշխատություններն ու կայքի տեքստերը։</p>
+<hr>
+<h2>📑 Բովանդակություն</h2>
+<ol>
+<li><a href="#1-%D5%B0%D5%A1%D5%B4%D5%A1%D5%AF%D5%A1%D6%80%D5%A3%D5%AB-%D5%A8%D5%B6%D5%A4%D5%B0%D5%A1%D5%B6%D5%B8%D6%82%D6%80-%D5%AF%D5%A1%D5%BC%D5%B8%D6%82%D6%81%D5%BE%D5%A1%D5%AE%D6%84%D5%A8">Համակարգի Ընդհանուր Կառուցվածքը</a></li>
+<li><a href="#2-%D5%B4%D5%B8%D6%82%D5%BF%D6%84-%D5%B0%D5%A1%D5%B4%D5%A1%D5%AF%D5%A1%D6%80%D5%A3-%D6%87-%D5%AB%D6%80%D5%A1%D5%BE%D5%A1%D5%BD%D5%B8%D6%82%D5%A9%D5%B5%D5%B8%D6%82%D5%B6%D5%B6%D5%A5%D6%80%D5%AB-%D5%A4%D5%A5%D6%80%D5%A5%D6%80%D5%A8-roles">Մուտք Համակարգ և Իրավասությունների Դերերը (Roles)</a></li>
+<li><a href="#3-%D5%AD%D5%B4%D5%A2%D5%A1%D5%A3%D6%80%D5%B4%D5%A1%D5%B6-%D5%BC%D5%A5%D5%AA%D5%AB%D5%B4%D5%AB-%D5%B4%D5%AB%D5%A1%D6%81%D5%B8%D6%82%D5%B4-floating-admin-bar">Խմբագրման Ռեժիմի Միացում (Floating Admin Bar)</a></li>
+<li><a href="#4-%D5%A7%D5%BB%D5%A5%D6%80%D5%AB-%D5%BF%D5%A5%D6%84%D5%BD%D5%BF%D5%A5%D6%80%D5%AB-%D5%B8%D6%82%D5%B2%D5%AB%D5%B2-%D5%AD%D5%B4%D5%A2%D5%A1%D5%A3%D6%80%D5%B8%D6%82%D5%B4-inline-text-editing">Էջերի Տեքստերի Ուղիղ Խմբագրում (Inline Text Editing)</a></li>
+<li><a href="#5-%D5%B8%D6%82%D5%B2%D5%A5%D5%B2%D5%A1%D5%B5%D5%AB%D5%B6-%D5%AF%D5%A5%D5%B6%D5%BF%D6%80%D5%B8%D5%B6%D5%B6%D5%A5%D6%80%D5%AB-think-tanks--centers-%D5%AF%D5%A1%D5%BC%D5%A1%D5%BE%D5%A1%D6%80%D5%B8%D6%82%D5%B4">Ուղեղային Կենտրոնների (Think Tanks / Centers) Կառավարում</a></li>
+<li><a href="#6-%D5%B0%D5%A5%D5%B2%D5%AB%D5%B6%D5%A1%D5%AF%D5%B6%D5%A5%D6%80%D5%AB-%D6%87-%D5%B4%D5%BF%D5%A1%D5%AE%D5%B8%D5%B2%D5%B6%D5%A5%D6%80%D5%AB-authors--thinkers-%D5%AF%D5%A1%D5%BC%D5%A1%D5%BE%D5%A1%D6%80%D5%B8%D6%82%D5%B4">Հեղինակների և Մտածողների (Authors / Thinkers) Կառավարում</a></li>
+<li><a href="#7-%D5%A3%D5%AB%D5%BF%D5%A1%D5%AF%D5%A1%D5%B6-%D5%A1%D5%B7%D5%AD%D5%A1%D5%BF%D5%B8%D6%82%D5%A9%D5%B5%D5%B8%D6%82%D5%B6%D5%B6%D5%A5%D6%80%D5%AB-publications-%D5%AF%D5%A1%D5%BC%D5%A1%D5%BE%D5%A1%D6%80%D5%B8%D6%82%D5%B4-%D6%87-%D5%AF%D5%A1%D5%BA%D5%A1%D5%AF%D6%81%D5%B8%D6%82%D5%B4">Գիտական Աշխատությունների (Publications) Կառավարում և Կապակցում</a></li>
+<li><a href="#8-%D5%A2%D5%B8%D5%BE%D5%A1%D5%B6%D5%A4%D5%A1%D5%AF%D5%B8%D6%82%D5%A9%D5%B5%D5%A1%D5%B6-%D5%B8%D6%80%D5%A1%D5%AF%D5%AB-%D5%BD%D5%BF%D5%A1%D5%B6%D5%A4%D5%A1%D6%80%D5%BF%D5%B6%D5%A5%D6%80-content-standards">Բովանդակության Որակի Ստանդարտներ (Content Standards)</a></li>
+<li><a href="#9-%D5%B0%D5%A1%D5%B3%D5%A1%D5%AD-%D5%BF%D6%80%D5%BE%D5%B8%D5%B2-%D5%B0%D5%A1%D6%80%D6%81%D5%A5%D6%80-%D6%87-%D5%AD%D5%B6%D5%A4%D5%AB%D6%80%D5%B6%D5%A5%D6%80%D5%AB-%D5%AC%D5%B8%D6%82%D5%AE%D5%B8%D6%82%D5%B4-troubleshooting">Հաճախ Տրվող Հարցեր և Խնդիրների Լուծում (Troubleshooting)</a></li>
+</ol>
+<hr>
+<h2>1. Համակարգի Ընդհանուր Կառուցվածքը</h2>
+<p>Պլատֆորմը միավորում է <strong>8 համաշխարհային քաղաքակրթությունների</strong> մտավոր ժառանգությունը՝</p>
+<ul>
+<li>🇨🇳 Չինական քաղաքակրթություն</li>
+<li>🇦🇲 Հայկական քաղաքակրթություն</li>
+<li>🇷🇺 Ռուսական քաղաքակրթություն</li>
+<li>🇪🇺 Եվրոպական քաղաքակրթություն</li>
+<li>🇮🇷 Իրանական քաղաքակրթություն</li>
+<li>🇦🇪/🇪🇬 Արաբական քաղաքակրթություն</li>
+<li>🇬🇷 Հունական քաղաքակրթություն</li>
+<li>🇮🇳 Հնդկական քաղաքակրթություն</li>
+</ul>
+<p>Յուրաքանչյուր քաղաքակրթության ներքո առկա են <strong>երեք հիմնական ենթահավաքածուներ (Subcollections)</strong> Firestore-ում.</p>
+<ol>
+<li><strong>Կենտրոններ (<code>centers</code>)</strong> — առաջատար գիտահետազոտական ինստիտուտներ, ակադեմիաներ, վերլուծական կենտրոններ:</li>
+<li><strong>Հեղինակներ (<code>authors</code>)</strong> — դասական և ժամանակակից փիլիսոփաներ, գիտնականներ, մտածողներ:</li>
+<li><strong>Գիտական Աշխատություններ (<code>publications</code>)</strong> — հոդվածներ, մենագրություններ, հետազոտական զեկույցներ, PDF նյութեր:</li>
+</ol>
+<blockquote>
+<p><strong>Կարևոր առանձնահատկություն</strong>՝ Համակարգը աշխատում է <strong>Live Inline CMS</strong> տրամաբանությամբ: Ադմինիստրատորը կարիք չունի առանձին բարդ Admin Panel մտնելու. բովանդակությունը խմբագրվում է անմիջապես կայքի էջերում՝ տեսողական ռեժիմով (WYSIWYG) և վայրկյանական պահպանվում Cloud Firestore-ում:</p>
+</blockquote>
+<hr>
+<h2>2. Մուտք Համակարգ և Իրավասությունների Դերերը (Roles)</h2>
+<h3>Ինչպես մուտք գործել</h3>
+<ol>
+<li>Բացեք կայքի մուտքի էջը՝ <strong><code>/auth</code></strong> (կամ սեղմեք վերևի մենյուի «Մուտք» կոճակը):</li>
+<li>Մուտք գործեք Ձեր <strong>Google հաշվով</strong> կամ գրանցված <strong>էլ. փոստով և գաղտնաբառով</strong>:</li>
+<li>Մուտք գործելուց հետո համակարգը Ձեզ կուղղորդի պրոֆիլի կամ նախորդ էջ:</li>
+</ol>
+<h3>Դերերի տեսակները (User Roles)</h3>
+<ul>
+<li>👑 <strong><code>super-admin</code></strong> (Գլխավոր Ադմինիստրատոր) — ունի բացարձակ հասանելիություն: Կարող է փոխել այլ օգտատերերի դերերը (<code>/admin/users</code>), իրականացնել բազայի սկզբնական սինքրոնիզացիա (Seed) և ջնջել ցանկացած տվյալ:</li>
+<li>🛡️ <strong><code>admin</code></strong> (Ադմինիստրատոր) — կարող է միացնել Խմբագրման Ռեժիմը (Edit Mode), ավելացնել նոր կենտրոններ, հեղինակներ, աշխատություններ, խմբագրել տեքստերն ու կապերը:</li>
+<li>✍️ <strong><code>moderator</code></strong> (Խմբագիր / Մոդերատոր) — կարող է խմբագրել գոյություն ունեցող հոդվածներն ու տեքստերը:</li>
+<li>👤 <strong><code>member</code></strong> (Անդամ / Ընթերցող) — սովորական գրանցված օգտատեր, կարող է մասնակցել քննարկումներին, բայց չունի բովանդակությունը խմբագրելու իրավունք:</li>
+</ul>
+<h3>Ինչպես նոր օգտատիրոջը դարձնել Ադմին</h3>
+<p>Գլխավոր ադմինիստրատորը պետք է՝</p>
+<ol>
+<li>Անցնի <strong><code>/admin/users</code></strong> էջը:</li>
+<li>Գտնի նոր գրանցված օգտատիրոջը (կա որոնման դաշտ ըստ էլ. փոստի կամ անվան):</li>
+<li>Դերի ընտրացանկից (Dropdo
+
+  <div class="footer-note">
+    © 2026 Ararat Civil Center — Բոլոր իրավունքները պաշտպանված են: Սույն ուղեցույցը նախատեսված է միայն լիազորված անձնակազմի համար:
+  </div>
+</body>
+</html>

@@ -5,8 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { USER_ROLES } from "@/types/auth";
-import { DialogueTopicItem, DialogueComment } from "@/types/dialogue";
-import { getAllCivilCenters } from "@/lib/civilizationsData";
+import { DialogueTopicItem, DialogueComment, TopicExpertOpinion } from "@/types/dialogue";
+import { getAllCivilCenters, getAllThinkersOptions, ThinkerOption } from "@/lib/civilizationsData";
 import {
   getTopicComments,
   addDialogueComment,
@@ -15,8 +15,13 @@ import {
   deleteDialogueTopic,
   approveDialogueTopic,
   rejectDialogueTopic,
+  getTopicExpertOpinions,
+  addTopicExpertOpinion,
+  updateTopicExpertOpinion,
+  deleteTopicExpertOpinion,
 } from "@/lib/dialogueService";
 import PersonWithLoupeIcon from "@/components/icons/PersonWithLoupeIcon";
+import TopicStatusIconBadge from "@/components/dialogue/TopicStatusIconBadge";
 
 interface Props {
   initialTopic: DialogueTopicItem;
@@ -27,10 +32,34 @@ export default function DialogueTopicDetailView({ initialTopic }: Props) {
   const { user, profile, role, isAdmin } = useAuth();
 
   const civilCenters = useMemo(() => getAllCivilCenters(), []);
+  const thinkerOptions = useMemo(() => getAllThinkersOptions(), []);
 
   const [topic, setTopic] = useState<DialogueTopicItem>(initialTopic);
   const [comments, setComments] = useState<DialogueComment[]>([]);
   const [loadingComments, setLoadingComments] = useState(true);
+
+  // Expert Opinions State
+  const [expertOpinions, setExpertOpinions] = useState<TopicExpertOpinion[]>([]);
+  const [loadingExperts, setLoadingExperts] = useState(true);
+  const [isExpertModalOpen, setIsExpertModalOpen] = useState(false);
+  const [editingExpertOpinion, setEditingExpertOpinion] = useState<TopicExpertOpinion | null>(null);
+
+  // Expert Opinion Form State
+  const [expertFormThinkerId, setExpertFormThinkerId] = useState("");
+  const [expertFormName, setExpertFormName] = useState("");
+  const [expertFormCivilization, setExpertFormCivilization] = useState("");
+  const [expertFormTitle, setExpertFormTitle] = useState("");
+  const [expertFormQuote, setExpertFormQuote] = useState("");
+  const [expertFormFullText, setExpertFormFullText] = useState("");
+  const [expertFormSourceUrl, setExpertFormSourceUrl] = useState("");
+  const [savingExpert, setSavingExpert] = useState(false);
+
+  // Expandable full text state for opinions
+  const [expandedOpinions, setExpandedOpinions] = useState<Record<string, boolean>>({});
+
+  const toggleExpandOpinion = (opinionId: string) => {
+    setExpandedOpinions((prev) => ({ ...prev, [opinionId]: !prev[opinionId] }));
+  };
 
   // New Comment State
   const [newCommentText, setNewCommentText] = useState("");
@@ -57,12 +86,13 @@ export default function DialogueTopicDetailView({ initialTopic }: Props) {
   // Toast
   const [toast, setToast] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
+
   const showToast = (type: "success" | "error", text: string) => {
     setToast({ type, text });
     setTimeout(() => setToast(null), 4000);
   };
 
-  // Fetch comments on mount
+  // Fetch comments and expert opinions on mount
   useEffect(() => {
     let isMounted = true;
     setLoadingComments(true);
@@ -75,10 +105,21 @@ export default function DialogueTopicDetailView({ initialTopic }: Props) {
         if (isMounted) setLoadingComments(false);
       });
 
+    setLoadingExperts(true);
+    getTopicExpertOpinions(topic.id, topic.expertResponses)
+      .then((list) => {
+        if (isMounted) setExpertOpinions(list);
+      })
+      .catch((err) => console.error("Error loading expert opinions:", err))
+      .finally(() => {
+        if (isMounted) setLoadingExperts(false);
+      });
+
     return () => {
       isMounted = false;
     };
-  }, [topic.id]);
+  }, [topic.id, topic.expertResponses]);
+
 
   // Handle post comment
   const handleAddComment = async (e: React.FormEvent) => {
@@ -271,8 +312,109 @@ export default function DialogueTopicDetailView({ initialTopic }: Props) {
     }
   };
 
+  // Expert Opinions Handlers
+  const canManageExperts = isAdmin || role === "scholar";
+
+  const handleOpenAddExpertModal = () => {
+    setEditingExpertOpinion(null);
+    setExpertFormThinkerId("");
+    setExpertFormName("");
+    setExpertFormCivilization(topic.civilizationTag || "");
+    setExpertFormTitle("");
+    setExpertFormQuote("");
+    setExpertFormFullText("");
+    setExpertFormSourceUrl("");
+    setIsExpertModalOpen(true);
+  };
+
+  const handleOpenEditExpertModal = (op: TopicExpertOpinion) => {
+    setEditingExpertOpinion(op);
+    setExpertFormThinkerId("");
+    setExpertFormName(op.name);
+    setExpertFormCivilization(op.civilization);
+    setExpertFormTitle(op.title || "");
+    setExpertFormQuote(op.quote);
+    setExpertFormFullText(op.fullText || "");
+    setExpertFormSourceUrl(op.sourceUrl || "");
+    setIsExpertModalOpen(true);
+  };
+
+  const handleSelectThinker = (thinkerId: string) => {
+    setExpertFormThinkerId(thinkerId);
+    if (!thinkerId) return;
+    const found = thinkerOptions.find((t) => t.id === thinkerId);
+    if (found) {
+      setExpertFormName(found.name);
+      setExpertFormCivilization(`${found.civSymbol} ${found.civName}`);
+      if (found.title) setExpertFormTitle(found.title);
+      if (found.quote && !expertFormQuote) setExpertFormQuote(found.quote);
+    }
+  };
+
+  const handleSaveExpertOpinion = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!expertFormName.trim() || !expertFormQuote.trim() || !expertFormCivilization.trim()) {
+      showToast("error", "Խնդրում ենք լրացնել անունը, քաղաքակրթությունը և հիմնական դիրքորոշումը:");
+      return;
+    }
+
+    setSavingExpert(true);
+    try {
+      const authorName = profile?.displayName || user?.displayName || user?.email?.split("@")[0] || "Ադմին";
+      const payload: Omit<TopicExpertOpinion, "id" | "createdAt" | "topicId"> = {
+        name: expertFormName.trim(),
+        civilization: expertFormCivilization.trim(),
+        quote: expertFormQuote.trim(),
+      };
+      if (expertFormTitle.trim()) payload.title = expertFormTitle.trim();
+      if (expertFormFullText.trim()) payload.fullText = expertFormFullText.trim();
+      if (expertFormSourceUrl.trim()) payload.sourceUrl = expertFormSourceUrl.trim();
+      if (user?.uid) payload.authorUid = user.uid;
+      if (authorName) payload.authorName = authorName;
+
+      if (editingExpertOpinion) {
+        await updateTopicExpertOpinion(topic.id, editingExpertOpinion.id, payload);
+        setExpertOpinions((prev) =>
+          prev.map((op) => (op.id === editingExpertOpinion.id ? { ...op, ...payload } : op))
+        );
+        showToast("success", "✓ Փորձագիտական կարծիքը թարմացվեց:");
+      } else {
+        const created = await addTopicExpertOpinion(topic.id, payload);
+        setExpertOpinions((prev) => [...prev, created]);
+        setTopic((prev) => ({
+          ...prev,
+          expertOpinionsCount: (prev.expertOpinionsCount || prev.expertResponses?.length || 0) + 1,
+        }));
+        showToast("success", "✓ Փորձագիտական կարծիքը հաջողությամբ ավելացվեց:");
+      }
+
+      setIsExpertModalOpen(false);
+    } catch (err: any) {
+      console.error(err);
+      showToast("error", `Սխալ պահպանելիս. ${err.message || err}`);
+    } finally {
+      setSavingExpert(false);
+    }
+  };
+
+  const handleDeleteExpertOpinion = async (opinionId: string) => {
+    if (!confirm("Իսկապե՞ս ցանկանում եք հեռացնել այս փորձագիտական կարծիքը:")) return;
+    try {
+      await deleteTopicExpertOpinion(topic.id, opinionId);
+      setExpertOpinions((prev) => prev.filter((op) => op.id !== opinionId));
+      setTopic((prev) => ({
+        ...prev,
+        expertOpinionsCount: Math.max(0, (prev.expertOpinionsCount || prev.expertResponses?.length || 1) - 1),
+      }));
+      showToast("success", "✓ Փորձագիտական կարծիքը հեռացվեց:");
+    } catch (err: any) {
+      showToast("error", `Սխալ. ${err.message || err}`);
+    }
+  };
+
   // Filter root comments vs nested replies
   const rootComments = comments.filter((c) => !c.parentId);
+
   const getRepliesForComment = (parentId: string) =>
     comments.filter((c) => c.parentId === parentId);
 
@@ -412,108 +554,122 @@ export default function DialogueTopicDetailView({ initialTopic }: Props) {
           boxShadow: "0 12px 35px rgba(0, 0, 0, 0.08)",
         }}
       >
-        {/* Admin Action Buttons */}
-        {isAdmin && (
-          <div
-            style={{
-              position: "absolute",
-              top: "1.25rem",
-              right: "1.25rem",
-              display: "flex",
-              gap: "0.5rem",
-              flexWrap: "wrap",
-            }}
-          >
-            {topic.status === "pending" && (
-              <button
-                type="button"
-                onClick={handleApproveTopic}
-                style={{
-                  background: "#10b981",
-                  border: "1px solid #10b981",
-                  color: "#ffffff",
-                  borderRadius: "0.4rem",
-                  padding: "0.35rem 0.85rem",
-                  fontSize: "0.8rem",
-                  fontWeight: "700",
-                  cursor: "pointer",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "0.3rem",
-                  boxShadow: "0 2px 8px rgba(16, 185, 129, 0.3)",
-                }}
-                title="Հաստատել և հրապարակել հարթակում"
-              >
-                <span>✓</span>
-                <span>Հաստատել</span>
-              </button>
-            )}
+        {/* Pinned Top-Right Corner: Status Indicator & Admin Action Buttons */}
+        <div
+          style={{
+            position: "absolute",
+            top: "1.25rem",
+            right: "1.25rem",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.75rem",
+            zIndex: 15,
+          }}
+        >
+          {/* Admin Action Buttons */}
+          {isAdmin && (
+            <div
+              style={{
+                display: "flex",
+                gap: "0.5rem",
+                flexWrap: "wrap",
+                alignItems: "center",
+              }}
+            >
+              {topic.status === "pending" && (
+                <button
+                  type="button"
+                  onClick={handleApproveTopic}
+                  style={{
+                    background: "#10b981",
+                    border: "1px solid #10b981",
+                    color: "#ffffff",
+                    borderRadius: "0.4rem",
+                    padding: "0.35rem 0.85rem",
+                    fontSize: "0.8rem",
+                    fontWeight: "700",
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "0.3rem",
+                    boxShadow: "0 2px 8px rgba(16, 185, 129, 0.3)",
+                  }}
+                  title="Հաստատել և հրապարակել հարթակում"
+                >
+                  <span>✓</span>
+                  <span>Հաստատել</span>
+                </button>
+              )}
 
-            {topic.status === "pending" && (
+              {topic.status === "pending" && (
+                <button
+                  type="button"
+                  onClick={handleRejectTopic}
+                  style={{
+                    background: "transparent",
+                    border: "1px solid #ef4444",
+                    color: "#ef4444",
+                    borderRadius: "0.4rem",
+                    padding: "0.35rem 0.75rem",
+                    fontSize: "0.8rem",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                  }}
+                  title="Մերժել հարցադրումը"
+                >
+                  ✕ Մերժել
+                </button>
+              )}
+
               <button
                 type="button"
-                onClick={handleRejectTopic}
+                onClick={() => {
+                  setTopicFormNumber(topic.number);
+                  setTopicFormTitle(topic.title);
+                  setTopicFormDescription(topic.description);
+                  setTopicFormTag(topic.civilizationTag || "Ընդհանուր");
+                  setTopicFormDate(topic.date);
+                  setTopicFormStatus(topic.status);
+                  setIsEditingModalOpen(true);
+                }}
                 style={{
-                  background: "transparent",
-                  border: "1px solid #ef4444",
-                  color: "#ef4444",
+                  background: "rgba(183, 121, 31, 0.15)",
+                  border: "1px solid var(--gold-accent)",
+                  color: "var(--gold-accent)",
                   borderRadius: "0.4rem",
-                  padding: "0.35rem 0.75rem",
+                  padding: "0.35rem 0.8rem",
                   fontSize: "0.8rem",
                   fontWeight: "600",
                   cursor: "pointer",
                 }}
-                title="Մերժել հարցադրումը"
+                title="Խմբագրել հարցադրումը"
               >
-                ✕ Մերժել
+                ✎ Խմբագրել
               </button>
-            )}
 
-            <button
-              type="button"
-              onClick={() => {
-                setTopicFormNumber(topic.number);
-                setTopicFormTitle(topic.title);
-                setTopicFormDescription(topic.description);
-                setTopicFormTag(topic.civilizationTag || "Ընդհանուր");
-                setTopicFormDate(topic.date);
-                setTopicFormStatus(topic.status);
-                setIsEditingModalOpen(true);
-              }}
-              style={{
-                background: "rgba(183, 121, 31, 0.15)",
-                border: "1px solid var(--gold-accent)",
-                color: "var(--gold-accent)",
-                borderRadius: "0.4rem",
-                padding: "0.35rem 0.8rem",
-                fontSize: "0.8rem",
-                fontWeight: "600",
-                cursor: "pointer",
-              }}
-              title="Խմբագրել հարցադրումը"
-            >
-              ✎ Խմբագրել
-            </button>
+              <button
+                type="button"
+                onClick={handleDeleteTopic}
+                style={{
+                  background: "rgba(239, 68, 68, 0.15)",
+                  border: "1px solid #ef4444",
+                  color: "#ef4444",
+                  borderRadius: "0.4rem",
+                  padding: "0.35rem 0.8rem",
+                  fontSize: "0.8rem",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                }}
+                title="Ջնջել հարցադրումը"
+              >
+                🗑 Ջնջել
+              </button>
+            </div>
+          )}
 
-            <button
-              type="button"
-              onClick={handleDeleteTopic}
-              style={{
-                background: "rgba(239, 68, 68, 0.15)",
-                border: "1px solid #ef4444",
-                color: "#ef4444",
-                borderRadius: "0.4rem",
-                padding: "0.35rem 0.8rem",
-                fontSize: "0.8rem",
-                fontWeight: "600",
-                cursor: "pointer",
-              }}
-              title="Ջնջել հարցադրումը"
-            >
-              🗑 Ջնջել
-            </button>
-          </div>
-        )}
+          {/* Status Indicator Icon always on top right corner */}
+          <TopicStatusIconBadge status={topic.status} size={30} />
+        </div>
 
         {/* Pending Moderation Notice for Admin or Author */}
         {topic.status === "pending" && (
@@ -560,10 +716,9 @@ export default function DialogueTopicDetailView({ initialTopic }: Props) {
             fontWeight: "bold",
             textTransform: "uppercase",
             flexWrap: "wrap",
+            paddingRight: "3.5rem",
           }}
         >
-          <span>{topic.number}</span>
-          <span>•</span>
           <span>{topic.date}</span>
           {topic.civilizationTag && (
             <>
@@ -606,38 +761,6 @@ export default function DialogueTopicDetailView({ initialTopic }: Props) {
               </Link>
             </>
           )}
-          <span
-            style={{
-              padding: "0.15rem 0.55rem",
-              borderRadius: "999px",
-              fontSize: "0.72rem",
-              fontWeight: "700",
-              background:
-                topic.status === "active"
-                  ? "rgba(16, 185, 129, 0.15)"
-                  : topic.status === "pending"
-                  ? "rgba(245, 158, 11, 0.2)"
-                  : topic.status === "rejected"
-                  ? "rgba(239, 68, 68, 0.15)"
-                  : "rgba(148, 163, 184, 0.15)",
-              color:
-                topic.status === "active"
-                  ? "#10b981"
-                  : topic.status === "pending"
-                  ? "#d97706"
-                  : topic.status === "rejected"
-                  ? "#ef4444"
-                  : "#94a3b8",
-            }}
-          >
-            {topic.status === "active"
-              ? "🟢 Ակտիվ Բանավեճ"
-              : topic.status === "pending"
-              ? "⏳ Հաստատման Սպասող"
-              : topic.status === "rejected"
-              ? "✕ Մերժված"
-              : "📁 Արխիվացված"}
-          </span>
         </div>
 
         {/* Title */}
@@ -685,7 +808,7 @@ export default function DialogueTopicDetailView({ initialTopic }: Props) {
           </span>
           <span>•</span>
           <span>💬 {comments.length} մեկնաբանություն</span>
-          {topic.expertResponses && topic.expertResponses.length > 0 && (
+          {expertOpinions.length > 0 && (
             <>
               <span>•</span>
               <span
@@ -701,79 +824,350 @@ export default function DialogueTopicDetailView({ initialTopic }: Props) {
                 }}
               >
                 <PersonWithLoupeIcon size={14} color="var(--gold-accent)" />
-                <span>{topic.expertResponses.length} փորձագետ</span>
+                <span>{expertOpinions.length} փորձագետ</span>
               </span>
             </>
           )}
         </div>
       </div>
 
-      {/* Expert Responses (if configured) */}
-      {topic.expertResponses && topic.expertResponses.length > 0 && (
-        <div style={{ marginBottom: "4rem" }}>
-          <h2
+      {/* ============================================================== */}
+      {/* EXPERT OPINIONS SECTION (SUBCOLLECTION) */}
+      {/* ============================================================== */}
+      <div id="expert-opinions" style={{ marginBottom: "4rem" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: "1rem",
+            borderBottom: "1px solid var(--card-border)",
+            paddingBottom: "1rem",
+            marginBottom: "2rem",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+            <h2
+              style={{
+                fontFamily: "var(--font-serif)",
+                color: "var(--gold-accent)",
+                margin: 0,
+                fontSize: "1.65rem",
+                display: "flex",
+                alignItems: "center",
+                gap: "0.65rem",
+              }}
+            >
+              <PersonWithLoupeIcon size={26} color="var(--gold-accent)" />
+              <span>Հրավիրյալ Մտածողների & Փորձագետների Կարծիքները</span>
+            </h2>
+            <span
+              style={{
+                fontSize: "0.85rem",
+                fontWeight: "700",
+                background: "rgba(183, 121, 31, 0.15)",
+                color: "var(--gold-accent)",
+                padding: "0.15rem 0.6rem",
+                borderRadius: "999px",
+                border: "1px solid rgba(183, 121, 31, 0.3)",
+              }}
+            >
+              {expertOpinions.length}
+            </span>
+          </div>
+
+          {canManageExperts && (
+            <button
+              type="button"
+              onClick={handleOpenAddExpertModal}
+              className="btn-primary"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "0.45rem",
+                padding: "0.55rem 1.15rem",
+                fontSize: "0.88rem",
+                borderRadius: "0.5rem",
+                cursor: "pointer",
+                boxShadow: "0 2px 10px rgba(183, 121, 31, 0.2)",
+              }}
+            >
+              <span>+</span>
+              <span>Ավելացնել Փորձագիտական Կարծիք</span>
+            </button>
+          )}
+        </div>
+
+        {loadingExperts ? (
+          <div
             style={{
-              fontFamily: "var(--font-serif)",
-              color: "var(--gold-accent)",
-              borderBottom: "1px solid var(--card-border)",
-              paddingBottom: "1rem",
-              marginBottom: "2rem",
-              fontSize: "1.65rem",
-              display: "flex",
-              alignItems: "center",
-              gap: "0.65rem",
+              padding: "2rem",
+              textAlign: "center",
+              color: "var(--text-secondary)",
+              fontSize: "0.95rem",
             }}
           >
-            <PersonWithLoupeIcon size={26} color="var(--gold-accent)" />
-            <span>Հրավիրյալ Մտածողների Պատասխանները</span>
-          </h2>
-
+            Բեռնվում են փորձագիտական կարծիքները...
+          </div>
+        ) : expertOpinions.length === 0 ? (
+          <div
+            className="glass-card"
+            style={{
+              padding: "2.5rem 2rem",
+              textAlign: "center",
+              borderRadius: "0.85rem",
+              border: "1px dashed var(--card-border)",
+            }}
+          >
+            <div style={{ fontSize: "2.5rem", marginBottom: "0.75rem" }}>📜</div>
+            <h3
+              style={{
+                margin: "0 0 0.5rem 0",
+                fontFamily: "var(--font-serif)",
+                color: "var(--text-primary)",
+                fontSize: "1.2rem",
+              }}
+            >
+              Այս հարցադրմանը դեռևս կցված չեն փորձագիտական դիրքորոշումներ
+            </h3>
+            <p
+              style={{
+                margin: "0 0 1.25rem 0",
+                color: "var(--text-secondary)",
+                fontSize: "0.92rem",
+                maxWidth: "520px",
+                marginLeft: "auto",
+                marginRight: "auto",
+                lineHeight: "1.6",
+              }}
+            >
+              Կազմկոմիտեն և հրավիրյալ մտածողները շուտով կհրապարակեն իրենց վերլուծությունները այս թեմայի շուրջ։
+            </p>
+            {canManageExperts && (
+              <button
+                type="button"
+                onClick={handleOpenAddExpertModal}
+                className="btn-primary"
+                style={{
+                  padding: "0.55rem 1.25rem",
+                  fontSize: "0.88rem",
+                  borderRadius: "0.5rem",
+                  cursor: "pointer",
+                }}
+              >
+                + Ավելացնել Առաջին Փորձագիտական Կարծիքը
+              </button>
+            )}
+          </div>
+        ) : (
           <div className="cards-grid">
-            {topic.expertResponses.map((exp, idx) => (
-              <div key={exp.id || idx} className="glass-card">
+            {expertOpinions.map((exp, idx) => {
+              const isExpanded = !!expandedOpinions[exp.id];
+              return (
                 <div
+                  key={exp.id || idx}
+                  className="glass-card"
                   style={{
                     display: "flex",
-                    alignItems: "center",
-                    gap: "1rem",
-                    marginBottom: "1rem",
+                    flexDirection: "column",
+                    justifyContent: "space-between",
+                    position: "relative",
                   }}
                 >
-                  <div
-                    style={{
-                      width: "48px",
-                      height: "48px",
-                      borderRadius: "50%",
-                      background:
-                        "linear-gradient(135deg, var(--gold-accent) 0%, transparent 100%)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      border: "1px solid var(--gold-accent)",
-                    }}
-                  >
-                    <PersonWithLoupeIcon size={24} color="var(--gold-accent)" />
-                  </div>
                   <div>
-                    <h3 style={{ margin: 0, fontSize: "1.05rem" }}>{exp.name}</h3>
-                    <small style={{ color: "var(--text-secondary)" }}>{exp.civilization}</small>
+                    {/* Expert Header */}
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "flex-start",
+                        justifyContent: "space-between",
+                        gap: "0.75rem",
+                        marginBottom: "1rem",
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.85rem" }}>
+                        <div
+                          style={{
+                            width: "48px",
+                            height: "48px",
+                            borderRadius: "50%",
+                            background:
+                              "linear-gradient(135deg, var(--gold-accent) 0%, transparent 100%)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            border: "1px solid var(--gold-accent)",
+                            flexShrink: 0,
+                          }}
+                        >
+                          <PersonWithLoupeIcon size={24} color="var(--gold-accent)" />
+                        </div>
+                        <div>
+                          <h3 style={{ margin: 0, fontSize: "1.08rem", fontWeight: "700" }}>
+                            {exp.name}
+                          </h3>
+                          {exp.title && (
+                            <div
+                              style={{
+                                fontSize: "0.82rem",
+                                color: "var(--text-secondary)",
+                                marginTop: "0.15rem",
+                              }}
+                            >
+                              {exp.title}
+                            </div>
+                          )}
+                          <div
+                            style={{
+                              display: "inline-block",
+                              marginTop: "0.3rem",
+                              fontSize: "0.75rem",
+                              fontWeight: "600",
+                              color: "var(--gold-accent)",
+                              background: "rgba(183, 121, 31, 0.1)",
+                              padding: "0.15rem 0.5rem",
+                              borderRadius: "0.3rem",
+                              border: "1px solid rgba(183, 121, 31, 0.25)",
+                            }}
+                          >
+                            {exp.civilization}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Admin / Scholar Edit & Delete Actions */}
+                      {canManageExperts && (
+                        <div style={{ display: "flex", gap: "0.35rem" }}>
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEditExpertModal(exp)}
+                            title="Խմբագրել կարծիքը"
+                            style={{
+                              background: "rgba(255, 255, 255, 0.05)",
+                              border: "1px solid var(--card-border)",
+                              color: "var(--text-secondary)",
+                              padding: "0.3rem 0.55rem",
+                              borderRadius: "0.35rem",
+                              cursor: "pointer",
+                              fontSize: "0.8rem",
+                            }}
+                          >
+                            ✎
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteExpertOpinion(exp.id)}
+                            title="Ջնջել կարծիքը"
+                            style={{
+                              background: "rgba(239, 68, 68, 0.1)",
+                              border: "1px solid rgba(239, 68, 68, 0.25)",
+                              color: "#ef4444",
+                              padding: "0.3rem 0.55rem",
+                              borderRadius: "0.35rem",
+                              cursor: "pointer",
+                              fontSize: "0.8rem",
+                            }}
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Quote / Opinion text */}
+                    <blockquote
+                      style={{
+                        margin: "0 0 1rem 0",
+                        padding: "0.85rem 1rem",
+                        background: "rgba(183, 121, 31, 0.04)",
+                        borderLeft: "3px solid var(--gold-accent)",
+                        borderRadius: "0 0.5rem 0.5rem 0",
+                        fontStyle: "italic",
+                        color: "var(--text-primary)",
+                        lineHeight: "1.7",
+                        fontSize: "0.98rem",
+                      }}
+                    >
+                      {exp.quote}
+                    </blockquote>
+
+                    {/* Full text accordion (if provided) */}
+                    {exp.fullText && (
+                      <div style={{ marginTop: "0.75rem" }}>
+                        <button
+                          type="button"
+                          onClick={() => toggleExpandOpinion(exp.id)}
+                          style={{
+                            background: "transparent",
+                            border: "none",
+                            color: "var(--gold-accent)",
+                            cursor: "pointer",
+                            fontSize: "0.82rem",
+                            fontWeight: "600",
+                            padding: 0,
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "0.3rem",
+                          }}
+                        >
+                          <span>{isExpanded ? "▲ Ծալել վերլուծությունը" : "▼ Կարդալ ամբողջական վերլուծությունը"}</span>
+                        </button>
+                        {isExpanded && (
+                          <div
+                            style={{
+                              marginTop: "0.75rem",
+                              padding: "1rem",
+                              background: "var(--input-bg)",
+                              borderRadius: "0.5rem",
+                              border: "1px solid var(--card-border)",
+                              fontSize: "0.9rem",
+                              lineHeight: "1.7",
+                              color: "var(--text-secondary)",
+                              whiteSpace: "pre-line",
+                            }}
+                          >
+                            {exp.fullText}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
+
+                  {/* Source link footer if present */}
+                  {exp.sourceUrl && (
+                    <div
+                      style={{
+                        marginTop: "1rem",
+                        paddingTop: "0.75rem",
+                        borderTop: "1px solid var(--card-border)",
+                        fontSize: "0.78rem",
+                      }}
+                    >
+                      <a
+                        href={exp.sourceUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          color: "var(--gold-accent)",
+                          textDecoration: "none",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "0.3rem",
+                        }}
+                      >
+                        <span>🔗</span>
+                        <span>Դիտել սկզբնաղբյուրը / հոդվածը</span>
+                      </a>
+                    </div>
+                  )}
                 </div>
-                <p
-                  style={{
-                    fontStyle: "italic",
-                    color: "var(--text-secondary)",
-                    lineHeight: "1.65",
-                    margin: 0,
-                  }}
-                >
-                  {exp.quote}
-                </p>
-              </div>
-            ))}
+              );
+            })}
           </div>
-        </div>
-      )}
+        )}
+      </div>
+
 
       {/* ============================================================== */}
       {/* DISCUSSION THREAD SECTION */}
@@ -1563,6 +1957,294 @@ export default function DialogueTopicDetailView({ initialTopic }: Props) {
           </div>
         </div>
       )}
+
+      {/* Add / Edit Expert Opinion Modal */}
+      {isExpertModalOpen && (
+        <div
+          className="civ-modal-overlay"
+          onClick={() => setIsExpertModalOpen(false)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div
+            className="civ-modal-box"
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: "620px" }}
+          >
+            <button
+              type="button"
+              className="civ-modal-close"
+              onClick={() => setIsExpertModalOpen(false)}
+              aria-label="Փակել"
+            >
+              ✕
+            </button>
+
+            <h2
+              style={{
+                fontFamily: "var(--font-serif)",
+                fontSize: "1.5rem",
+                color: "var(--gold-accent)",
+                margin: "0 0 1.25rem 0",
+                display: "flex",
+                alignItems: "center",
+                gap: "0.5rem",
+              }}
+            >
+              <span>{editingExpertOpinion ? "✎ Խմբագրել" : "✨ Ավելացնել"} Փորձագիտական Կարծիք</span>
+            </h2>
+
+            <form
+              onSubmit={handleSaveExpertOpinion}
+              style={{ display: "flex", flexDirection: "column", gap: "1.1rem" }}
+            >
+              {/* Optional Quick Thinker Selector */}
+              <div>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: "0.85rem",
+                    fontWeight: "600",
+                    marginBottom: "0.35rem",
+                    color: "var(--text-secondary)",
+                  }}
+                >
+                  💡 Ընտրել հայտնի մտածողների ցանկից (կամ լրացնել ինքնուրույն)
+                </label>
+                <select
+                  value={expertFormThinkerId}
+                  onChange={(e) => handleSelectThinker(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "0.7rem",
+                    background: "var(--input-bg)",
+                    border: "1px solid var(--card-border)",
+                    borderRadius: "0.5rem",
+                    color: "var(--text-primary)",
+                  }}
+                >
+                  <option value="">— Ընտրել հրավիրյալ մտածող (կամ մուտքագրել նորը) —</option>
+                  {thinkerOptions.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.civSymbol} {t.name} ({t.civName})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                <div>
+                  <label
+                    style={{
+                      display: "block",
+                      fontSize: "0.85rem",
+                      fontWeight: "600",
+                      marginBottom: "0.35rem",
+                    }}
+                  >
+                    Փորձագետի / Մտածողի Անուն *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Օր.՝ Ալեն դը Բենուա"
+                    value={expertFormName}
+                    onChange={(e) => setExpertFormName(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "0.75rem",
+                      background: "var(--input-bg)",
+                      border: "1px solid var(--card-border)",
+                      borderRadius: "0.5rem",
+                      color: "var(--text-primary)",
+                      boxSizing: "border-box",
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label
+                    style={{
+                      display: "block",
+                      fontSize: "0.85rem",
+                      fontWeight: "600",
+                      marginBottom: "0.35rem",
+                    }}
+                  >
+                    Քաղաքակրթական Ավանդույթ *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Օր.՝ Եվրոպական քաղաքակրթություն"
+                    value={expertFormCivilization}
+                    onChange={(e) => setExpertFormCivilization(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "0.75rem",
+                      background: "var(--input-bg)",
+                      border: "1px solid var(--card-border)",
+                      borderRadius: "0.5rem",
+                      color: "var(--text-primary)",
+                      boxSizing: "border-box",
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: "0.85rem",
+                    fontWeight: "600",
+                    marginBottom: "0.35rem",
+                  }}
+                >
+                  Կոչում / Պաշտոն / Պատկանելություն
+                </label>
+                <input
+                  type="text"
+                  placeholder="Օր.՝ Փիլիսոփա, GRECE հետազոտական կենտրոնի հիմնադիր"
+                  value={expertFormTitle}
+                  onChange={(e) => setExpertFormTitle(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "0.75rem",
+                    background: "var(--input-bg)",
+                    border: "1px solid var(--card-border)",
+                    borderRadius: "0.5rem",
+                    color: "var(--text-primary)",
+                    boxSizing: "border-box",
+                  }}
+                />
+              </div>
+
+              <div>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: "0.85rem",
+                    fontWeight: "600",
+                    marginBottom: "0.35rem",
+                  }}
+                >
+                  Հիմնական Մեջբերում / Դիրքորոշում (Quote) *
+                </label>
+                <textarea
+                  required
+                  rows={3}
+                  placeholder="Մտածողի առանցքային թեզը կամ դիրքորոշումը տվյալ հարցադրման շուրջ..."
+                  value={expertFormQuote}
+                  onChange={(e) => setExpertFormQuote(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "0.75rem",
+                    background: "var(--input-bg)",
+                    border: "1px solid var(--card-border)",
+                    borderRadius: "0.5rem",
+                    color: "var(--text-primary)",
+                    boxSizing: "border-box",
+                    lineHeight: "1.6",
+                    fontFamily: "inherit",
+                  }}
+                />
+              </div>
+
+              <div>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: "0.85rem",
+                    fontWeight: "600",
+                    marginBottom: "0.35rem",
+                  }}
+                >
+                  Ամբողջական Վերլուծություն / Շարադրանք (Կամընտրական)
+                </label>
+                <textarea
+                  rows={4}
+                  placeholder="Ավելի մանրամասն շարադրանք, պատմական կամ տեսական հիմնավորում (եթե առկա է)..."
+                  value={expertFormFullText}
+                  onChange={(e) => setExpertFormFullText(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "0.75rem",
+                    background: "var(--input-bg)",
+                    border: "1px solid var(--card-border)",
+                    borderRadius: "0.5rem",
+                    color: "var(--text-primary)",
+                    boxSizing: "border-box",
+                    lineHeight: "1.6",
+                    fontFamily: "inherit",
+                  }}
+                />
+              </div>
+
+              <div>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: "0.85rem",
+                    fontWeight: "600",
+                    marginBottom: "0.35rem",
+                  }}
+                >
+                  🔗 Սկզբնաղբյուրի Հղում / Հոդված (Կամընտրական)
+                </label>
+                <input
+                  type="url"
+                  placeholder="https://..."
+                  value={expertFormSourceUrl}
+                  onChange={(e) => setExpertFormSourceUrl(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "0.75rem",
+                    background: "var(--input-bg)",
+                    border: "1px solid var(--card-border)",
+                    borderRadius: "0.5rem",
+                    color: "var(--text-primary)",
+                    boxSizing: "border-box",
+                  }}
+                />
+              </div>
+
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  gap: "0.75rem",
+                  marginTop: "1rem",
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setIsExpertModalOpen(false)}
+                  style={{
+                    padding: "0.6rem 1.25rem",
+                    background: "transparent",
+                    border: "1px solid var(--card-border)",
+                    color: "var(--text-secondary)",
+                    borderRadius: "0.4rem",
+                    cursor: "pointer",
+                  }}
+                >
+                  Չեղարկել
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingExpert}
+                  className="btn-primary"
+                  style={{ padding: "0.6rem 1.5rem" }}
+                >
+                  {savingExpert ? "Պահպանվում է..." : "✓ Պահպանել Կարծիքը"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </main>
+
   );
 }

@@ -13,12 +13,12 @@ import {
   deleteDialogueTopic,
   approveDialogueTopic,
   rejectDialogueTopic,
-  seedDialogueTopicsToFirestore,
 } from "@/lib/dialogueService";
 import PersonWithLoupeIcon from "@/components/icons/PersonWithLoupeIcon";
-
+import TopicStatusIconBadge from "@/components/dialogue/TopicStatusIconBadge";
 function DialogueHubContent() {
   const router = useRouter();
+
   const { user, profile, role, isAdmin, isSuperAdmin } = useAuth();
 
   // Civil Centers List for optional selection
@@ -343,22 +343,6 @@ function DialogueHubContent() {
     }
   };
 
-  // Seed Default Topics (SuperAdmin only)
-  const handleSeedTopics = async () => {
-    if (!confirm("Սերմացնե՞լ հարցադրումները Firestore բազայում:")) return;
-    try {
-      const res = await seedDialogueTopicsToFirestore();
-      await fetchTopics();
-      if (res.success) {
-        showToast("success", res.message);
-      } else {
-        showToast("error", res.message);
-      }
-    } catch (err: any) {
-      showToast("error", `Սխալ. ${err.message || err}`);
-    }
-  };
-
   const handleClearFilters = () => {
     setSearchQuery("");
     setStatusFilter("all");
@@ -536,8 +520,9 @@ function DialogueHubContent() {
                 fontFamily: "var(--font-serif)",
               }}
             >
-              {topics.reduce((acc, t) => acc + (t.expertResponses?.length || 0), 0)}
+              {topics.reduce((acc, t) => acc + (t.expertOpinionsCount ?? t.expertResponses?.length ?? 0), 0)}
             </div>
+
             <div
               style={{
                 fontSize: "0.82rem",
@@ -585,26 +570,6 @@ function DialogueHubContent() {
               {isAdmin ? "Առաջարկել / Ստեղծել Հարցադրում (Admin)" : "Առաջարկել Նոր Հարցադրում"}
             </span>
           </button>
-
-          {isSuperAdmin && (
-            <button
-              type="button"
-              onClick={handleSeedTopics}
-              style={{
-                padding: "0.75rem 1.25rem",
-                background: "transparent",
-                border: "1px dashed var(--gold-accent)",
-                color: "var(--gold-accent)",
-                borderRadius: "0.5rem",
-                fontSize: "0.88rem",
-                fontWeight: "600",
-                cursor: "pointer",
-              }}
-              title="Սերմացնել նախնական հարցադրումները"
-            >
-              ⚡️ Seed Topics
-            </button>
-          )}
         </div>
       </div>
 
@@ -1011,8 +976,9 @@ function DialogueHubContent() {
         >
           {filteredTopics.map((topic) => {
             const commentCount = topic.commentsCount || 0;
-            const expertCount = topic.expertResponses?.length || 0;
+            const expertCount = topic.expertOpinionsCount ?? topic.expertResponses?.length ?? 0;
             const isPending = topic.status === "pending";
+
             const isAuthor = user?.uid && topic.authorUid === user.uid;
 
             return (
@@ -1035,82 +1001,29 @@ function DialogueHubContent() {
                   transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
                 }}
               >
+                {/* Pinned Always to Top Right Corner */}
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "1.25rem",
+                    right: "1.25rem",
+                    zIndex: 10,
+                  }}
+                >
+                  <TopicStatusIconBadge status={topic.status} />
+                </div>
+
                 <div>
-                  {/* Top Bar: Number & Status */}
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      marginBottom: "0.75rem",
-                      flexWrap: "wrap",
-                      gap: "0.4rem",
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontSize: "0.78rem",
-                        fontWeight: "700",
-                        letterSpacing: "0.08em",
-                        color: "var(--gold-accent)",
-                        textTransform: "uppercase",
-                        background: "rgba(183, 121, 31, 0.1)",
-                        padding: "0.25rem 0.65rem",
-                        borderRadius: "0.4rem",
-                        border: "1px solid rgba(183, 121, 31, 0.2)",
-                      }}
-                    >
-                      {topic.number}
-                    </span>
-
-                    <span
-                      style={{
-                        padding: "0.25rem 0.65rem",
-                        borderRadius: "999px",
-                        fontSize: "0.75rem",
-                        fontWeight: "600",
-                        background:
-                          topic.status === "active"
-                            ? "rgba(16, 185, 129, 0.12)"
-                            : topic.status === "pending"
-                            ? "rgba(245, 158, 11, 0.18)"
-                            : topic.status === "rejected"
-                            ? "rgba(239, 68, 68, 0.12)"
-                            : "rgba(148, 163, 184, 0.12)",
-                        color:
-                          topic.status === "active"
-                            ? "#10b981"
-                            : topic.status === "pending"
-                            ? "#d97706"
-                            : topic.status === "rejected"
-                            ? "#ef4444"
-                            : "#94a3b8",
-                        border:
-                          topic.status === "active"
-                            ? "1px solid rgba(16, 185, 129, 0.25)"
-                            : topic.status === "pending"
-                            ? "1px solid rgba(245, 158, 11, 0.35)"
-                            : "1px solid rgba(148, 163, 184, 0.25)",
-                      }}
-                    >
-                      {topic.status === "active"
-                        ? "🟢 Ակտիվ Քննարկում"
-                        : topic.status === "pending"
-                        ? "⏳ Սպասում է Հաստատման"
-                        : topic.status === "rejected"
-                        ? "✕ Մերժված"
-                        : "📁 Արխիվ"}
-                    </span>
-                  </div>
-
-                  {/* Discipline / Tag & Optional Civil Center */}
+                  {/* Category Tags & Civil Center */}
                   <div
                     style={{
                       display: "flex",
                       flexWrap: "wrap",
                       alignItems: "center",
                       gap: "0.4rem",
-                      marginBottom: "0.75rem",
+                      marginBottom: "0.85rem",
+                      paddingRight: "2.75rem",
+                      minHeight: "28px",
                     }}
                   >
                     {topic.civilizationTag && (
@@ -1164,6 +1077,9 @@ function DialogueHubContent() {
                       </Link>
                     )}
                   </div>
+
+
+
 
                   {/* Title */}
                   <h3

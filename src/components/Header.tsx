@@ -148,6 +148,7 @@ export default function Header() {
                   borderRadius: "0.4rem",
                   border: "1px solid var(--card-border)",
                   background: "rgba(183, 121, 31, 0.08)",
+                  textDecoration: "none",
                 }}
                 title="Ադմինիստրատիվ Վահանակ"
               >

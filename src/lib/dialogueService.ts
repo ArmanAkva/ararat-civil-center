@@ -14,10 +14,12 @@ import {
   limit,
 } from "firebase/firestore";
 import { db } from "./firebase";
-import { DialogueTopicItem, DialogueComment, SiteNotification } from "@/types/dialogue";
+import { DialogueTopicItem, DialogueComment, SiteNotification, TopicExpertOpinion } from "@/types/dialogue";
+import { ExpertResponse } from "@/types/content";
 import { defaultDialogueContent } from "./defaultSiteContent";
 
 export const defaultTopics: DialogueTopicItem[] = [
+
   {
     id: "topic-12",
     number: "ՀԱՐՑԱԴՐՈՒՄ #12",
@@ -245,13 +247,51 @@ export function markAllLocalNotificationsAsRead(
   }
 }
 
+const LOCAL_EXPERT_OPINIONS_KEY = "ararat_dialogue_expert_opinions";
+
+export function getAllLocalExpertOpinions(): TopicExpertOpinion[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(LOCAL_EXPERT_OPINIONS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function getLocalExpertOpinions(topicId: string): TopicExpertOpinion[] {
+  return getAllLocalExpertOpinions().filter((op) => op.topicId === topicId);
+}
+
+export function saveLocalExpertOpinion(op: TopicExpertOpinion): void {
+  if (typeof window === "undefined") return;
+  try {
+    const list = getAllLocalExpertOpinions().filter((o) => o.id !== op.id);
+    localStorage.setItem(LOCAL_EXPERT_OPINIONS_KEY, JSON.stringify([...list, op]));
+  } catch {
+    // ignore
+  }
+}
+
+export function removeLocalExpertOpinion(opinionId: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    const list = getAllLocalExpertOpinions().filter((o) => o.id !== opinionId);
+    localStorage.setItem(LOCAL_EXPERT_OPINIONS_KEY, JSON.stringify(list));
+  } catch {
+    // ignore
+  }
+}
+
 // ----------------------------------------------------
 // FIRESTORE COLLECTIONS & SUBCOLLECTIONS
 // ----------------------------------------------------
 export const DIALOGUES_COLLECTION = "dialogues";
 export const COMMENTS_SUBCOLLECTION = "comments";
+export const EXPERT_OPINIONS_SUBCOLLECTION = "expert_opinions";
 export const LEGACY_TOPICS_COLLECTION = "dialogue_topics";
 export const LEGACY_COMMENTS_COLLECTION = "dialogue_comments";
+
 
 // ----------------------------------------------------
 // 1. TOPICS & DIALOGUES API
@@ -294,13 +334,17 @@ export async function getDialogueTopics(): Promise<DialogueTopicItem[]> {
       firestoreList.forEach((t) => mergedMap.set(t.id, t));
 
       const localComments = getAllLocalComments();
+      const localExperts = getAllLocalExpertOpinions();
       return Array.from(mergedMap.values())
         .map((t) => {
           const topicLocalCount = localComments.filter((c) => c.topicId === t.id).length;
           const topicDefCount = defaultComments.filter((c) => c.topicId === t.id).length;
+          const topicLocalExperts = localExperts.filter((e) => e.topicId === t.id).length;
+          const topicDefExperts = t.expertResponses?.length || 0;
           return {
             ...t,
             commentsCount: Math.max(t.commentsCount || 0, topicLocalCount, topicDefCount),
+            expertOpinionsCount: Math.max(t.expertOpinionsCount || 0, topicLocalExperts, topicDefExperts),
           };
         })
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -314,13 +358,17 @@ export async function getDialogueTopics(): Promise<DialogueTopicItem[]> {
   localList.forEach((t) => mergedMap.set(t.id, t));
 
   const localComments = getAllLocalComments();
+  const localExperts = getAllLocalExpertOpinions();
   return Array.from(mergedMap.values())
     .map((t) => {
       const topicLocalCount = localComments.filter((c) => c.topicId === t.id).length;
       const topicDefCount = defaultComments.filter((c) => c.topicId === t.id).length;
+      const topicLocalExperts = localExperts.filter((e) => e.topicId === t.id).length;
+      const topicDefExperts = t.expertResponses?.length || 0;
       return {
         ...t,
         commentsCount: Math.max(t.commentsCount || 0, topicLocalCount, topicDefCount),
+        expertOpinionsCount: Math.max(t.expertOpinionsCount || 0, topicLocalExperts, topicDefExperts),
       };
     })
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -368,9 +416,12 @@ export async function getDialogueTopicById(
     const localComments = getAllLocalComments();
     const topicLocalCount = localComments.filter((c) => c.topicId === found.id).length;
     const topicDefCount = defaultComments.filter((c) => c.topicId === found.id).length;
+    const localExperts = getLocalExpertOpinions(found.id);
+    const defExpertsCount = found.expertResponses?.length || 0;
     return {
       ...found,
       commentsCount: Math.max(found.commentsCount || 0, topicLocalCount, topicDefCount),
+      expertOpinionsCount: Math.max(found.expertOpinionsCount || 0, localExperts.length, defExpertsCount),
     };
   }
 
@@ -532,7 +583,18 @@ export async function deleteDialogueTopic(topicId: string): Promise<void> {
       console.warn("Could not delete comments subcollection:", subErr);
     }
 
+    // 1b. Delete all expert opinions in subcollection: dialogues/{topicId}/expert_opinions
+    try {
+      const expRef = collection(db, DIALOGUES_COLLECTION, topicId, EXPERT_OPINIONS_SUBCOLLECTION);
+      const expSnap = await getDocs(expRef);
+      const deleteExpPromises = expSnap.docs.map((docSnap) => deleteDoc(docSnap.ref));
+      await Promise.all(deleteExpPromises);
+    } catch (subErr) {
+      console.warn("Could not delete expert_opinions subcollection:", subErr);
+    }
+
     // 2. Also delete from legacy dialogue_comments if any exist
+
     try {
       const legacyCommRef = collection(db, LEGACY_COMMENTS_COLLECTION);
       const legacyQ = query(legacyCommRef, where("topicId", "==", topicId));
@@ -789,8 +851,201 @@ export async function deleteDialogueComment(
 }
 
 // ----------------------------------------------------
-// 3. NOTIFICATIONS API
+// 3. EXPERT OPINIONS API (SUBCOLLECTION: dialogues/{topicId}/expert_opinions)
 // ----------------------------------------------------
+
+/**
+ * Fetches all expert opinions for a dialogue topic from its subcollection dialogues/{topicId}/expert_opinions
+ * Merges Firestore, local cache, and fallback topic.expertResponses
+ */
+export async function getTopicExpertOpinions(
+  topicId: string,
+  fallbackExpertResponses?: ExpertResponse[]
+): Promise<TopicExpertOpinion[]> {
+  const localList = getLocalExpertOpinions(topicId);
+
+  try {
+    const expRef = collection(db, DIALOGUES_COLLECTION, topicId, EXPERT_OPINIONS_SUBCOLLECTION);
+    let snap: any;
+    try {
+      const q = query(expRef, orderBy("createdAt", "asc"));
+      snap = await getDocs(q);
+    } catch {
+      snap = await getDocs(expRef);
+    }
+
+    const firestoreList: TopicExpertOpinion[] = [];
+    if (!snap.empty) {
+      snap.forEach((d: any) => {
+        firestoreList.push({ id: d.id, ...(d.data() as Omit<TopicExpertOpinion, "id">) });
+      });
+    }
+
+    if (firestoreList.length > 0 || localList.length > 0) {
+      const mergedMap = new Map<string, TopicExpertOpinion>();
+      localList.forEach((op) => mergedMap.set(op.id, op));
+      firestoreList.forEach((op) => mergedMap.set(op.id, op));
+
+      return Array.from(mergedMap.values()).sort(
+        (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      );
+    }
+  } catch (err) {
+    console.warn(`Could not fetch expert opinions from Firestore for topic ${topicId}:`, err);
+  }
+
+  // If local list exists, return it
+  if (localList.length > 0) {
+    return localList.sort(
+      (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    );
+  }
+
+  // Fallback to topic.expertResponses if provided or from defaultTopics
+  const defaultTopic = defaultTopics.find((t) => t.id === topicId);
+  const fallbacks = fallbackExpertResponses || defaultTopic?.expertResponses || [];
+  if (fallbacks.length > 0) {
+    return fallbacks.map((exp, idx) => ({
+      id: exp.id || `fallback-exp-${topicId}-${idx}`,
+      topicId,
+      name: exp.name,
+      civilization: exp.civilization,
+      quote: exp.quote,
+      createdAt: defaultTopic?.createdAt || new Date().toISOString(),
+    }));
+  }
+
+  return [];
+}
+
+/**
+ * Adds an expert opinion to subcollection dialogues/{topicId}/expert_opinions/{opinionId}
+ * Sanitizes payload so Firestore never throws for undefined fields
+ */
+export async function addTopicExpertOpinion(
+  topicId: string,
+  data: Omit<TopicExpertOpinion, "id" | "createdAt" | "topicId">
+): Promise<TopicExpertOpinion> {
+  const newId = `exp-${Date.now()}`;
+  const now = new Date().toISOString();
+
+  const firestoreData: Record<string, any> = {
+    id: newId,
+    topicId,
+    name: data.name,
+    civilization: data.civilization,
+    quote: data.quote,
+    createdAt: now,
+  };
+  if (data.title) firestoreData.title = data.title;
+  if (data.fullText) firestoreData.fullText = data.fullText;
+  if (data.avatarUrl) firestoreData.avatarUrl = data.avatarUrl;
+  if (data.sourceUrl) firestoreData.sourceUrl = data.sourceUrl;
+  if (data.authorUid) firestoreData.authorUid = data.authorUid;
+  if (data.authorName) firestoreData.authorName = data.authorName;
+
+  const newOpinion: TopicExpertOpinion = {
+    id: newId,
+    topicId,
+    name: data.name,
+    civilization: data.civilization,
+    quote: data.quote,
+    createdAt: now,
+  };
+  if (data.title) newOpinion.title = data.title;
+  if (data.fullText) newOpinion.fullText = data.fullText;
+  if (data.avatarUrl) newOpinion.avatarUrl = data.avatarUrl;
+  if (data.sourceUrl) newOpinion.sourceUrl = data.sourceUrl;
+  if (data.authorUid) newOpinion.authorUid = data.authorUid;
+  if (data.authorName) newOpinion.authorName = data.authorName;
+
+  try {
+    // 1. Save to subcollection dialogues/{topicId}/expert_opinions/{newId}
+    const docRef = doc(db, DIALOGUES_COLLECTION, topicId, EXPERT_OPINIONS_SUBCOLLECTION, newId);
+    await setDoc(docRef, firestoreData);
+
+    // 2. Increment expertOpinionsCount on topic doc
+    try {
+      const topicRef = doc(db, DIALOGUES_COLLECTION, topicId);
+      const snap = await getDoc(topicRef);
+      if (snap.exists()) {
+        const cur = snap.data().expertOpinionsCount || 0;
+        await updateDoc(topicRef, { expertOpinionsCount: cur + 1 });
+      }
+    } catch (e) {
+      console.warn("Could not increment topic expertOpinionsCount:", e);
+    }
+  } catch (err) {
+    console.warn("Firestore error adding expert opinion, caching locally:", err);
+  }
+
+  saveLocalExpertOpinion(newOpinion);
+  return newOpinion;
+}
+
+/**
+ * Updates an expert opinion in subcollection dialogues/{topicId}/expert_opinions/{opinionId}
+ */
+export async function updateTopicExpertOpinion(
+  topicId: string,
+  opinionId: string,
+  partialData: Partial<TopicExpertOpinion>
+): Promise<void> {
+  const cleanData: Record<string, any> = {
+    updatedAt: new Date().toISOString(),
+  };
+  for (const [key, val] of Object.entries(partialData)) {
+    if (val !== undefined && key !== "id" && key !== "topicId") {
+      cleanData[key] = val;
+    }
+  }
+
+  try {
+    const docRef = doc(db, DIALOGUES_COLLECTION, topicId, EXPERT_OPINIONS_SUBCOLLECTION, opinionId);
+    await updateDoc(docRef, cleanData);
+  } catch (err) {
+    console.warn("Could not update expert opinion in Firestore:", err);
+  }
+
+  const localList = getLocalExpertOpinions(topicId);
+  const existing = localList.find((op) => op.id === opinionId);
+  if (existing) {
+    saveLocalExpertOpinion({ ...existing, ...partialData, updatedAt: cleanData.updatedAt });
+  }
+}
+
+/**
+ * Deletes an expert opinion from subcollection dialogues/{topicId}/expert_opinions/{opinionId}
+ */
+export async function deleteTopicExpertOpinion(
+  topicId: string,
+  opinionId: string
+): Promise<void> {
+  try {
+    const docRef = doc(db, DIALOGUES_COLLECTION, topicId, EXPERT_OPINIONS_SUBCOLLECTION, opinionId);
+    await deleteDoc(docRef);
+
+    try {
+      const topicRef = doc(db, DIALOGUES_COLLECTION, topicId);
+      const snap = await getDoc(topicRef);
+      if (snap.exists()) {
+        const cur = snap.data().expertOpinionsCount || 1;
+        await updateDoc(topicRef, { expertOpinionsCount: Math.max(0, cur - 1) });
+      }
+    } catch {
+      // ignore
+    }
+  } catch (err) {
+    console.warn("Could not delete expert opinion from Firestore:", err);
+  }
+
+  removeLocalExpertOpinion(opinionId);
+}
+
+// ----------------------------------------------------
+// 4. NOTIFICATIONS API
+// ----------------------------------------------------
+
 
 /**
  * Creates a notification in Firestore and local cache
@@ -1008,9 +1263,11 @@ export async function seedDialogueTopicsToFirestore(): Promise<{
   try {
     let topicsSeeded = 0;
     let commentsSeeded = 0;
+    let expertOpinionsSeeded = 0;
 
     for (const t of defaultTopics) {
       const topicComments = defaultComments.filter((c) => c.topicId === t.id);
+      const topicExperts = t.expertResponses || [];
 
       // 1. Build clean, sanitized payload for the dialogue topic (no undefined values)
       const topicData: Record<string, any> = {
@@ -1024,6 +1281,7 @@ export async function seedDialogueTopicsToFirestore(): Promise<{
         authorName: t.authorName || "Արարատյան Կենտրոն",
         authorRole: t.authorRole || "super-admin",
         commentsCount: topicComments.length,
+        expertOpinionsCount: topicExperts.length,
       };
       if (t.civilizationTag) topicData.civilizationTag = t.civilizationTag;
       if (t.centerId) topicData.centerId = t.centerId;
@@ -1061,14 +1319,35 @@ export async function seedDialogueTopicsToFirestore(): Promise<{
         commentsSeeded++;
       }
 
+      // 3. Seed expert opinions directly as subcollections: dialogues/{topicId}/expert_opinions/{expId}
+      for (const exp of topicExperts) {
+        const expData: Record<string, any> = {
+          id: exp.id,
+          topicId: t.id,
+          name: exp.name,
+          civilization: exp.civilization,
+          quote: exp.quote,
+          createdAt: t.createdAt || new Date().toISOString(),
+        };
+        const expRef = doc(db, DIALOGUES_COLLECTION, t.id, EXPERT_OPINIONS_SUBCOLLECTION, exp.id);
+        await setDoc(expRef, expData, { merge: true });
+        saveLocalExpertOpinion(expData as TopicExpertOpinion);
+        expertOpinionsSeeded++;
+      }
+
       // Sync local cache
-      saveLocalTopic({ ...t, commentsCount: topicComments.length });
+      saveLocalTopic({
+        ...t,
+        commentsCount: topicComments.length,
+        expertOpinionsCount: topicExperts.length,
+      });
     }
 
     return {
       success: true,
-      message: `✓ ${topicsSeeded} հարցադրում և ${commentsSeeded} մեկնաբանություն հաջողությամբ գրանցվեցին Firestore-ում (dialogues/{id}/comments):`,
+      message: `✓ ${topicsSeeded} հարցադրում, ${commentsSeeded} մեկնաբանություն և ${expertOpinionsSeeded} փորձագիտական կարծիք հաջողությամբ գրանցվեցին Firestore-ում:`,
     };
+
   } catch (err: any) {
     console.error("Seed dialogue error:", err);
     return {

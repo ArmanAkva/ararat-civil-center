@@ -4,6 +4,7 @@ import React, {
   createContext,
   useContext,
   useState,
+  useEffect,
   ReactNode,
 } from "react";
 import { useAuth } from "./AuthContext";
@@ -24,6 +25,9 @@ interface EditModeContextType {
   isEditMode: boolean;
   toggleEditMode: () => void;
   canEdit: boolean;
+  isAdminBarVisible: boolean;
+  toggleAdminBarVisible: () => void;
+  setIsAdminBarVisible: (visible: boolean) => void;
   statusMessage: { type: "success" | "error"; text: string } | null;
   clearStatusMessage: () => void;
   savePageField: (
@@ -55,18 +59,58 @@ const EditModeContext = createContext<EditModeContextType | undefined>(undefined
 export function EditModeProvider({ children }: { children: ReactNode }) {
   const { isAdmin } = useAuth();
   const [isEditMode, setIsEditMode] = useState(false);
+  const [isAdminBarVisible, setIsAdminBarVisibleState] = useState(false);
   const [saving, setSaving] = useState(false);
   const [statusMessage, setStatusMessage] = useState<{
     type: "success" | "error";
     text: string;
   } | null>(null);
 
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("cms_admin_bar_visible");
+      if (stored !== null) {
+        setIsAdminBarVisibleState(stored === "true");
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const setIsAdminBarVisible = (visible: boolean) => {
+    setIsAdminBarVisibleState(visible);
+    try {
+      localStorage.setItem("cms_admin_bar_visible", String(visible));
+    } catch {
+      // ignore
+    }
+  };
+
+  const toggleAdminBarVisible = () => {
+    setIsAdminBarVisibleState((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem("cms_admin_bar_visible", String(next));
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  };
+
   const toggleEditMode = () => {
     if (!isAdmin) {
       alert("Միայն Ադմինիստրատորները կարող են ակտիվացնել Խմբագրման ռեժիմը:");
       return;
     }
-    setIsEditMode((prev) => !prev);
+    setIsEditMode((prev) => {
+      const next = !prev;
+      if (next) {
+        // Automatically ensure admin panel is visible when activating edit mode
+        setIsAdminBarVisible(true);
+      }
+      return next;
+    });
   };
 
   const showStatus = (type: "success" | "error", text: string) => {
@@ -249,6 +293,9 @@ export function EditModeProvider({ children }: { children: ReactNode }) {
         isEditMode: isAdmin && isEditMode,
         toggleEditMode,
         canEdit: isAdmin,
+        isAdminBarVisible: isAdmin && isAdminBarVisible,
+        toggleAdminBarVisible,
+        setIsAdminBarVisible,
         statusMessage,
         clearStatusMessage,
         savePageField,

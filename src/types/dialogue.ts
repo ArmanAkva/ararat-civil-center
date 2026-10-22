@@ -1,5 +1,21 @@
 import { ExpertResponse } from "./content";
 
+export interface TopicExpertOpinion {
+  id: string;
+  topicId: string;
+  name: string;
+  civilization: string;
+  title?: string;
+  quote: string;
+  fullText?: string;
+  avatarUrl?: string;
+  sourceUrl?: string;
+  authorUid?: string;
+  authorName?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
 export interface DialogueTopicItem {
   id: string;
   number: string;
@@ -17,7 +33,9 @@ export interface DialogueTopicItem {
   authorEmail?: string;
   commentsCount?: number;
   expertResponses?: ExpertResponse[];
+  expertOpinionsCount?: number;
 }
+
 
 export interface DialogueComment {
   id: string;
