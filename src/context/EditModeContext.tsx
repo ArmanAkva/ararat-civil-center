@@ -57,7 +57,7 @@ interface EditModeContextType {
 const EditModeContext = createContext<EditModeContextType | undefined>(undefined);
 
 export function EditModeProvider({ children }: { children: ReactNode }) {
-  const { isAdmin } = useAuth();
+  const { isAdmin, user } = useAuth();
   const [isEditMode, setIsEditMode] = useState(false);
   const [isAdminBarVisible, setIsAdminBarVisibleState] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -180,7 +180,10 @@ export function EditModeProvider({ children }: { children: ReactNode }) {
 
   // Subcollection Center CRUD
   const saveCenter = async (civId: string, center: ThinkTank) => {
-    if (!isAdmin) return;
+    if (!isAdmin && !user) {
+      showStatus("error", "Անհրաժեշտ է մուտք գործել համակարգ կենտրոնը պահպանելու համար:");
+      return;
+    }
     setSaving(true);
     try {
       await saveCenterDoc(civId, center);
@@ -195,7 +198,10 @@ export function EditModeProvider({ children }: { children: ReactNode }) {
   };
 
   const deleteCenter = async (civId: string, centerId: string) => {
-    if (!isAdmin) return;
+    if (!isAdmin && !user) {
+      showStatus("error", "Անհրաժեշտ է մուտք գործել համակարգ կենտրոնը հեռացնելու համար:");
+      return;
+    }
     setSaving(true);
     try {
       await deleteCenterDoc(civId, centerId);
@@ -211,7 +217,10 @@ export function EditModeProvider({ children }: { children: ReactNode }) {
 
   // Subcollection Author CRUD
   const saveAuthor = async (civId: string, author: Thinker) => {
-    if (!isAdmin) return;
+    if (!isAdmin && !user) {
+      showStatus("error", "Անհրաժեշտ է մուտք գործել համակարգ հեղինակին պահպանելու համար:");
+      return;
+    }
     setSaving(true);
     try {
       await saveAuthorDoc(civId, author);
@@ -226,7 +235,10 @@ export function EditModeProvider({ children }: { children: ReactNode }) {
   };
 
   const deleteAuthor = async (civId: string, authorId: string) => {
-    if (!isAdmin) return;
+    if (!isAdmin && !user) {
+      showStatus("error", "Անհրաժեշտ է մուտք գործել համակարգ հեղինակին հեռացնելու համար:");
+      return;
+    }
     setSaving(true);
     try {
       await deleteAuthorDoc(civId, authorId);
@@ -241,11 +253,14 @@ export function EditModeProvider({ children }: { children: ReactNode }) {
   };
 
   const savePublication = async (civId: string, publication: Publication) => {
-    if (!isAdmin) return;
+    if (!isAdmin && !user) {
+      showStatus("error", "Անհրաժեշտ է մուտք գործել համակարգ աշխատությունը պահպանելու համար:");
+      return;
+    }
     setSaving(true);
     try {
       await savePublicationDoc(civId, publication);
-      showStatus("success", `✓ Աշխատությունը («${publication.title}») պահպանվեց ենթահավաքածուում:`);
+      showStatus("success", `✓ Աշխատությունը («${publication.title}») պահպանվեց:`);
     } catch (err: any) {
       console.error(err);
       showStatus("error", `Սխալ աշխատությունը պահպանելիս. ${err.message || err}`);
@@ -256,11 +271,14 @@ export function EditModeProvider({ children }: { children: ReactNode }) {
   };
 
   const deletePublication = async (civId: string, pubId: string) => {
-    if (!isAdmin) return;
+    if (!isAdmin && !user) {
+      showStatus("error", "Անհրաժեշտ է մուտք գործել համակարգ աշխատությունը հեռացնելու համար:");
+      return;
+    }
     setSaving(true);
     try {
       await deletePublicationDoc(civId, pubId);
-      showStatus("success", "✓ Աշխատությունը հեռացվեց ենթահավաքածուից:");
+      showStatus("success", "✓ Աշխատությունը հեռացվեց:");
     } catch (err: any) {
       console.error(err);
       showStatus("error", `Սխալ աշխատությունը հեռացնելիս. ${err.message || err}`);

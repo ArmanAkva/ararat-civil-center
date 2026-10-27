@@ -11,6 +11,8 @@ import { getCenterContent } from "@/lib/contentService";
 import CenterLoading from "@/app/centers/[id]/loading";
 import { MemberAvatar } from "@/components/ui/MemberCard";
 import { AutoTruncateQuote } from "@/components/ui/AutoTruncateQuote";
+import PdfViewerModal from "@/components/publications/PdfViewerModal";
+import PdfUploadField from "@/components/publications/PdfUploadField";
 
 interface Props {
   initialCenter: ThinkTank;
@@ -30,6 +32,16 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
   const [pubModalTab, setPubModalTab] = useState<"select" | "create">("select");
   const [pubSearchQuery, setPubSearchQuery] = useState("");
   const [editingPub, setEditingPub] = useState<Publication | null>(null);
+  const [isEditingCenterProfile, setIsEditingCenterProfile] = useState(false);
+  const [viewingPdf, setViewingPdf] = useState<{
+    url: string;
+    title: string;
+    authorName?: string;
+    year?: string;
+    pages?: number;
+    fileName?: string;
+    fileSizeBytes?: number;
+  } | null>(null);
 
   // New Publication form state
   const [newPubData, setNewPubData] = useState({
@@ -38,6 +50,8 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
     type: "Զեկույց",
     pages: "",
     downloadUrl: "",
+    fileName: "",
+    fileSizeBytes: undefined as number | undefined,
     description: "",
     authorId: "",
   });
@@ -187,14 +201,16 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
       id: newPubId,
       civId: civ.id,
       title: newPubData.title.trim(),
-      year: newPubData.year ? String(newPubData.year).trim() : undefined,
       type: newPubData.type || "Զեկույց",
-      pages: newPubData.pages ? Number(newPubData.pages) : undefined,
-      downloadUrl: newPubData.downloadUrl ? newPubData.downloadUrl.trim() : undefined,
-      description: newPubData.description ? newPubData.description.trim() : undefined,
       centerIds: [center.id],
       authorIds,
       createdAt: new Date().toISOString(),
+      ...(newPubData.year?.trim() ? { year: newPubData.year.trim() } : {}),
+      ...(newPubData.pages ? { pages: Number(newPubData.pages) } : {}),
+      ...(newPubData.downloadUrl?.trim() ? { downloadUrl: newPubData.downloadUrl.trim() } : {}),
+      ...(newPubData.fileName?.trim() ? { fileName: newPubData.fileName.trim() } : {}),
+      ...(newPubData.fileSizeBytes ? { fileSizeBytes: newPubData.fileSizeBytes } : {}),
+      ...(newPubData.description?.trim() ? { description: newPubData.description.trim() } : {}),
     };
 
     // 1. Save in civilization publications subcollection
@@ -220,6 +236,8 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
       type: "Զեկույց",
       pages: "",
       downloadUrl: "",
+      fileName: "",
+      fileSizeBytes: undefined,
       description: "",
       authorId: "",
     });
@@ -232,11 +250,13 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
     const updatedPub: Publication = {
       ...editingPub,
       title: data.title?.trim() || editingPub.title,
-      year: data.year ? String(data.year).trim() : editingPub.year,
       type: data.type || editingPub.type,
-      pages: data.pages ? Number(data.pages) : editingPub.pages,
-      downloadUrl: data.downloadUrl ? data.downloadUrl.trim() : editingPub.downloadUrl,
-      description: data.description ? data.description.trim() : editingPub.description,
+      ...(data.year !== undefined ? (data.year ? { year: String(data.year).trim() } : { year: "" }) : (editingPub.year ? { year: editingPub.year } : {})),
+      ...(data.pages !== undefined ? (data.pages ? { pages: Number(data.pages) } : {}) : (editingPub.pages ? { pages: editingPub.pages } : {})),
+      ...(data.downloadUrl !== undefined ? (data.downloadUrl ? { downloadUrl: data.downloadUrl.trim() } : { downloadUrl: "" }) : (editingPub.downloadUrl ? { downloadUrl: editingPub.downloadUrl } : {})),
+      ...(data.fileName !== undefined ? { fileName: data.fileName } : (editingPub.fileName ? { fileName: editingPub.fileName } : {})),
+      ...(data.fileSizeBytes !== undefined ? { fileSizeBytes: data.fileSizeBytes } : (editingPub.fileSizeBytes ? { fileSizeBytes: editingPub.fileSizeBytes } : {})),
+      ...(data.description !== undefined ? (data.description ? { description: data.description.trim() } : { description: "" }) : (editingPub.description ? { description: editingPub.description } : {})),
     };
 
     await savePublication(civ.id, updatedPub);
@@ -343,11 +363,11 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
     const newAuthor: Thinker = {
       id: newAuthorId,
       name: newAuthorData.name.trim(),
-      nameOriginal: newAuthorData.nameOriginal.trim() || undefined,
       title: newAuthorData.title.trim() || "Կենտրոնի Փորձագետ / Հետազոտող",
       bio: newAuthorData.bio.trim() || "",
-      quote: newAuthorData.quote.trim() || undefined,
       publications: [],
+      ...(newAuthorData.nameOriginal.trim() ? { nameOriginal: newAuthorData.nameOriginal.trim() } : {}),
+      ...(newAuthorData.quote.trim() ? { quote: newAuthorData.quote.trim() } : {}),
     };
 
     // 1. Save author into Civilization Authors pool:
@@ -431,27 +451,52 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
         </Link>
         <div style={{ display: "flex", alignItems: "center", gap: "0.8rem", flexWrap: "wrap" }}>
           {isAdmin && (
-            <button
-              type="button"
-              onClick={toggleEditMode}
-              style={{
-                background: isEditMode ? "var(--gold-accent)" : "rgba(183, 121, 31, 0.12)",
-                color: isEditMode ? "#ffffff" : "var(--gold-accent)",
-                border: "1px solid var(--gold-accent)",
-                padding: "0.35rem 0.85rem",
-                borderRadius: "999px",
-                fontSize: "0.82rem",
-                fontWeight: "700",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                gap: "0.4rem",
-                transition: "all 0.2s ease",
-              }}
-            >
-              <span>{isEditMode ? "✏️" : "👁"}</span>
-              <span>{isEditMode ? "Խմբագրումը՝ ԱԿՏԻՎ" : "Խմբագրել Կենտրոնը"}</span>
-            </button>
+            <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+              <button
+                type="button"
+                onClick={() => setIsEditingCenterProfile(true)}
+                style={{
+                  background: "rgba(183, 121, 31, 0.15)",
+                  color: "var(--gold-accent)",
+                  border: "1px solid var(--gold-accent)",
+                  padding: "0.4rem 0.95rem",
+                  borderRadius: "999px",
+                  fontSize: "0.82rem",
+                  fontWeight: "700",
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.4rem",
+                  transition: "all 0.2s ease",
+                }}
+              >
+                <span>✏️</span>
+                <span>Խմբագրել Կենտրոնը</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={toggleEditMode}
+                style={{
+                  background: isEditMode ? "var(--gold-accent)" : "rgba(255, 255, 255, 0.05)",
+                  color: isEditMode ? "#ffffff" : "var(--text-secondary)",
+                  border: "1px solid var(--card-border)",
+                  padding: "0.4rem 0.85rem",
+                  borderRadius: "999px",
+                  fontSize: "0.82rem",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.4rem",
+                  transition: "all 0.2s ease",
+                }}
+                title="Խմբագրման ռեժիմի միացում"
+              >
+                <span>{isEditMode ? "✓" : "👁"}</span>
+                <span>{isEditMode ? "Խմբագրումը՝ ԱԿՏԻՎ" : "Խմբագրման Ռեժիմ"}</span>
+              </button>
+            </div>
           )}
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <span style={{ fontSize: "1.2rem" }}>{civ.symbol}</span>
@@ -609,7 +654,7 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
               Կենտրոնի հետազոտական հրապարակումները, քաղաքականության զեկույցները և մենագրությունները
             </p>
           </div>
-          {isEditMode && (
+          {(isEditMode || isAdmin) && (
             <button
               type="button"
               onClick={() => {
@@ -638,7 +683,7 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
           >
             <div style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>📄</div>
             <p style={{ margin: "0 0 1rem 0" }}>Այս կենտրոնի համար գիտական աշխատություններ դեռ ավելացված չեն:</p>
-            {isEditMode && (
+            {(isEditMode || isAdmin) && (
               <button
                 type="button"
                 onClick={() => {
@@ -682,7 +727,9 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
                     )}
                   </div>
                   <h3 style={{ margin: "0 0 0.5rem 0", color: "var(--text-primary)", fontSize: "1.2rem", fontFamily: "var(--font-serif)" }}>
-                    {pub.title}
+                    <Link href={`/publications/${pub.id}`} style={{ color: "inherit", textDecoration: "none" }}>
+                      {pub.title}
+                    </Link>
                   </h3>
                   {pub.description && (
                     <p style={{ margin: "0 0 0.6rem 0", color: "var(--text-secondary)", fontSize: "0.95rem", lineHeight: "1.6" }}>
@@ -724,16 +771,63 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
                 </div>
 
                 <div style={{ display: "flex", gap: "0.6rem", alignItems: "center", flexWrap: "wrap" }}>
+                  <Link
+                    href={`/publications/${pub.id}`}
+                    className="credo-action-btn"
+                    style={{ padding: "0.5rem 0.9rem", fontSize: "0.85rem", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "0.3rem" }}
+                  >
+                    📖 Բացել էջում
+                  </Link>
+
                   <button
                     type="button"
                     onClick={() => setSelectedPublication(pub)}
                     className="credo-action-btn"
                     style={{ padding: "0.5rem 1rem", fontSize: "0.85rem" }}
                   >
-                    Դիտել Մանրամասն
+                    Մանրամասն
                   </button>
 
-                  {isEditMode && (
+                  {pub.downloadUrl && (
+                    <div style={{ display: "flex", gap: "0.4rem", alignItems: "center" }}>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setViewingPdf({
+                            url: pub.downloadUrl!,
+                            title: pub.title,
+                            authorName: center.name,
+                            year: pub.year,
+                            pages: pub.pages,
+                            fileName: pub.fileName,
+                            fileSizeBytes: pub.fileSizeBytes,
+                          })
+                        }
+                        className="credo-action-btn"
+                        style={{
+                          padding: "0.5rem 0.85rem",
+                          fontSize: "0.85rem",
+                          background: "rgba(183, 121, 31, 0.15)",
+                          color: "var(--gold-accent)",
+                        }}
+                      >
+                        👁 Դիտել PDF
+                      </button>
+                      <a
+                        href={pub.downloadUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        download={pub.fileName || `${pub.title}.pdf`}
+                        className="credo-action-btn"
+                        style={{ padding: "0.5rem 0.85rem", fontSize: "0.85rem", textDecoration: "none" }}
+                        title="Ներբեռնել PDF"
+                      >
+                        ⬇️ Ներբեռնել
+                      </a>
+                    </div>
+                  )}
+
+                  {(isEditMode || isAdmin) && (
                     <>
                       <button
                         type="button"
@@ -778,7 +872,7 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
               </div>
             ))}
 
-            {isEditMode && (
+            {(isEditMode || isAdmin) && (
               <button
                 type="button"
                 onClick={() => {
@@ -821,7 +915,7 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
               Կենտրոնի առաջատար հետազոտողները, վերլուծաբանները և գիտական մտածողները
             </p>
           </div>
-          {isEditMode && (
+          {(isEditMode || isAdmin) && (
             <button
               type="button"
               onClick={() => {
@@ -850,7 +944,7 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
           >
             <div style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>🖋</div>
             <p style={{ margin: "0 0 1rem 0" }}>Այս կենտրոնին դեռևս կցված չեն գիտաշխատողներ կամ հեղինակներ:</p>
-            {isEditMode && (
+            {(isEditMode || isAdmin) && (
               <button
                 type="button"
                 onClick={() => {
@@ -878,7 +972,7 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
                   position: "relative",
                 }}
               >
-                {isEditMode && (
+                {(isEditMode || isAdmin) && (
                   <div style={{ position: "absolute", top: "0.8rem", right: "0.8rem", display: "flex", gap: "0.4rem", zIndex: 10 }}>
                     <button
                       type="button"
@@ -983,7 +1077,7 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
               </div>
             ))}
 
-            {isEditMode && (
+            {(isEditMode || isAdmin) && (
               <button
                 type="button"
                 onClick={() => {
@@ -1708,27 +1802,6 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
 
                 <div>
                   <label style={{ display: "block", fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "0.4rem" }}>
-                    Առցանց Հղում / PDF URL (ընտրովի)
-                  </label>
-                  <input
-                    type="url"
-                    placeholder="https://..."
-                    value={newPubData.downloadUrl}
-                    onChange={(e) => setNewPubData({ ...newPubData, downloadUrl: e.target.value })}
-                    style={{
-                      width: "100%",
-                      padding: "0.65rem 0.85rem",
-                      borderRadius: "0.5rem",
-                      background: "var(--input-bg)",
-                      border: "1px solid var(--card-border)",
-                      color: "var(--text-primary)",
-                      boxSizing: "border-box",
-                    }}
-                  />
-                </div>
-
-                <div>
-                  <label style={{ display: "block", fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "0.4rem" }}>
                     Ամփոփագիր / Հիմնադրույթներ
                   </label>
                   <textarea
@@ -1748,6 +1821,22 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
                     }}
                   />
                 </div>
+
+                <PdfUploadField
+                  civId={civ.id}
+                  downloadUrl={newPubData.downloadUrl}
+                  fileName={newPubData.fileName}
+                  fileSizeBytes={newPubData.fileSizeBytes}
+                  label="PDF Փաստաթուղթ (Storage / URL)"
+                  onChange={(res) => {
+                    setNewPubData({
+                      ...newPubData,
+                      downloadUrl: res.downloadUrl,
+                      fileName: res.fileName || "",
+                      fileSizeBytes: res.fileSizeBytes,
+                    });
+                  }}
+                />
 
                 <div style={{ background: "rgba(183, 121, 31, 0.08)", padding: "0.85rem 1rem", borderRadius: "0.5rem", borderLeft: "3px solid var(--gold-accent)", fontSize: "0.85rem", color: "var(--text-secondary)" }}>
                   ✓ Այս աշխատությունն ավտոմատ կավելացվի <strong>«{civ.nameHy}»</strong> քաղաքակրթության գրադարանում և կկցվի <strong>«{center.name}»</strong> կենտրոնին:
@@ -1772,6 +1861,7 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
       )}
 
       {/* Edit Publication Details Modal */}
+      {/* Edit Publication Details Modal */}
       {editingPub && (
         <EditCardModal
           title={`Խմբագրել Աշխատությունը՝ ${editingPub.title}`}
@@ -1781,15 +1871,18 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
             type: editingPub.type || "Զեկույց",
             pages: editingPub.pages || "",
             downloadUrl: editingPub.downloadUrl || "",
+            fileName: editingPub.fileName || "",
+            fileSizeBytes: editingPub.fileSizeBytes,
             description: editingPub.description || "",
           }}
+          civId={civ.id}
           fields={[
             { key: "title", label: "Աշխատության Վերնագիր", placeholder: "Վերնագիր" },
             { key: "type", label: "Տեսակ (Զեկույց / Մենագրություն / Հոդված / PDF)", placeholder: "Զեկույց" },
             { key: "year", label: "Հրատարակման Տարեթիվ", placeholder: "2026" },
             { key: "pages", label: "Էջերի Քանակ", placeholder: "100" },
-            { key: "downloadUrl", label: "Առցանց Հղում / PDF URL", placeholder: "https://..." },
             { key: "description", label: "Ամփոփագիր", type: "textarea", placeholder: "Հիմնական դրույթները..." },
+            { key: "downloadUrl", label: "PDF Փաստաթուղթ (Storage / URL)", type: "pdf" },
           ]}
           onSave={handleSaveEditedPublication}
           onClose={() => setEditingPub(null)}
@@ -1838,7 +1931,7 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
               </p>
             </div>
 
-            <div style={{ display: "flex", gap: "1rem", justifyContent: "flex-end", flexWrap: "wrap" }}>
+            <div style={{ display: "flex", gap: "0.8rem", justifyContent: "flex-end", flexWrap: "wrap", alignItems: "center" }}>
               <button
                 type="button"
                 className="credo-action-btn"
@@ -1847,16 +1940,38 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
                 Փակել
               </button>
               {selectedPublication.downloadUrl ? (
-                <a
-                  href={selectedPublication.downloadUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn-primary"
-                  style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "0.4rem" }}
-                >
-                  <span>Կարդալ Առցանց / Բացել Հղումը</span>
-                  <span>↗</span>
-                </a>
+                <>
+                  <button
+                    type="button"
+                    className="credo-action-btn"
+                    onClick={() => {
+                      const p = selectedPublication;
+                      setSelectedPublication(null);
+                      setViewingPdf({
+                        url: p.downloadUrl!,
+                        title: p.title,
+                        authorName: center.name,
+                        year: p.year,
+                        pages: p.pages,
+                        fileName: p.fileName,
+                        fileSizeBytes: p.fileSizeBytes,
+                      });
+                    }}
+                    style={{ padding: "0.55rem 1.1rem", fontSize: "0.88rem" }}
+                  >
+                    👁 Դիտել PDF-ը
+                  </button>
+                  <a
+                    href={selectedPublication.downloadUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    download={selectedPublication.fileName || `${selectedPublication.title}.pdf`}
+                    className="btn-primary"
+                    style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "0.4rem" }}
+                  >
+                    <span>⬇️ Ներբեռնել PDF</span>
+                  </a>
+                </>
               ) : (
                 <button
                   type="button"
@@ -1871,6 +1986,63 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Edit Center Profile Modal */}
+      {isEditingCenterProfile && (
+        <EditCardModal
+          title={`Խմբագրել Կենտրոնը՝ ${center.name}`}
+          initialData={{
+            name: center.name || "",
+            originalName: center.originalName || "",
+            city: center.city || "",
+            country: center.country || "",
+            foundedYear: center.foundedYear || "",
+            description: center.description || "",
+            focusAreas: center.focusAreas || [],
+            website: center.website || "",
+          }}
+          fields={[
+            { key: "name", label: "Կենտրոնի Անվանում (հայերեն)", placeholder: "Անվանում" },
+            { key: "originalName", label: "Բնօրինակ / Լատիներեն Անվանում", placeholder: "Original Name" },
+            { key: "city", label: "Քաղաք", placeholder: "Երևան" },
+            { key: "country", label: "Երկիր", placeholder: "Հայաստան" },
+            { key: "foundedYear", label: "Հիմնադրման Տարեթիվ", placeholder: "2015" },
+            { key: "focusAreas", label: "Հետազոտական Ուղղություններ (բաժանեք ստորակետով)", type: "tags" },
+            { key: "website", label: "Պաշտոնական Կայք", placeholder: "https://..." },
+            { key: "description", label: "Կենտրոնի Մանրամասն Նկարագրություն", type: "textarea", placeholder: "Նկարագիր..." },
+          ]}
+          onSave={async (data) => {
+            const updated: ThinkTank = {
+              ...center,
+              name: data.name.trim(),
+              originalName: data.originalName.trim(),
+              city: data.city.trim(),
+              country: data.country.trim(),
+              description: data.description.trim(),
+              focusAreas: Array.isArray(data.focusAreas) ? data.focusAreas : [],
+              ...(data.foundedYear ? { foundedYear: String(data.foundedYear).trim() } : {}),
+              ...(data.website ? { website: data.website.trim() } : {}),
+            };
+            setCenter(updated);
+            await saveCenter(civ.id, updated);
+          }}
+          onClose={() => setIsEditingCenterProfile(false)}
+        />
+      )}
+
+      {/* PDF Full-Screen Viewer Modal */}
+      {viewingPdf && (
+        <PdfViewerModal
+          url={viewingPdf.url}
+          title={viewingPdf.title}
+          authorName={viewingPdf.authorName}
+          year={viewingPdf.year}
+          pages={viewingPdf.pages}
+          fileName={viewingPdf.fileName}
+          fileSizeBytes={viewingPdf.fileSizeBytes}
+          onClose={() => setViewingPdf(null)}
+        />
       )}
     </main>
   );

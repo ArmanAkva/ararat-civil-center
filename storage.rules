@@ -1,0 +1,35 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && (
+        firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role in ['admin', 'super-admin']
+      );
+    }
+    
+    // Publication PDFs:
+    // Anyone can read and download publications; authenticated users can upload
+    match /publications/{civId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+    
+    // User profile images & uploads
+    match /users/{userId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+    }
+
+    // Fallback: public read, authenticated write
+    match /{allPaths=**} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+  }
+}

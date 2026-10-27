@@ -16,6 +16,7 @@ import { getCivilizationContent } from "@/lib/contentService";
 import SingleCivilizationLoading from "@/app/civilizations/[slug]/loading";
 import { MemberAvatarStack, MemberChip, MemberAvatar } from "@/components/ui/MemberCard";
 import { AutoTruncateQuote } from "@/components/ui/AutoTruncateQuote";
+import PdfViewerModal from "@/components/publications/PdfViewerModal";
 
 interface Props {
   civilization: Civilization;
@@ -51,6 +52,15 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
   const [editingAuthor, setEditingAuthor] = useState<{ author: Thinker; isNew: boolean } | null>(null);
   const [editingLibraryPub, setEditingLibraryPub] = useState<{ pub: Publication; isNew: boolean } | null>(null);
   const [addingPubAuthor, setAddingPubAuthor] = useState<Thinker | null>(null);
+  const [viewingPdf, setViewingPdf] = useState<{
+    url: string;
+    title: string;
+    authorName?: string;
+    year?: string;
+    pages?: number;
+    fileName?: string;
+    fileSizeBytes?: number;
+  } | null>(null);
 
   // Sync latest from Firestore on mount
   useEffect(() => {
@@ -413,7 +423,7 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
             )}
 
             {/* Add Center Button */}
-            {isEditMode && activeTab === "centers" && (
+            {(isEditMode || canEdit) && activeTab === "centers" && (
               <button
                 type="button"
                 onClick={() =>
@@ -447,7 +457,7 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
             )}
 
             {/* Add Author Button */}
-            {isEditMode && activeTab === "authors" && (
+            {(isEditMode || canEdit) && activeTab === "authors" && (
               <button
                 type="button"
                 onClick={() =>
@@ -479,7 +489,7 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
             )}
 
             {/* Add Publication Button */}
-            {isEditMode && activeTab === "publications" && (
+            {(isEditMode || canEdit) && activeTab === "publications" && (
               <button
                 type="button"
                 onClick={() =>
@@ -539,8 +549,8 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
         {activeTab === "centers" && (
           <div className="tab-content-panel" role="tabpanel" aria-label="Կենտրոններ">
             <div className="cards-grid-subpage">
-              {/* Dashed Add Card when in Edit Mode */}
-              {isEditMode && (
+              {/* Dashed Add Card when in Edit Mode or Admin */}
+              {(isEditMode || canEdit) && (
                 <div
                   onClick={() =>
                     setEditingCenter({
@@ -606,7 +616,7 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
 
               {filteredCenters.map((center) => (
                 <article key={center.id} className="center-card" style={{ position: "relative" }}>
-                  {isEditMode && (
+                  {(isEditMode || canEdit) && (
                     <div
                       style={{
                         position: "absolute",
@@ -647,7 +657,7 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
                   )}
 
                   <div>
-                    <div className="center-card-header" style={{ paddingRight: isEditMode ? "140px" : "0" }}>
+                    <div className="center-card-header" style={{ paddingRight: (isEditMode || canEdit) ? "140px" : "0" }}>
                       <div className="center-location-tag">
                         <span>📍</span>
                         <span>
@@ -800,8 +810,8 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
         {activeTab === "authors" && (
           <div className="tab-content-panel" role="tabpanel" aria-label="Հեղինակներ">
             <div className="cards-grid-subpage">
-              {/* Dashed Add Card when in Edit Mode */}
-              {isEditMode && (
+              {/* Dashed Add Card when in Edit Mode or Admin */}
+              {(isEditMode || canEdit) && (
                 <div
                   onClick={() =>
                     setEditingAuthor({
@@ -865,7 +875,7 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
 
               {filteredAuthors.map((author) => (
                 <article key={author.id} className="author-card" style={{ position: "relative" }}>
-                  {isEditMode && (
+                  {(isEditMode || canEdit) && (
                     <div
                       style={{
                         position: "absolute",
@@ -907,7 +917,7 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
 
                   <div className="author-header-flex">
                     <MemberAvatar name={author.name} size={64} glow />
-                    <div style={{ paddingRight: isEditMode ? "140px" : "0" }}>
+                    <div style={{ paddingRight: (isEditMode || canEdit) ? "140px" : "0" }}>
                       <h3 className="author-name">
                         <Link href={`/authors/${author.id}`} style={{ color: "inherit", textDecoration: "none" }}>
                           {author.name || "Անանուն հեղինակ"}
@@ -975,7 +985,7 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
                         <span style={{ fontSize: "0.75rem", color: "var(--gold-accent)" }}>
                           {author.publications ? author.publications.length : 0} նյութ
                         </span>
-                        {isEditMode && (
+                        {(isEditMode || canEdit) && (
                           <button
                             type="button"
                             onClick={(e) => {
@@ -1029,7 +1039,7 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
                               </span>
                             </div>
 
-                            {isEditMode && (
+                            {(isEditMode || canEdit) && (
                               <button
                                 type="button"
                                 onClick={(e) => {
@@ -1126,8 +1136,8 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
         {activeTab === "publications" && (
           <div className="tab-content-panel" role="tabpanel" aria-label="Գիտական Աշխատություններ">
             <div className="cards-grid-subpage">
-              {/* Dashed Add Card when in Edit Mode */}
-              {isEditMode && (
+              {/* Dashed Add Card when in Edit Mode or Admin */}
+              {(isEditMode || canEdit) && (
                 <div
                   onClick={() =>
                     setEditingLibraryPub({
@@ -1148,10 +1158,10 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
                   }
                   role="button"
                   tabIndex={0}
+                  className="publication-card"
                   style={{
                     border: "2px dashed var(--gold-accent)",
-                    borderRadius: "1.25rem",
-                    padding: "2.5rem 1.5rem",
+                    padding: "2rem 1.5rem",
                     display: "flex",
                     flexDirection: "column",
                     alignItems: "center",
@@ -1159,13 +1169,11 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
                     textAlign: "center",
                     cursor: "pointer",
                     background: "rgba(183, 121, 31, 0.04)",
-                    transition: "all 0.25s ease",
-                    minHeight: "280px",
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.background = "rgba(183, 121, 31, 0.1)";
                     e.currentTarget.style.borderColor = "var(--gold-accent)";
-                    e.currentTarget.style.transform = "translateY(-3px)";
+                    e.currentTarget.style.transform = "translateY(-4px)";
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.background = "rgba(183, 121, 31, 0.04)";
@@ -1195,23 +1203,16 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
               {filteredPublications.map((pub, idx) => (
                 <article
                   key={pub.id || idx}
-                  className="glass-card"
-                  style={{
-                    padding: "1.8rem",
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "space-between",
-                    position: "relative",
-                  }}
+                  className="publication-card"
                 >
-                  {isEditMode && (
+                  {(isEditMode || canEdit) && (
                     <div
                       style={{
                         position: "absolute",
                         top: "1rem",
                         right: "1rem",
                         display: "flex",
-                        gap: "0.5rem",
+                        gap: "0.4rem",
                         zIndex: 10,
                       }}
                     >
@@ -1219,10 +1220,10 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
                         type="button"
                         onClick={() => setEditingLibraryPub({ pub, isNew: false })}
                         className="credo-action-btn"
-                        style={{ padding: "0.3rem 0.6rem", fontSize: "0.75rem", background: "var(--bg-secondary)" }}
+                        style={{ padding: "0.25rem 0.55rem", fontSize: "0.75rem", background: "var(--bg-secondary)" }}
                         title="Խմբագրել աշխատությունը"
                       >
-                        ✏️ Խմբագրել
+                        ✏️
                       </button>
                       <button
                         type="button"
@@ -1231,7 +1232,7 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
                           background: "rgba(239, 68, 68, 0.1)",
                           border: "1px solid rgba(239, 68, 68, 0.4)",
                           color: "#ef4444",
-                          padding: "0.3rem 0.6rem",
+                          padding: "0.25rem 0.55rem",
                           borderRadius: "0.4rem",
                           cursor: "pointer",
                           fontSize: "0.75rem",
@@ -1239,40 +1240,42 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
                         }}
                         title="Հեռացնել աշխատությունը"
                       >
-                        🗑 Ջնջել
+                        🗑
                       </button>
                     </div>
                   )}
 
-                  <div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginBottom: "0.6rem", flexWrap: "wrap" }}>
+                  <div className="pub-card-body">
+                    <div className="pub-card-top-badges">
                       <span className="pub-tag-badge">📄 {pub.type || "Զեկույց"}</span>
-                      <span style={{ fontSize: "0.85rem", color: "var(--gold-accent)", fontWeight: "600" }}>
+                      <span style={{ fontSize: "0.82rem", color: "var(--gold-accent)", fontWeight: "600" }}>
                         {pub.year && `${pub.year}թ.`}
                         {pub.pages && ` • ${pub.pages} էջ`}
                       </span>
                       {pub.downloadUrl && (
-                        <span style={{ fontSize: "0.78rem", color: "#10b981", background: "rgba(16, 185, 129, 0.12)", padding: "0.15rem 0.5rem", borderRadius: "999px", border: "1px solid rgba(16, 185, 129, 0.3)" }}>
-                          ✓ Առցանց
+                        <span style={{ fontSize: "0.75rem", color: "#10b981", background: "rgba(16, 185, 129, 0.12)", padding: "0.15rem 0.5rem", borderRadius: "999px", border: "1px solid rgba(16, 185, 129, 0.3)" }}>
+                          ✓ PDF առկա
                         </span>
                       )}
                     </div>
 
-                    <h3 style={{ margin: "0 0 0.6rem 0", color: "var(--text-primary)", fontSize: "1.2rem", fontFamily: "var(--font-serif)", lineHeight: "1.35", paddingRight: isEditMode ? "140px" : "0" }}>
-                      {pub.title}
+                    <h3 className="pub-card-title" style={{ paddingRight: (isEditMode || canEdit) ? "70px" : "0" }}>
+                      <Link href={`/publications/${pub.id}`} style={{ color: "inherit", textDecoration: "none" }}>
+                        {pub.title}
+                      </Link>
                     </h3>
 
                     {pub.description && (
-                      <p style={{ margin: "0 0 1rem 0", color: "var(--text-secondary)", fontSize: "0.92rem", lineHeight: "1.6" }}>
+                      <p className="pub-card-desc">
                         {pub.description}
                       </p>
                     )}
 
                     {/* Attached Authors and Centers */}
-                    <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", marginBottom: "1rem" }}>
+                    <div className="pub-card-affiliations">
                       {pub.authorIds && pub.authorIds.length > 0 && (
                         <div style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap", alignItems: "center" }}>
-                          <span style={{ fontSize: "0.78rem", color: "var(--text-secondary)" }}>Հեղինակ՝</span>
+                          <span style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>Հեղինակ՝</span>
                           {pub.authorIds.map((aId) => {
                             const authorObj = (civ.authors || []).find((a) => a.id === aId);
                             return (
@@ -1280,7 +1283,7 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
                                 key={aId}
                                 href={`/authors/${aId}`}
                                 style={{
-                                  fontSize: "0.75rem",
+                                  fontSize: "0.74rem",
                                   color: "var(--gold-accent)",
                                   background: "rgba(183, 121, 31, 0.12)",
                                   padding: "0.15rem 0.5rem",
@@ -1303,7 +1306,7 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
 
                       {pub.centerIds && pub.centerIds.length > 0 && (
                         <div style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap", alignItems: "center" }}>
-                          <span style={{ fontSize: "0.78rem", color: "var(--text-secondary)" }}>Կենտրոն՝</span>
+                          <span style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>Կենտրոն՝</span>
                           {pub.centerIds.map((cId) => {
                             const centerObj = (civ.centers || []).find((c) => c.id === cId);
                             return (
@@ -1311,7 +1314,7 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
                                 key={cId}
                                 href={`/centers/${cId}`}
                                 style={{
-                                  fontSize: "0.75rem",
+                                  fontSize: "0.74rem",
                                   color: "var(--gold-accent)",
                                   background: "rgba(183, 121, 31, 0.1)",
                                   padding: "0.15rem 0.5rem",
@@ -1334,25 +1337,61 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
                     </div>
                   </div>
 
-                  <div style={{ paddingTop: "0.8rem", borderTop: "1px solid var(--card-border)", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.5rem" }}>
-                    <button
-                      type="button"
-                      onClick={() => setSelectedPublication({ pub, authorName: civ.nameHy })}
+                  <div className="pub-card-footer">
+                    <Link
+                      href={`/publications/${pub.id}`}
                       className="credo-action-btn"
-                      style={{ padding: "0.45rem 0.9rem", fontSize: "0.82rem" }}
+                      style={{ padding: "0.45rem 0.8rem", fontSize: "0.8rem", textDecoration: "none" }}
                     >
-                      Դիտել Մանրամասն
-                    </button>
+                      📖 Բացել էջում
+                    </Link>
 
-                    {pub.downloadUrl && (
-                      <a
-                        href={pub.downloadUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ color: "var(--gold-accent)", fontSize: "0.82rem", fontWeight: "600", textDecoration: "none" }}
+                    {pub.downloadUrl ? (
+                      <div style={{ display: "flex", gap: "0.35rem", alignItems: "center" }}>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setViewingPdf({
+                              url: pub.downloadUrl!,
+                              title: pub.title,
+                              authorName: civ.nameHy,
+                              year: pub.year,
+                              pages: pub.pages,
+                              fileName: pub.fileName,
+                              fileSizeBytes: pub.fileSizeBytes,
+                            })
+                          }
+                          className="credo-action-btn"
+                          style={{
+                            padding: "0.45rem 0.75rem",
+                            fontSize: "0.8rem",
+                            background: "rgba(183, 121, 31, 0.12)",
+                            color: "var(--gold-accent)",
+                          }}
+                        >
+                          👁 PDF
+                        </button>
+                        <a
+                          href={pub.downloadUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          download={pub.fileName || `${pub.title}.pdf`}
+                          className="credo-action-btn"
+                          style={{ padding: "0.45rem 0.75rem", fontSize: "0.8rem", textDecoration: "none" }}
+                          title="Ներբեռնել PDF"
+                        >
+                          ⬇️
+                        </a>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setSelectedPublication({ pub, authorName: civ.nameHy })}
+                        className="credo-action-btn"
+                        style={{ padding: "0.45rem 0.75rem", fontSize: "0.78rem" }}
                       >
-                        Բացել Հղումը ↗
-                      </a>
+                        Մանրամասն
+                      </button>
                     )}
                   </div>
                 </article>
@@ -1431,13 +1470,14 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
               : `Խմբագրել՝ ${editingLibraryPub.pub.title || "Աշխատություն"}`
           }
           initialData={editingLibraryPub.pub}
+          civId={civ.id}
           fields={[
             { key: "title", label: "Աշխատության Վերնագիր", placeholder: "օրինակ՝ Ռազմավարական Ինքնիշխանության Հիմունքները" },
             { key: "type", label: "Տեսակ (Զեկույց / Մենագրություն / Հոդված / PDF / Գիրք)", placeholder: "Զեկույց" },
             { key: "year", label: "Հրատարակման Տարեթիվ", placeholder: "2026" },
             { key: "pages", label: "Էջերի Քանակ", placeholder: "120" },
-            { key: "downloadUrl", label: "Առցանց Հղում / PDF URL", placeholder: "https://..." },
             { key: "description", label: "Ամփոփագիր և Գիտական Թեզիսներ", type: "textarea", placeholder: "Հիմնական դրույթները..." },
+            { key: "downloadUrl", label: "PDF Փաստաթուղթ (Storage / URL)", type: "pdf" },
           ]}
           onSave={handleSaveLibraryPub}
           onClose={() => setEditingLibraryPub(null)}
@@ -1446,7 +1486,7 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
       )}
 
       {/* =========================================================
-          Add Publication Modal
+          Add Publication Modal (Author)
           ========================================================= */}
       {addingPubAuthor && (
         <EditCardModal
@@ -1456,14 +1496,17 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
             year: String(new Date().getFullYear()),
             type: "PDF",
             pages: 100,
+            downloadUrl: "",
             description: "",
           }}
+          civId={civ.id}
           fields={[
             { key: "title", label: "Աշխատության Վերնագիր", placeholder: "օրինակ՝ Քաղաքակրթությունների Համարարչություն" },
             { key: "year", label: "Հրատարակման Տարեթիվ", placeholder: "2026" },
             { key: "type", label: "Տեսակ (PDF / Մենագրություն / Հոդված / Զեկույց)", placeholder: "PDF" },
             { key: "pages", label: "Էջերի Քանակ", placeholder: "150" },
             { key: "description", label: "Ամփոփագիր և Նկարագրություն", type: "textarea", placeholder: "Աշխատության հիմնական դրույթները..." },
+            { key: "downloadUrl", label: "PDF Փաստաթուղթ (Storage / URL)", type: "pdf" },
           ]}
           onSave={handleSaveNewPublication}
           onClose={() => setAddingPubAuthor(null)}
@@ -1517,7 +1560,7 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
               </p>
             </div>
 
-            <div style={{ display: "flex", gap: "1rem", justifyContent: "flex-end", flexWrap: "wrap" }}>
+            <div style={{ display: "flex", gap: "0.8rem", justifyContent: "flex-end", flexWrap: "wrap", alignItems: "center" }}>
               <button
                 type="button"
                 className="credo-action-btn"
@@ -1525,18 +1568,68 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
               >
                 Փակել
               </button>
-              <button
-                type="button"
-                className="btn-primary"
-                onClick={() => {
-                  alert(`«${selectedPublication.pub.title}» աշխատության թվային տարբերակը պատրաստվում է ներբեռնման (Արարատյան Գրադարան)։`);
-                }}
-              >
-                <span>Ներբեռնել PDF (Թվային արխիվ)</span>
-              </button>
+              {selectedPublication.pub.downloadUrl ? (
+                <>
+                  <button
+                    type="button"
+                    className="credo-action-btn"
+                    onClick={() => {
+                      const p = selectedPublication.pub;
+                      const authName = selectedPublication.authorName;
+                      setSelectedPublication(null);
+                      setViewingPdf({
+                        url: p.downloadUrl!,
+                        title: p.title,
+                        authorName: authName,
+                        year: p.year,
+                        pages: p.pages,
+                        fileName: p.fileName,
+                        fileSizeBytes: p.fileSizeBytes,
+                      });
+                    }}
+                    style={{ padding: "0.55rem 1.1rem", fontSize: "0.88rem" }}
+                  >
+                    👁 Դիտել PDF-ը
+                  </button>
+                  <a
+                    href={selectedPublication.pub.downloadUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    download={selectedPublication.pub.fileName || `${selectedPublication.pub.title}.pdf`}
+                    className="btn-primary"
+                    style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "0.4rem" }}
+                  >
+                    <span>⬇️ Ներբեռնել PDF</span>
+                  </a>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  className="btn-primary"
+                  onClick={() => {
+                    alert(`«${selectedPublication.pub.title}» աշխատության թվային տարբերակը պատրաստվում է ներբեռնման (Արարատյան Գրադարան)։`);
+                  }}
+                >
+                  <span>Ներբեռնել PDF (Թվային արխիվ)</span>
+                </button>
+              )}
             </div>
           </div>
         </div>
+      )}
+
+      {/* PDF Full-Screen Viewer Modal */}
+      {viewingPdf && (
+        <PdfViewerModal
+          url={viewingPdf.url}
+          title={viewingPdf.title}
+          authorName={viewingPdf.authorName}
+          year={viewingPdf.year}
+          pages={viewingPdf.pages}
+          fileName={viewingPdf.fileName}
+          fileSizeBytes={viewingPdf.fileSizeBytes}
+          onClose={() => setViewingPdf(null)}
+        />
       )}
     </main>
   );

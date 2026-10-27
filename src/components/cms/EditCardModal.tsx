@@ -1,11 +1,12 @@
 "use client";
 
 import React, { useState } from "react";
+import PdfUploadField from "@/components/publications/PdfUploadField";
 
 interface FieldConfig {
   key: string;
   label: string;
-  type?: "text" | "textarea" | "tags";
+  type?: "text" | "textarea" | "tags" | "pdf";
   placeholder?: string;
 }
 
@@ -13,6 +14,7 @@ interface EditCardModalProps<T> {
   title: string;
   initialData: T;
   fields: FieldConfig[];
+  civId?: string;
   onSave: (data: T) => Promise<void>;
   onClose: () => void;
   onDelete?: () => Promise<void>;
@@ -22,6 +24,7 @@ export default function EditCardModal<T extends Record<string, any>>({
   title,
   initialData,
   fields,
+  civId,
   onSave,
   onClose,
   onDelete,
@@ -32,8 +35,11 @@ export default function EditCardModal<T extends Record<string, any>>({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
+    const sanitized = Object.fromEntries(
+      Object.entries(formData).filter(([_, v]) => v !== undefined)
+    ) as T;
     try {
-      await onSave(formData);
+      await onSave(sanitized);
       onClose();
     } catch (err) {
       console.error(err);
@@ -78,78 +84,98 @@ export default function EditCardModal<T extends Record<string, any>>({
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1.2rem" }}>
           {fields.map((f) => (
             <div key={f.key}>
-              <label
-                style={{
-                  display: "block",
-                  fontSize: "0.85rem",
-                  fontWeight: "600",
-                  marginBottom: "0.35rem",
-                  color: "var(--text-primary)",
-                }}
-              >
-                {f.label}
-              </label>
-
-              {f.type === "textarea" ? (
-                <textarea
-                  rows={3}
-                  value={formData[f.key] || ""}
-                  onChange={(e) => handleFieldChange(f.key, e.target.value)}
-                  placeholder={f.placeholder}
-                  style={{
-                    width: "100%",
-                    padding: "0.75rem",
-                    background: "var(--input-bg)",
-                    border: "1px solid var(--card-border)",
-                    borderRadius: "0.5rem",
-                    color: "var(--text-primary)",
-                    fontSize: "0.95rem",
-                    fontFamily: "inherit",
-                    boxSizing: "border-box",
-                  }}
-                />
-              ) : f.type === "tags" ? (
-                <input
-                  type="text"
-                  value={Array.isArray(formData[f.key]) ? formData[f.key].join(", ") : formData[f.key] || ""}
-                  onChange={(e) =>
-                    handleFieldChange(
-                      f.key,
-                      e.target.value
-                        .split(",")
-                        .map((s: string) => s.trim())
-                        .filter(Boolean)
-                    )
-                  }
-                  placeholder="բաժանեք ստորակետով՝ Փիլիսոփայություն, Էթիկա..."
-                  style={{
-                    width: "100%",
-                    padding: "0.75rem",
-                    background: "var(--input-bg)",
-                    border: "1px solid var(--card-border)",
-                    borderRadius: "0.5rem",
-                    color: "var(--text-primary)",
-                    fontSize: "0.95rem",
-                    boxSizing: "border-box",
+              {f.type === "pdf" ? (
+                <PdfUploadField
+                  civId={civId || formData.civId || "general"}
+                  downloadUrl={formData[f.key] || ""}
+                  fileName={formData.fileName}
+                  fileSizeBytes={formData.fileSizeBytes}
+                  label={f.label}
+                  onChange={(res) => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      [f.key]: res.downloadUrl,
+                      ...(res.fileName !== undefined ? { fileName: res.fileName } : {}),
+                      ...(res.fileSizeBytes !== undefined ? { fileSizeBytes: res.fileSizeBytes } : {}),
+                    }));
                   }}
                 />
               ) : (
-                <input
-                  type="text"
-                  value={formData[f.key] || ""}
-                  onChange={(e) => handleFieldChange(f.key, e.target.value)}
-                  placeholder={f.placeholder}
-                  style={{
-                    width: "100%",
-                    padding: "0.75rem",
-                    background: "var(--input-bg)",
-                    border: "1px solid var(--card-border)",
-                    borderRadius: "0.5rem",
-                    color: "var(--text-primary)",
-                    fontSize: "0.95rem",
-                    boxSizing: "border-box",
-                  }}
-                />
+                <>
+                  <label
+                    style={{
+                      display: "block",
+                      fontSize: "0.85rem",
+                      fontWeight: "600",
+                      marginBottom: "0.35rem",
+                      color: "var(--text-primary)",
+                    }}
+                  >
+                    {f.label}
+                  </label>
+
+                  {f.type === "textarea" ? (
+                    <textarea
+                      rows={3}
+                      value={formData[f.key] || ""}
+                      onChange={(e) => handleFieldChange(f.key, e.target.value)}
+                      placeholder={f.placeholder}
+                      style={{
+                        width: "100%",
+                        padding: "0.75rem",
+                        background: "var(--input-bg)",
+                        border: "1px solid var(--card-border)",
+                        borderRadius: "0.5rem",
+                        color: "var(--text-primary)",
+                        fontSize: "0.95rem",
+                        fontFamily: "inherit",
+                        boxSizing: "border-box",
+                      }}
+                    />
+                  ) : f.type === "tags" ? (
+                    <input
+                      type="text"
+                      value={Array.isArray(formData[f.key]) ? formData[f.key].join(", ") : formData[f.key] || ""}
+                      onChange={(e) =>
+                        handleFieldChange(
+                          f.key,
+                          e.target.value
+                            .split(",")
+                            .map((s: string) => s.trim())
+                            .filter(Boolean)
+                        )
+                      }
+                      placeholder="բաժանեք ստորակետով՝ Փիլիսոփայություն, Էթիկա..."
+                      style={{
+                        width: "100%",
+                        padding: "0.75rem",
+                        background: "var(--input-bg)",
+                        border: "1px solid var(--card-border)",
+                        borderRadius: "0.5rem",
+                        color: "var(--text-primary)",
+                        fontSize: "0.95rem",
+                        boxSizing: "border-box",
+                      }}
+                    />
+                  ) : (
+                    <input
+                      type="text"
+                      value={formData[f.key] || ""}
+                      onChange={(e) => handleFieldChange(f.key, e.target.value)}
+                      placeholder={f.placeholder}
+                      style={{
+                        width: "100%",
+                        padding: "0.75rem",
+                        background: "var(--input-bg)",
+                        border: "1px solid var(--card-border)",
+                        borderRadius: "0.5rem",
+                        color: "var(--text-primary)",
+                        fontSize: "0.95rem",
+                        boxSizing: "border-box",
+                      }}
+                    />
+                  )}
+                </>
               )}
             </div>
           ))}

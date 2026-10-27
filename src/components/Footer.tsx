@@ -263,6 +263,9 @@ export default function Footer() {
                 <Link href="/civilizations" className="footer-link">Քաղաքակրթություններ</Link>
               </li>
               <li>
+                <Link href="/publications" className="footer-link">Գրադարան (Գիտական Աշխատություններ)</Link>
+              </li>
+              <li>
                 <Link href="/dialogue" className="footer-link">Երկխոսության Հարթակ</Link>
               </li>
               <li>

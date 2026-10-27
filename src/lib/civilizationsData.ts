@@ -7,6 +7,8 @@ export interface Publication {
   description?: string;
   pages?: number;
   downloadUrl?: string;
+  fileName?: string;
+  fileSizeBytes?: number;
   authorIds?: string[];
   centerIds?: string[];
   createdAt?: string;
@@ -1276,16 +1278,72 @@ export function findPublicationById(
   return undefined;
 }
 
-export function getAllPublicationIds(): string[] {
-  const ids = new Set<string>();
+export interface PublicationWithDetails {
+  pub: Publication;
+  civ: Civilization;
+  author?: Thinker;
+  center?: ThinkTank;
+}
+
+export function getAllLocalPublicationsWithDetails(): PublicationWithDetails[] {
+  const map = new Map<string, PublicationWithDetails>();
+
   for (const civ of civilizationsData) {
+    // 1. civ.publications
     if (civ.publications) {
       for (const pub of civ.publications) {
-        if (pub.id) ids.add(pub.id);
+        if (!pub.id) continue;
+        const author = pub.authorIds?.[0]
+          ? civ.authors?.find((a) => a.id.toLowerCase() === pub.authorIds![0].toLowerCase())
+          : undefined;
+        const center = pub.centerIds?.[0]
+          ? civ.centers?.find((c) => c.id.toLowerCase() === pub.centerIds![0].toLowerCase())
+          : undefined;
+        map.set(pub.id.toLowerCase(), { pub, civ, author, center });
+      }
+    }
+    // 2. authors publications
+    if (civ.authors) {
+      for (const a of civ.authors) {
+        if (a.publications) {
+          for (const pub of a.publications) {
+            if (!pub.id) continue;
+            if (!map.has(pub.id.toLowerCase())) {
+              const center = pub.centerIds?.[0]
+                ? civ.centers?.find((c) => c.id.toLowerCase() === pub.centerIds![0].toLowerCase())
+                : undefined;
+              map.set(pub.id.toLowerCase(), { pub, civ, author: a, center });
+            }
+          }
+        }
+      }
+    }
+    // 3. centers publications
+    if (civ.centers) {
+      for (const c of civ.centers) {
+        if (c.publications) {
+          for (const pub of c.publications) {
+            if (!pub.id) continue;
+            if (!map.has(pub.id.toLowerCase())) {
+              const author = pub.authorIds?.[0]
+                ? civ.authors?.find((a) => a.id.toLowerCase() === pub.authorIds![0].toLowerCase())
+                : undefined;
+              map.set(pub.id.toLowerCase(), { pub, civ, author, center: c });
+            }
+          }
+        }
       }
     }
   }
-  return Array.from(ids);
+
+  return Array.from(map.values());
+}
+
+export function getAllPublicationIds(): string[] {
+  const details = getAllLocalPublicationsWithDetails();
+  return details
+    .map((d) => d.pub.id)
+    .filter((id): id is string => Boolean(id));
 }
 
 export interface CivilCenterOption {

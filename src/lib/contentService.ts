@@ -5,6 +5,9 @@ import {
   deleteDoc,
   collection,
   getDocs,
+  collectionGroup,
+  query,
+  where,
 } from "firebase/firestore";
 import { db } from "./firebase";
 import {
@@ -12,11 +15,13 @@ import {
   ThinkTank,
   Thinker,
   Publication,
+  PublicationWithDetails,
   civilizationsData,
   getCivilizationBySlug,
   findCenterById,
   findAuthorById,
   findPublicationById,
+  getAllLocalPublicationsWithDetails,
 } from "./civilizationsData";
 import {
   defaultCivilizationsContent,
@@ -76,6 +81,51 @@ export async function getCivilizationContent(
       });
     }
 
+    // Merge centers by ID
+    const baseCenters = (parentSnap && parentSnap.exists() && Array.isArray(parentSnap.data().centers) && parentSnap.data().centers.length > 0)
+      ? parentSnap.data().centers
+      : localCiv?.centers || [];
+    const centerMap = new Map<string, ThinkTank>();
+    for (const c of baseCenters) {
+      if (c && c.id) centerMap.set(c.id.toLowerCase(), c);
+    }
+    for (const c of fetchedCenters) {
+      if (c && c.id) {
+        centerMap.set(c.id.toLowerCase(), { ...(centerMap.get(c.id.toLowerCase()) || {}), ...c });
+      }
+    }
+    const mergedCenters = Array.from(centerMap.values());
+
+    // Merge authors by ID
+    const baseAuthors = (parentSnap && parentSnap.exists() && Array.isArray(parentSnap.data().authors) && parentSnap.data().authors.length > 0)
+      ? parentSnap.data().authors
+      : localCiv?.authors || [];
+    const authorMap = new Map<string, Thinker>();
+    for (const a of baseAuthors) {
+      if (a && a.id) authorMap.set(a.id.toLowerCase(), a);
+    }
+    for (const a of fetchedAuthors) {
+      if (a && a.id) {
+        authorMap.set(a.id.toLowerCase(), { ...(authorMap.get(a.id.toLowerCase()) || {}), ...a });
+      }
+    }
+    const mergedAuthors = Array.from(authorMap.values());
+
+    // Merge publications by ID
+    const basePubs = (parentSnap && parentSnap.exists() && Array.isArray(parentSnap.data().publications) && parentSnap.data().publications.length > 0)
+      ? parentSnap.data().publications
+      : localCiv?.publications || [];
+    const pubMap = new Map<string, Publication>();
+    for (const p of basePubs) {
+      if (p && p.id) pubMap.set(p.id.toLowerCase(), p);
+    }
+    for (const p of fetchedPublications) {
+      if (p && p.id) {
+        pubMap.set(p.id.toLowerCase(), { ...(pubMap.get(p.id.toLowerCase()) || {}), ...p });
+      }
+    }
+    const mergedPublications = Array.from(pubMap.values());
+
     if (parentSnap.exists()) {
       const parentData = parentSnap.data();
       return {
@@ -88,32 +138,16 @@ export async function getCivilizationContent(
         tagline: parentData.tagline || localCiv?.tagline || "",
         credo: parentData.credo || localCiv?.credo || "",
         overview: parentData.overview || localCiv?.overview || "",
-        centers:
-          fetchedCenters.length > 0
-            ? fetchedCenters
-            : (Array.isArray(parentData.centers) && parentData.centers.length > 0)
-            ? parentData.centers
-            : localCiv?.centers || [],
-        authors:
-          fetchedAuthors.length > 0
-            ? fetchedAuthors
-            : (Array.isArray(parentData.authors) && parentData.authors.length > 0)
-            ? parentData.authors
-            : localCiv?.authors || [],
-        publications:
-          fetchedPublications.length > 0
-            ? fetchedPublications
-            : (Array.isArray(parentData.publications) && parentData.publications.length > 0)
-            ? parentData.publications
-            : localCiv?.publications || [],
+        centers: mergedCenters,
+        authors: mergedAuthors,
+        publications: mergedPublications,
       };
     } else if (fetchedCenters.length > 0 || fetchedAuthors.length > 0 || fetchedPublications.length > 0) {
-      // Subcollections exist even if parent doc wasn't fetched
       return {
         ...(localCiv || civilizationsData[0]),
-        centers: fetchedCenters.length > 0 ? fetchedCenters : localCiv?.centers || [],
-        authors: fetchedAuthors.length > 0 ? fetchedAuthors : localCiv?.authors || [],
-        publications: fetchedPublications.length > 0 ? fetchedPublications : localCiv?.publications || [],
+        centers: mergedCenters,
+        authors: mergedAuthors,
+        publications: mergedPublications,
       };
     }
   } catch (error) {
@@ -142,6 +176,39 @@ export async function getAllCivilizationsContent(): Promise<Civilization[]> {
 }
 
 /**
+ * Recursively strips keys with undefined values from objects/arrays
+ * to prevent Firestore "Unsupported field value: undefined" errors.
+ */
+export function cleanFirestoreData<T>(data: T): T {
+  if (data === null || data === undefined) {
+    return data;
+  }
+  try {
+    return JSON.parse(
+      JSON.stringify(data, (_key, value) => {
+        return value === undefined ? undefined : value;
+      })
+    ) as T;
+  } catch {
+    if (Array.isArray(data)) {
+      return data
+        .filter((item) => item !== undefined)
+        .map((item) => (typeof item === "object" && item !== null ? cleanFirestoreData(item) : item)) as unknown as T;
+    }
+    if (typeof data === "object") {
+      const clean: Record<string, any> = {};
+      for (const [key, val] of Object.entries(data)) {
+        if (val !== undefined) {
+          clean[key] = typeof val === "object" && val !== null ? cleanFirestoreData(val) : val;
+        }
+      }
+      return clean as T;
+    }
+    return data;
+  }
+}
+
+/**
  * Updates the parent civilization document (meta and core credo)
  */
 export async function updateCivilizationContent(
@@ -153,10 +220,10 @@ export async function updateCivilizationContent(
   const { centers, authors, ...metaFields } = partialData;
   await setDoc(
     docRef,
-    {
+    cleanFirestoreData({
       ...metaFields,
       updatedAt: new Date().toISOString(),
-    },
+    }),
     { merge: true }
   );
 }
@@ -172,11 +239,11 @@ export async function saveCenterDoc(
   const docRef = doc(db, "civilizations", civId, "centers", center.id);
   await setDoc(
     docRef,
-    {
+    cleanFirestoreData({
       ...center,
       civId,
       updatedAt: new Date().toISOString(),
-    },
+    }),
     { merge: true }
   );
 }
@@ -204,11 +271,11 @@ export async function saveAuthorDoc(
   const docRef = doc(db, "civilizations", civId, "authors", author.id);
   await setDoc(
     docRef,
-    {
+    cleanFirestoreData({
       ...author,
       civId,
       updatedAt: new Date().toISOString(),
-    },
+    }),
     { merge: true }
   );
 }
@@ -237,12 +304,12 @@ export async function savePublicationDoc(
   const docRef = doc(db, "civilizations", civId, "publications", pubId);
   await setDoc(
     docRef,
-    {
+    cleanFirestoreData({
       ...pub,
       id: pubId,
       civId,
       updatedAt: new Date().toISOString(),
-    },
+    }),
     { merge: true }
   );
 }
@@ -290,10 +357,10 @@ export async function updatePageContent<T>(
   const docRef = doc(db, "site_content", pageKey);
   await setDoc(
     docRef,
-    {
+    cleanFirestoreData({
       ...partialData,
       updatedAt: new Date().toISOString(),
-    },
+    }),
     { merge: true }
   );
 }
@@ -312,7 +379,7 @@ export async function seedAllContentToFirestore(): Promise<{
       const parentRef = doc(db, "civilizations", civ.id);
       await setDoc(
         parentRef,
-        {
+        cleanFirestoreData({
           id: civ.id,
           slug: civ.slug,
           nameHy: civ.nameHy,
@@ -323,7 +390,7 @@ export async function seedAllContentToFirestore(): Promise<{
           credo: civ.credo,
           overview: civ.overview,
           updatedAt: new Date().toISOString(),
-        },
+        }),
         { merge: true }
       );
 
@@ -332,11 +399,11 @@ export async function seedAllContentToFirestore(): Promise<{
         const centerRef = doc(db, "civilizations", civ.id, "centers", center.id);
         await setDoc(
           centerRef,
-          {
+          cleanFirestoreData({
             ...center,
             civId: civ.id,
             updatedAt: new Date().toISOString(),
-          },
+          }),
           { merge: true }
         );
       }
@@ -346,11 +413,11 @@ export async function seedAllContentToFirestore(): Promise<{
         const authorRef = doc(db, "civilizations", civ.id, "authors", author.id);
         await setDoc(
           authorRef,
-          {
+          cleanFirestoreData({
             ...author,
             civId: civ.id,
             updatedAt: new Date().toISOString(),
-          },
+          }),
           { merge: true }
         );
       }
@@ -362,12 +429,12 @@ export async function seedAllContentToFirestore(): Promise<{
           const pubRef = doc(db, "civilizations", civ.id, "publications", pubId);
           await setDoc(
             pubRef,
-            {
+            cleanFirestoreData({
               ...pub,
               id: pubId,
               civId: civ.id,
               updatedAt: new Date().toISOString(),
-            },
+            }),
             { merge: true }
           );
         }
@@ -503,3 +570,192 @@ export async function getAuthorContent(
 
   return local;
 }
+
+/**
+ * Reads a single publication and its associated civilization, author, and center.
+ */
+export async function getPublicationContent(
+  pubId: string
+): Promise<PublicationWithDetails | undefined> {
+  const local = findPublicationById(pubId);
+  const civId = local?.civ.id;
+
+  // 1. If civId is known from local defaults, try direct fetch first
+  if (civId) {
+    try {
+      const docRef = doc(db, "civilizations", civId, "publications", pubId);
+      const snap = await getDoc(docRef);
+      if (snap.exists()) {
+        const firestorePub = snap.data() as Publication;
+        const mergedPub: Publication = {
+          ...(local?.pub || {}),
+          ...firestorePub,
+        };
+        const fullCiv = await getCivilizationContent(civId);
+        const resolvedCiv = fullCiv || local.civ;
+        const author = mergedPub.authorIds?.[0]
+          ? (resolvedCiv.authors || []).find((a) => a.id.toLowerCase() === mergedPub.authorIds![0].toLowerCase())
+          : undefined;
+        const center = mergedPub.centerIds?.[0]
+          ? (resolvedCiv.centers || []).find((c) => c.id.toLowerCase() === mergedPub.centerIds![0].toLowerCase())
+          : undefined;
+        return { pub: mergedPub, civ: resolvedCiv, author, center };
+      }
+    } catch (e) {
+      console.warn(`Firestore publication direct fetch ${pubId} failed:`, e);
+    }
+  }
+
+  // 2. Query collectionGroup to find by ID anywhere in Firestore
+  try {
+    const q = query(collectionGroup(db, "publications"), where("id", "==", pubId));
+    const snap = await getDocs(q);
+    if (!snap.empty) {
+      const foundDoc = snap.docs[0];
+      const firestorePub = foundDoc.data() as Publication;
+      const parentCivId = foundDoc.ref.parent.parent?.id || firestorePub.civId || civId || "arm";
+      const fullCiv = await getCivilizationContent(parentCivId);
+      const resolvedCiv = fullCiv || local?.civ || civilizationsData.find((c) => c.id === parentCivId) || civilizationsData[0];
+      const mergedPub: Publication = {
+        ...(local?.pub || {}),
+        ...firestorePub,
+      };
+      const author = mergedPub.authorIds?.[0]
+        ? (resolvedCiv.authors || []).find((a) => a.id.toLowerCase() === mergedPub.authorIds![0].toLowerCase())
+        : undefined;
+      const center = mergedPub.centerIds?.[0]
+        ? (resolvedCiv.centers || []).find((c) => c.id.toLowerCase() === mergedPub.centerIds![0].toLowerCase())
+        : undefined;
+      return { pub: mergedPub, civ: resolvedCiv, author, center };
+    }
+  } catch (e) {
+    console.warn(`collectionGroup query for ${pubId} failed:`, e);
+  }
+
+  // 3. Fallback to scanning all civilizations
+  try {
+    const allCivs = await getAllCivilizationsContent();
+    for (const c of allCivs) {
+      const found = (c.publications || []).find(
+        (p) => p.id?.toLowerCase() === pubId.toLowerCase()
+      );
+      if (found) {
+        const mergedPub: Publication = { ...(local?.pub || {}), ...found };
+        const author = mergedPub.authorIds?.[0]
+          ? (c.authors || []).find((a) => a.id.toLowerCase() === mergedPub.authorIds![0].toLowerCase())
+          : undefined;
+        const center = mergedPub.centerIds?.[0]
+          ? (c.centers || []).find((ct) => ct.id.toLowerCase() === mergedPub.centerIds![0].toLowerCase())
+          : undefined;
+        return { pub: mergedPub, civ: c, author, center };
+      }
+    }
+  } catch (e) {
+    console.warn("Global search for publication failed:", e);
+  }
+
+  if (local) {
+    const author = local.pub.authorIds?.[0]
+      ? (local.civ.authors || []).find((a) => a.id.toLowerCase() === local.pub.authorIds![0].toLowerCase())
+      : undefined;
+    const center = local.pub.centerIds?.[0]
+      ? (local.civ.centers || []).find((c) => c.id.toLowerCase() === local.pub.centerIds![0].toLowerCase())
+      : undefined;
+    return { pub: local.pub, civ: local.civ, author, center };
+  }
+
+  return undefined;
+}
+
+/**
+ * Reads all publications across all civilizations with resolved civilization, author, and center.
+ */
+export async function getAllPublicationsWithDetails(): Promise<PublicationWithDetails[]> {
+  try {
+    const allCivs = await getAllCivilizationsContent();
+    const map = new Map<string, PublicationWithDetails>();
+
+    for (const civ of allCivs) {
+      if (civ.publications && Array.isArray(civ.publications)) {
+        for (const pub of civ.publications) {
+          if (!pub.id) continue;
+          const author = pub.authorIds?.[0]
+            ? (civ.authors || []).find((a) => a.id.toLowerCase() === pub.authorIds![0].toLowerCase())
+            : undefined;
+          const center = pub.centerIds?.[0]
+            ? (civ.centers || []).find((c) => c.id.toLowerCase() === pub.centerIds![0].toLowerCase())
+            : undefined;
+          map.set(pub.id.toLowerCase(), { pub, civ, author, center });
+        }
+      }
+
+      // Also gather publications directly nested on authors or centers
+      if (civ.authors && Array.isArray(civ.authors)) {
+        for (const a of civ.authors) {
+          if (a.publications && Array.isArray(a.publications)) {
+            for (const pub of a.publications) {
+              if (!pub.id) continue;
+              if (!map.has(pub.id.toLowerCase())) {
+                const center = pub.centerIds?.[0]
+                  ? (civ.centers || []).find((c) => c.id.toLowerCase() === pub.centerIds![0].toLowerCase())
+                  : undefined;
+                map.set(pub.id.toLowerCase(), { pub, civ, author: a, center });
+              }
+            }
+          }
+        }
+      }
+
+      if (civ.centers && Array.isArray(civ.centers)) {
+        for (const c of civ.centers) {
+          if (c.publications && Array.isArray(c.publications)) {
+            for (const pub of c.publications) {
+              if (!pub.id) continue;
+              if (!map.has(pub.id.toLowerCase())) {
+                const author = pub.authorIds?.[0]
+                  ? (civ.authors || []).find((a) => a.id.toLowerCase() === pub.authorIds![0].toLowerCase())
+                  : undefined;
+                map.set(pub.id.toLowerCase(), { pub, civ, author, center: c });
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // Also include any publications from collectionGroup across Firestore
+    try {
+      const snap = await getDocs(collectionGroup(db, "publications"));
+      snap.forEach((docSnap) => {
+        const pub = docSnap.data() as Publication;
+        if (!pub || !pub.id) return;
+        const key = pub.id.toLowerCase();
+        const parentCivId = docSnap.ref.parent.parent?.id || pub.civId || "arm";
+        const civ = allCivs.find((c) => c.id.toLowerCase() === parentCivId.toLowerCase()) || civilizationsData[0];
+        const existing = map.get(key);
+        if (existing) {
+          existing.pub = { ...existing.pub, ...pub };
+        } else {
+          const author = pub.authorIds?.[0]
+            ? (civ.authors || []).find((a) => a.id.toLowerCase() === pub.authorIds![0].toLowerCase())
+            : undefined;
+          const center = pub.centerIds?.[0]
+            ? (civ.centers || []).find((c) => c.id.toLowerCase() === pub.centerIds![0].toLowerCase())
+            : undefined;
+          map.set(key, { pub, civ, author, center });
+        }
+      });
+    } catch (e) {
+      console.warn("collectionGroup publications query error:", e);
+    }
+
+    if (map.size > 0) {
+      return Array.from(map.values());
+    }
+  } catch (err) {
+    console.warn("Failed fetching all publications from Firestore, using local fallback:", err);
+  }
+
+  return getAllLocalPublicationsWithDetails();
+}
+
