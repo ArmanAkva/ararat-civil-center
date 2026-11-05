@@ -290,7 +290,7 @@ export const civilizationsData: Civilization[] = [
         foundedYear: "2024",
         description: "Գլոբալ ցիվիլիզացիոն երկխոսությունների, ավանդական արժեքների վերաիմաստավորման և Համարարչության հայեցակարգային հարթակ։",
         focusAreas: ["Քաղաքակրթական կոդեր", "Անթրոպոլոգիական ճգնաժամ", "Արդար աշխարհակարգ", "Համարարչություն"],
-        website: "https://ararat-forum.org",
+        website: "https://araratcivil.org",
         publications: [
           {
             title: "Արարատյան Դոկտրին. Քաղաքակրթական Կոդեր և Համարարչական Աշխարհակարգ",

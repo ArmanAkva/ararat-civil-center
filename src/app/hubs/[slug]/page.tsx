@@ -6,6 +6,7 @@ import {
   getCivilizationBySlug,
 } from "@/lib/civilizationsData";
 import { getCivilizationContent } from "@/lib/contentService";
+import { SITE_NAME, SITE_URL } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -28,16 +29,23 @@ export async function generateMetadata({
 
   if (!civ) {
     return {
-      title: "Քաղաքակրթություն չի գտնվել | Արարատյան Ֆորում",
+      title: "Քաղաքակրթություն չի գտնվել",
     };
   }
 
+  const title = `${civ.nameHy} (${civ.nameEn})`;
+  const description = civ.credo;
+
   return {
-    title: `${civ.nameHy} (${civ.nameEn}) | Արարատյան Ֆորում`,
-    description: civ.credo,
+    title,
+    description,
+    alternates: {
+      canonical: `${SITE_URL}/civilizations/${civ.slug}`,
+    },
     openGraph: {
-      title: `${civ.nameHy} | Արարատյան Ֆորում`,
-      description: civ.credo,
+      title: `${title} | ${SITE_NAME}`,
+      description,
+      url: `${SITE_URL}/civilizations/${civ.slug}`,
     },
   };
 }
