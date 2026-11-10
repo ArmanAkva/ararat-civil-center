@@ -11,6 +11,7 @@ import { useAuth } from "./AuthContext";
 import {
   updatePageContent,
   updateCivilizationContent,
+  autoTranslateFieldInBackground,
   saveCenterDoc,
   deleteCenterDoc,
   saveAuthorDoc,
@@ -132,6 +133,13 @@ export function EditModeProvider({ children }: { children: ReactNode }) {
     try {
       await updatePageContent(pageKey, { [field]: value });
       showStatus("success", "✓ Փոփոխությունը պահպանվեց Firestore-ում:");
+
+      // Automatically translate newly saved Armenian text in background using Gemini Flash
+      if (typeof value === "string" && value.trim().length > 0 && !field.startsWith("_")) {
+        autoTranslateFieldInBackground("site_content", pageKey, field, value).catch((e) => {
+          console.warn("Auto-translate in background error:", e);
+        });
+      }
     } catch (err: any) {
       console.error(err);
       showStatus("error", `Սխալ պահպանելիս. ${err.message || err}`);
@@ -151,6 +159,13 @@ export function EditModeProvider({ children }: { children: ReactNode }) {
     try {
       await updateCivilizationContent(civId, { [field]: value });
       showStatus("success", "✓ Քաղաքակրթության տվյալները պահպանվեցին:");
+
+      // Automatically translate newly saved Armenian text in background using Gemini Flash
+      if (typeof value === "string" && value.trim().length > 0 && !String(field).startsWith("_")) {
+        autoTranslateFieldInBackground("civilizations", civId, String(field), value).catch((e) => {
+          console.warn("Auto-translate in background error:", e);
+        });
+      }
     } catch (err: any) {
       console.error(err);
       showStatus("error", `Սխալ պահպանելիս. ${err.message || err}`);

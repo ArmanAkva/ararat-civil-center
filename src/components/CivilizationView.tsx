@@ -17,6 +17,7 @@ import SingleCivilizationLoading from "@/app/civilizations/[slug]/loading";
 import { MemberAvatarStack, MemberChip, MemberAvatar } from "@/components/ui/MemberCard";
 import { AutoTruncateQuote } from "@/components/ui/AutoTruncateQuote";
 import PdfViewerModal from "@/components/publications/PdfViewerModal";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface Props {
   civilization: Civilization;
@@ -25,6 +26,8 @@ interface Props {
 export default function CivilizationView({ civilization: initialCiv }: Props) {
   const [civ, setCiv] = useState<Civilization>(initialCiv);
   const [loading, setLoading] = useState(true);
+  const { locale, applyLocale } = useLanguage();
+  const displayCiv = applyLocale(civ);
   const {
     isEditMode,
     toggleEditMode,
@@ -177,7 +180,7 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
   };
 
   // Filter centers based on query
-  const filteredCenters = civ.centers.filter((c) => {
+  const filteredCenters = (displayCiv.centers || []).filter((c) => {
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase();
     return (
@@ -190,7 +193,7 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
   });
 
   // Filter authors based on query
-  const filteredAuthors = civ.authors.filter((a) => {
+  const filteredAuthors = (displayCiv.authors || []).filter((a) => {
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase();
     return (
@@ -203,7 +206,7 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
   });
 
   // Filter publications based on query
-  const filteredPublications = (civ.publications || []).filter((p) => {
+  const filteredPublications = (displayCiv.publications || []).filter((p) => {
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase();
     return (
@@ -263,7 +266,7 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
         <div className="civ-title-meta">
           <span className="civ-badge-pill">
             <EditableText
-              value={civ.badge}
+              value={displayCiv.badge}
               label="Տարբերանշան (Badge)"
               tag="span"
               onSave={async (val) => {
@@ -276,7 +279,7 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
 
         <h1 id="civ-heading" className="civ-main-title">
           <EditableText
-            value={civ.nameHy}
+            value={locale === "en" ? (displayCiv.nameEn || displayCiv.nameHy) : displayCiv.nameHy}
             label="Անվանում (Հայերեն)"
             tag="span"
             onSave={async (val) => {
@@ -288,7 +291,7 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
 
         <div className="civ-en-title">
           <EditableText
-            value={civ.nameEn}
+            value={displayCiv.nameEn}
             label="Անվանում (Անգլերեն)"
             tag="span"
             onSave={async (val) => {
@@ -315,7 +318,7 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
 
         <blockquote className="credo-quote-text">
           <EditableText
-            value={civ.credo}
+            value={displayCiv.credo}
             label="Գլխավոր Ասելիք (Core Credo Quote)"
             tag="span"
             multiline
@@ -330,7 +333,7 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
           <div className="credo-author-sign">
             <span>⚜️</span>
             <span>
-              <strong>Արարատյան Ֆորում</strong> | {civ.nameHy}
+              <strong>Արարատյան Ֆորում</strong> | {displayCiv.nameHy}
             </span>
           </div>
 

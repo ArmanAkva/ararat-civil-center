@@ -366,6 +366,204 @@ export async function updatePageContent<T>(
 }
 
 /**
+ * Updates the translations map for a page in site_content/{pageKey}
+ */
+export async function updatePageTranslations(
+  pageKey: "home" | "about" | "dialogue" | "forum" | "civilizations" | "footer",
+  translations: Record<string, any>
+): Promise<void> {
+  const docRef = doc(db, "site_content", pageKey);
+  await setDoc(
+    docRef,
+    cleanFirestoreData({
+      translations,
+      updatedAt: new Date().toISOString(),
+    }),
+    { merge: true }
+  );
+}
+
+/**
+ * Updates the translations map for a civilization in civilizations/{civId}
+ */
+export async function updateCivilizationTranslations(
+  civId: string,
+  translations: Record<string, any>
+): Promise<void> {
+  const docRef = doc(db, "civilizations", civId);
+  await setDoc(
+    docRef,
+    cleanFirestoreData({
+      translations,
+      updatedAt: new Date().toISOString(),
+    }),
+    { merge: true }
+  );
+}
+
+/**
+ * Automatically translates a newly updated field using Gemini Flash in the background
+ * and merges the EN & RU translations into the target Firestore document.
+ */
+export async function autoTranslateFieldInBackground(
+  collectionName: "site_content" | "civilizations",
+  docId: string,
+  fieldName: string,
+  armenianText: string,
+  context?: string
+): Promise<void> {
+  if (!armenianText || typeof armenianText !== "string" || armenianText.trim().length === 0) {
+    return;
+  }
+
+  try {
+    const res = await fetch("/api/translate/sync", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        fields: { [fieldName]: armenianText },
+        targetLangs: ["en", "ru"],
+        context: context || `Field: ${fieldName} in ${collectionName}/${docId}`,
+      }),
+    });
+
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data.success || !data.translations) return;
+
+    const firestoreRef = doc(db, collectionName, docId);
+    const snap = await getDoc(firestoreRef);
+    const existingTranslations = (snap.exists() && snap.data().translations) || {};
+
+    const updatedTranslations = {
+      ...existingTranslations,
+      en: {
+        ...(existingTranslations.en || {}),
+        ...(data.translations.en || {}),
+      },
+      ru: {
+        ...(existingTranslations.ru || {}),
+        ...(data.translations.ru || {}),
+      },
+    };
+
+    await setDoc(
+      firestoreRef,
+      cleanFirestoreData({
+        translations: updatedTranslations,
+        updatedAt: new Date().toISOString(),
+      }),
+      { merge: true }
+    );
+  } catch (error) {
+    console.warn("Background auto-translation failed:", error);
+  }
+}
+
+/**
+ * Sends page texts to AI translation endpoint and persists results into Firestore.
+ */
+export async function translatePageWithAi(
+  pageKey: "home" | "about" | "dialogue" | "forum" | "civilizations" | "footer",
+  data: Record<string, any>,
+  context?: string
+): Promise<{ success: boolean; message: string; translations?: any }> {
+  try {
+    // 1. Collect translatable text strings
+    const textsToTranslate: Record<string, string> = {};
+    for (const [key, value] of Object.entries(data)) {
+      if (typeof value === "string" && value.trim().length > 0 && !key.startsWith("_") && key !== "id" && key !== "slug" && key !== "link" && key !== "updatedAt" && key !== "targetDateTime") {
+        textsToTranslate[key] = value;
+      }
+    }
+
+    if (Object.keys(textsToTranslate).length === 0) {
+      return { success: false, message: "No translatable text found on this page." };
+    }
+
+    // 2. Call AI translation API
+    const response = await fetch("/api/translate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        texts: textsToTranslate,
+        targetLangs: ["en", "ru"],
+        sourceLang: "hy",
+        context: context || `Page: ${pageKey} content of Ararat Civilizational Center`,
+      }),
+    });
+
+    const result = await response.json();
+    if (!response.ok || !result.success) {
+      throw new Error(result.message || "Failed to translate with AI");
+    }
+
+    // 3. Merge and save into Firestore
+    await updatePageTranslations(pageKey, result.translations);
+
+    return {
+      success: true,
+      message: "✓ Page content successfully translated with AI and saved to Firestore!",
+      translations: result.translations,
+    };
+  } catch (error: any) {
+    console.error("translatePageWithAi error:", error);
+    return {
+      success: false,
+      message: `Translation failed: ${error.message || String(error)}`,
+    };
+  }
+}
+
+/**
+ * Translates a Civilization document (badge, credo, overview, tagline) with AI and saves to Firestore.
+ */
+export async function translateCivilizationWithAi(
+  civId: string,
+  civData: Record<string, any>
+): Promise<{ success: boolean; message: string; translations?: any }> {
+  try {
+    const textsToTranslate: Record<string, string> = {};
+    const translatableKeys = ["nameHy", "badge", "tagline", "credo", "overview"];
+    for (const key of translatableKeys) {
+      if (typeof civData[key] === "string" && civData[key].trim().length > 0) {
+        textsToTranslate[key] = civData[key];
+      }
+    }
+
+    const response = await fetch("/api/translate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        texts: textsToTranslate,
+        targetLangs: ["en", "ru"],
+        sourceLang: "hy",
+        context: `Civilization worldview and credo for ID: ${civId}`,
+      }),
+    });
+
+    const result = await response.json();
+    if (!response.ok || !result.success) {
+      throw new Error(result.message || "Failed to translate civilization with AI");
+    }
+
+    await updateCivilizationTranslations(civId, result.translations);
+
+    return {
+      success: true,
+      message: "✓ Civilization successfully translated with AI and saved to Firestore!",
+      translations: result.translations,
+    };
+  } catch (error: any) {
+    console.error("translateCivilizationWithAi error:", error);
+    return {
+      success: false,
+      message: `Translation failed: ${error.message || String(error)}`,
+    };
+  }
+}
+
+/**
  * Seeds all site content and 8 civilizations with SUBCOLLECTIONS into Firestore
  */
 export async function seedAllContentToFirestore(): Promise<{

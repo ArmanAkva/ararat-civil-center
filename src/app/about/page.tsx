@@ -6,6 +6,7 @@ import { defaultAboutContent } from "@/lib/defaultSiteContent";
 import { AboutPageContent } from "@/types/content";
 import { getPageContent } from "@/lib/contentService";
 import { useEditMode } from "@/context/EditModeContext";
+import { useLanguage } from "@/context/LanguageContext";
 import EditableText from "@/components/cms/EditableText";
 import AboutLoading from "./loading";
 
@@ -15,6 +16,9 @@ export default function About() {
   const [content, setContent] = useState<AboutPageContent>(defaultAboutContent);
   const [loading, setLoading] = useState(true);
   const { savePageField } = useEditMode();
+  const { applyLocale } = useLanguage();
+
+  const displayContent = applyLocale(content);
 
   useEffect(() => {
     let isMounted = true;
@@ -47,7 +51,7 @@ export default function About() {
         <EditableText
           tag="h1"
           label="Էջի Գլխավոր Վերնագիր"
-          value={content.headerTitle}
+          value={displayContent.headerTitle}
           style={{ fontSize: "2.5rem", color: "var(--gold-accent)", fontFamily: "var(--font-serif)" }}
           onSave={async (val) => {
             setContent((prev) => ({ ...prev, headerTitle: val }));
@@ -57,7 +61,7 @@ export default function About() {
         <EditableText
           tag="p"
           label="Ենթավերնագիր"
-          value={content.headerSubtitle}
+          value={displayContent.headerSubtitle}
           style={{ color: "var(--text-secondary)", fontSize: "1.1rem", maxWidth: "700px", margin: "0 auto" }}
           onSave={async (val) => {
             setContent((prev) => ({ ...prev, headerSubtitle: val }));
@@ -71,7 +75,7 @@ export default function About() {
         <EditableText
           tag="h2"
           label="Առաքելության Բաժնի Վերնագիր"
-          value={content.missionTitle}
+          value={displayContent.missionTitle}
           style={{ fontFamily: "var(--font-serif)", color: "var(--gold-accent)", borderBottom: "1px solid var(--card-border)", paddingBottom: "1rem", marginBottom: "1.5rem" }}
           onSave={async (val) => {
             setContent((prev) => ({ ...prev, missionTitle: val }));
@@ -82,7 +86,7 @@ export default function About() {
           tag="p"
           multiline
           label="Առաքելություն Պարբերություն 1"
-          value={content.missionP1}
+          value={displayContent.missionP1}
           style={{ fontSize: "1.1rem", lineHeight: "1.8", marginBottom: "1rem" }}
           onSave={async (val) => {
             setContent((prev) => ({ ...prev, missionP1: val }));
@@ -93,7 +97,7 @@ export default function About() {
           tag="p"
           multiline
           label="Առաքելություն Պարբերություն 2"
-          value={content.missionP2}
+          value={displayContent.missionP2}
           style={{ fontSize: "1.1rem", lineHeight: "1.8", fontStyle: "italic", color: "var(--text-secondary)" }}
           onSave={async (val) => {
             setContent((prev) => ({ ...prev, missionP2: val }));
@@ -107,7 +111,7 @@ export default function About() {
         <EditableText
           tag="h2"
           label="8 Քաղաքակրթությունների Բաժնի Վերնագիր"
-          value={content.civilizationsHeader}
+          value={displayContent.civilizationsHeader}
           style={{ fontFamily: "var(--font-serif)", color: "var(--gold-accent)", marginBottom: "1.5rem" }}
           onSave={async (val) => {
             setContent((prev) => ({ ...prev, civilizationsHeader: val }));
@@ -118,7 +122,7 @@ export default function About() {
           tag="p"
           multiline
           label="Ներածական Տեքստ"
-          value={content.civilizationsIntro}
+          value={displayContent.civilizationsIntro}
           style={{ fontSize: "1.1rem", lineHeight: "1.8", marginBottom: "2rem" }}
           onSave={async (val) => {
             setContent((prev) => ({ ...prev, civilizationsIntro: val }));
@@ -142,7 +146,7 @@ export default function About() {
         <EditableText
           tag="h2"
           label="Ինչու՞ Հայաստանում Վերնագիր"
-          value={content.whyAraratTitle}
+          value={displayContent.whyAraratTitle}
           style={{ fontFamily: "var(--font-serif)", color: "var(--gold-accent)", borderBottom: "1px solid var(--card-border)", paddingBottom: "1rem", marginBottom: "1.5rem" }}
           onSave={async (val) => {
             setContent((prev) => ({ ...prev, whyAraratTitle: val }));
@@ -153,7 +157,7 @@ export default function About() {
           tag="p"
           multiline
           label="Ինչու՞ Հայաստանում Պարբերություն 1"
-          value={content.whyAraratP1}
+          value={displayContent.whyAraratP1}
           style={{ fontSize: "1.1rem", lineHeight: "1.8", marginBottom: "1rem" }}
           onSave={async (val) => {
             setContent((prev) => ({ ...prev, whyAraratP1: val }));
@@ -164,7 +168,7 @@ export default function About() {
           tag="p"
           multiline
           label="Ինչու՞ Հայաստանում Պարբերություն 2"
-          value={content.whyAraratP2}
+          value={displayContent.whyAraratP2}
           style={{ fontSize: "1.1rem", lineHeight: "1.8" }}
           onSave={async (val) => {
             setContent((prev) => ({ ...prev, whyAraratP2: val }));
@@ -178,7 +182,7 @@ export default function About() {
         <EditableText
           tag="h2"
           label="Գործիքների Բաժնի Վերնագիր"
-          value={content.toolsHeader}
+          value={displayContent.toolsHeader}
           style={{ fontFamily: "var(--font-serif)", color: "var(--gold-accent)", marginBottom: "1.5rem" }}
           onSave={async (val) => {
             setContent((prev) => ({ ...prev, toolsHeader: val }));
@@ -190,7 +194,7 @@ export default function About() {
             <EditableText
               tag="h3"
               label="Գործիք 1 Վերնագիր"
-              value={content.incubatorTitle}
+              value={displayContent.incubatorTitle}
               style={{ color: "var(--gold-accent)", marginTop: 0, fontSize: "1.3rem" }}
               onSave={async (val) => {
                 setContent((prev) => ({ ...prev, incubatorTitle: val }));
@@ -201,7 +205,7 @@ export default function About() {
               tag="p"
               multiline
               label="Գործիք 1 Նկարագրություն"
-              value={content.incubatorDesc}
+              value={displayContent.incubatorDesc}
               style={{ margin: 0, lineHeight: "1.6", color: "var(--text-secondary)", fontSize: "1.05rem" }}
               onSave={async (val) => {
                 setContent((prev) => ({ ...prev, incubatorDesc: val }));
@@ -214,7 +218,7 @@ export default function About() {
             <EditableText
               tag="h3"
               label="Գործիք 2 Վերնագիր"
-              value={content.forumToolTitle}
+              value={displayContent.forumToolTitle}
               style={{ color: "var(--gold-accent)", marginTop: 0, fontSize: "1.3rem" }}
               onSave={async (val) => {
                 setContent((prev) => ({ ...prev, forumToolTitle: val }));
@@ -225,7 +229,7 @@ export default function About() {
               tag="p"
               multiline
               label="Գործիք 2 Նկարագրություն"
-              value={content.forumToolDesc}
+              value={displayContent.forumToolDesc}
               style={{ margin: 0, lineHeight: "1.6", color: "var(--text-secondary)", fontSize: "1.05rem" }}
               onSave={async (val) => {
                 setContent((prev) => ({ ...prev, forumToolDesc: val }));
@@ -296,7 +300,7 @@ export default function About() {
           <EditableText
             tag="h2"
             label="Կոչ Վերնագիր"
-            value={content.callToActionTitle || defaultAboutContent.callToActionTitle}
+            value={displayContent.callToActionTitle || defaultAboutContent.callToActionTitle}
             style={{
               fontFamily: "var(--font-serif)",
               color: "var(--gold-accent)",
@@ -315,7 +319,7 @@ export default function About() {
             tag="p"
             multiline
             label="Կոչ Նկարագրություն"
-            value={content.callToActionDesc || defaultAboutContent.callToActionDesc}
+            value={displayContent.callToActionDesc || defaultAboutContent.callToActionDesc}
             style={{
               fontSize: "1.08rem",
               lineHeight: "1.85",
@@ -345,7 +349,7 @@ export default function About() {
               tag="span"
               multiline
               label="Եզրափակիչ Մեջբերում"
-              value={content.callToActionQuote || defaultAboutContent.callToActionQuote}
+              value={displayContent.callToActionQuote || defaultAboutContent.callToActionQuote}
               style={{
                 fontFamily: "var(--font-serif)",
                 fontSize: "clamp(1.15rem, 2vw, 1.35rem)",

@@ -3,9 +3,11 @@ import { Geist, Geist_Mono } from "next/font/google";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { AuthProvider } from "@/context/AuthContext";
+import { LanguageProvider } from "@/context/LanguageContext";
 import { EditModeProvider } from "@/context/EditModeContext";
 import FloatingAdminBar from "@/components/cms/FloatingAdminBar";
 import { SITE_URL, SITE_NAME, DEFAULT_SEO } from "@/lib/seo";
+import AiTranslationBanner from "@/components/ui/AiTranslationBanner";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -133,12 +135,15 @@ export default function RootLayout({
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <AuthProvider>
-          <EditModeProvider>
-            <Header />
-            {children}
-            <Footer />
-            <FloatingAdminBar />
-          </EditModeProvider>
+          <LanguageProvider>
+            <EditModeProvider>
+              <AiTranslationBanner />
+              <Header />
+              {children}
+              <Footer />
+              <FloatingAdminBar />
+            </EditModeProvider>
+          </LanguageProvider>
         </AuthProvider>
       </body>
     </html>

@@ -7,6 +7,7 @@ import { getAllCivilizationsContent, getPageContent } from "@/lib/contentService
 import { defaultCivilizationsContent } from "@/lib/defaultSiteContent";
 import { CivilizationsPageContent } from "@/types/content";
 import { useEditMode } from "@/context/EditModeContext";
+import { useLanguage } from "@/context/LanguageContext";
 import EditableText from "@/components/cms/EditableText";
 import EditCardModal from "@/components/cms/EditCardModal";
 import { PageHeaderSkeleton, CivilizationsGridSkeleton } from "@/components/ui/Skeleton";
@@ -20,6 +21,10 @@ export default function Civilizations() {
   const [loading, setLoading] = useState(true);
 
   const { isEditMode, savePageField, saveCivilizationField, saveCivilizationFull } = useEditMode();
+  const { locale, applyLocale } = useLanguage();
+
+  const displayContent = applyLocale(content);
+  const displayCivilizations = applyLocale(civilizations);
 
   useEffect(() => {
     let isMounted = true;
@@ -63,7 +68,7 @@ export default function Civilizations() {
           <EditableText
             tag="div"
             label="Էջի Տիտղոս / Բեյջ (Eyebrow)"
-            value={content.badge}
+            value={displayContent.badge}
             style={{
               color: "var(--gold-accent)",
               fontSize: "0.85rem",
@@ -80,7 +85,7 @@ export default function Civilizations() {
         <EditableText
           tag="h1"
           label="Էջի Գլխավոր Վերնագիր"
-          value={content.title}
+          value={displayContent.title}
           style={{
             fontSize: "clamp(2.2rem, 4vw, 3rem)",
             color: "var(--text-primary)",
@@ -96,7 +101,7 @@ export default function Civilizations() {
           tag="p"
           multiline
           label="Էջի Նկարագրություն"
-          value={content.description}
+          value={displayContent.description}
           style={{
             color: "var(--text-secondary)",
             fontSize: "1.15rem",
@@ -119,7 +124,8 @@ export default function Civilizations() {
           gap: "2rem",
         }}
       >
-        {civilizations.map((civ) => {
+        {civilizations.map((civ, civIdx) => {
+          const displayCiv = displayCivilizations[civIdx] || civ;
           const cardContent = (
             <>
               {/* Card Edit Button in Edit Mode */}
@@ -168,7 +174,7 @@ export default function Civilizations() {
                   <EditableText
                     tag="div"
                     label={`«${civ.nameHy}» Սիմվոլ`}
-                    value={civ.symbol}
+                    value={displayCiv.symbol}
                     style={{
                       fontSize: "2.8rem",
                       color: "var(--gold-accent)",
@@ -185,7 +191,7 @@ export default function Civilizations() {
                   <EditableText
                     tag="span"
                     label={`«${civ.nameHy}» Բեյջ`}
-                    value={civ.badge}
+                    value={displayCiv.badge}
                     style={{
                       fontSize: "0.75rem",
                       fontWeight: "600",
@@ -208,7 +214,7 @@ export default function Civilizations() {
                 <EditableText
                   tag="h3"
                   label={`«${civ.nameHy}» Անվանում (Հայերեն)`}
-                  value={civ.nameHy}
+                  value={locale === "en" ? (displayCiv.nameEn || displayCiv.nameHy) : displayCiv.nameHy}
                   style={{
                     fontSize: "1.35rem",
                     margin: "0 0 0.35rem 0",
@@ -225,7 +231,7 @@ export default function Civilizations() {
                 <EditableText
                   tag="div"
                   label={`«${civ.nameHy}» Անվանում (Անգլերեն)`}
-                  value={civ.nameEn}
+                  value={displayCiv.nameEn}
                   style={{
                     fontSize: "0.85rem",
                     color: "var(--gold-accent)",
@@ -247,8 +253,8 @@ export default function Civilizations() {
                   tag="p"
                   multiline
                   label={`«${civ.nameHy}» Կրեդո`}
-                  value={civ.credo}
-                  title={civ.credo}
+                  value={displayCiv.credo}
+                  title={displayCiv.credo}
                   style={{
                     fontSize: "0.92rem",
                     color: "var(--text-secondary)",

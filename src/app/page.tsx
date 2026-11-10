@@ -6,6 +6,7 @@ import { defaultHomeContent } from "@/lib/defaultSiteContent";
 import { HomePageContent } from "@/types/content";
 import { getPageContent } from "@/lib/contentService";
 import { useEditMode } from "@/context/EditModeContext";
+import { useLanguage } from "@/context/LanguageContext";
 import EditableText from "@/components/cms/EditableText";
 import { Skeleton } from "@/components/ui/Skeleton";
 
@@ -15,6 +16,9 @@ export default function Home() {
   const [content, setContent] = useState<HomePageContent>(defaultHomeContent);
   const [loading, setLoading] = useState(true);
   const { savePageField, isEditMode } = useEditMode();
+  const { applyLocale } = useLanguage();
+
+  const displayContent = applyLocale(content);
 
   useEffect(() => {
     let isMounted = true;
@@ -63,7 +67,7 @@ export default function Home() {
         <EditableText
           tag="h1"
           label="Գլխավոր Վերնագիր (Hero Title)"
-          value={content.heroTitle}
+          value={displayContent.heroTitle}
           onSave={async (val) => {
             setContent((prev) => ({ ...prev, heroTitle: val }));
             await savePageField("home", "heroTitle", val);
@@ -73,7 +77,7 @@ export default function Home() {
         <EditableText
           tag="h2"
           label="Ենթավերնագիր (Hero Subtitle)"
-          value={content.heroSubtitle}
+          value={displayContent.heroSubtitle}
           onSave={async (val) => {
             setContent((prev) => ({ ...prev, heroSubtitle: val }));
             await savePageField("home", "heroSubtitle", val);
@@ -85,7 +89,7 @@ export default function Home() {
             tag="span"
             multiline
             label="Գլխավոր Մեջբերում (Home Credo)"
-            value={content.credo}
+            value={displayContent.credo}
             onSave={async (val) => {
               setContent((prev) => ({ ...prev, credo: val }));
               await savePageField("home", "credo", val);
@@ -94,7 +98,7 @@ export default function Home() {
         </div>
 
         <div className="cards-grid">
-          {content.cards.map((card, idx) => (
+          {displayContent.cards.map((card, idx) => (
             <div key={card.id || idx} style={{ position: "relative" }}>
               <Link href={card.link} className="glass-card">
                 <EditableText

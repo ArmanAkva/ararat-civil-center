@@ -6,6 +6,7 @@ import { defaultAboutContent } from "@/lib/defaultSiteContent";
 import { AboutPageContent } from "@/types/content";
 import { getPageContent } from "@/lib/contentService";
 import { useEditMode } from "@/context/EditModeContext";
+import { useLanguage } from "@/context/LanguageContext";
 import EditableText from "@/components/cms/EditableText";
 
 export interface FooterData {
@@ -43,6 +44,9 @@ const defaultFooterData: FooterData = {
 export default function Footer() {
   const [content, setContent] = useState<FooterData>(defaultFooterData);
   const { savePageField } = useEditMode();
+  const { applyLocale } = useLanguage();
+
+  const displayContent = applyLocale(content);
 
   useEffect(() => {
     let isMounted = true;
@@ -142,7 +146,7 @@ export default function Footer() {
               <EditableText
                 tag="span"
                 label="Բրենդի Անվանում"
-                value={content.brandName}
+                value={displayContent.brandName}
                 style={{
                   fontFamily: "var(--font-serif)",
                   fontWeight: "700",
@@ -160,7 +164,7 @@ export default function Footer() {
                 tag="blockquote"
                 multiline
                 label="Ֆուտերի Գլխավոր Մեջբերում"
-                value={content.quote}
+                value={displayContent.quote}
                 style={{
                   margin: 0,
                   padding: "0.85rem 1.15rem",
@@ -198,7 +202,7 @@ export default function Footer() {
                 <EditableText
                   tag="span"
                   label="Երկխոսության Կոճակ"
-                  value={content.btnDialogueText}
+                  value={displayContent.btnDialogueText}
                   onSave={(val) => handleSaveField("btnDialogueText", val)}
                 />
               </Link>
@@ -229,7 +233,7 @@ export default function Footer() {
                 <EditableText
                   tag="span"
                   label="Քաղաքակրթությունների Կոճակ"
-                  value={content.btnCivText}
+                  value={displayContent.btnCivText}
                   onSave={(val) => handleSaveField("btnCivText", val)}
                 />
               </Link>
@@ -241,7 +245,7 @@ export default function Footer() {
             <EditableText
               tag="h4"
               label="Բաժինների Վերնագիր"
-              value={content.navTitle}
+              value={displayContent.navTitle}
               style={{
                 fontFamily: "var(--font-serif)",
                 color: "var(--gold-accent)",
@@ -279,7 +283,7 @@ export default function Footer() {
             <EditableText
               tag="h4"
               label="Արժեհամակարգի Վերնագիր"
-              value={content.valuesTitle}
+              value={displayContent.valuesTitle}
               style={{
                 fontFamily: "var(--font-serif)",
                 color: "var(--gold-accent)",
@@ -294,28 +298,28 @@ export default function Footer() {
               <EditableText
                 tag="span"
                 label="Արժեք 1"
-                value={content.valueItem1}
+                value={displayContent.valueItem1}
                 style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}
                 onSave={(val) => handleSaveField("valueItem1", val)}
               />
               <EditableText
                 tag="span"
                 label="Արժեք 2"
-                value={content.valueItem2}
+                value={displayContent.valueItem2}
                 style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}
                 onSave={(val) => handleSaveField("valueItem2", val)}
               />
               <EditableText
                 tag="span"
                 label="Արժեք 3"
-                value={content.valueItem3}
+                value={displayContent.valueItem3}
                 style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}
                 onSave={(val) => handleSaveField("valueItem3", val)}
               />
               <EditableText
                 tag="span"
                 label="Արժեք 4"
-                value={content.valueItem4}
+                value={displayContent.valueItem4}
                 style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}
                 onSave={(val) => handleSaveField("valueItem4", val)}
               />
@@ -340,7 +344,7 @@ export default function Footer() {
           <EditableText
             tag="div"
             label="Հեղինակային Իրավունք (Copyright)"
-            value={content.copyrightText}
+            value={displayContent.copyrightText}
             style={{ fontSize: "0.82rem", color: "var(--text-secondary)" }}
             onSave={(val) => handleSaveField("copyrightText", val)}
           />
@@ -349,7 +353,7 @@ export default function Footer() {
               <EditableText
                 tag="span"
                 label="Կոնտակտներ Տեքստ"
-                value={content.linkContactText}
+                value={displayContent.linkContactText}
                 style={{ color: "var(--text-secondary)", fontSize: "0.82rem" }}
                 onSave={(val) => handleSaveField("linkContactText", val)}
               />

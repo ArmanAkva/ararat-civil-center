@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { USER_ROLES } from "@/types/auth";
 import NotificationBell from "@/components/notifications/NotificationBell";
 
@@ -10,6 +11,7 @@ export default function Header() {
   const [theme, setTheme] = useState("light");
   const [isScrolled, setIsScrolled] = useState(false);
   const { user, profile, role, isAdmin } = useAuth();
+  const { locale, setLocale, t } = useLanguage();
 
   useEffect(() => {
     let currentTheme = "light";
@@ -100,11 +102,11 @@ export default function Header() {
         </span>
       </Link>
       <nav className="header-nav-links">
-        <Link href="/about" className="nav-link">Մեր մասին</Link>
-        <Link href="/civilizations" className="nav-link">Քաղաքակրթություններ</Link>
-        <Link href="/publications" className="nav-link">Գրադարան</Link>
-        <Link href="/dialogue" className="nav-link">Երկխոսության հարթակ</Link>
-        <Link href="/forum" className="nav-link">Ֆորում</Link>
+        <Link href="/about" className="nav-link">{t("nav.about")}</Link>
+        <Link href="/civilizations" className="nav-link">{t("nav.civilizations")}</Link>
+        <Link href="/publications" className="nav-link">{t("nav.library")}</Link>
+        <Link href="/dialogue" className="nav-link">{t("nav.dialogue")}</Link>
+        <Link href="/forum" className="nav-link">{t("nav.forum")}</Link>
       </nav>
 
       <div className="header-actions">
@@ -132,8 +134,8 @@ export default function Header() {
                 boxShadow: "0 2px 8px rgba(0, 0, 0, 0.08)",
                 flexShrink: 0,
               }}
-              title={`Պրոֆիլ (${profile?.displayName || user.email})`}
-              aria-label="Բացել Պրոֆիլը"
+              title={`${t("nav.profile")} (${profile?.displayName || user.email})`}
+              aria-label={t("nav.profile")}
             >
               {getUserInitials()}
             </Link>
@@ -151,9 +153,9 @@ export default function Header() {
                   background: "rgba(183, 121, 31, 0.08)",
                   textDecoration: "none",
                 }}
-                title="Ադմինիստրատիվ Վահանակ"
+                title={t("nav.admin")}
               >
-                🛡 Ադմին
+                {t("nav.admin")}
               </Link>
             )}
           </div>
@@ -170,12 +172,43 @@ export default function Header() {
               transition: "all 0.25s ease",
             }}
           >
-            Մուտք
+            {t("nav.login")}
           </Link>
         )}
 
         <div className="lang-selector">
-          <span className="active">AM</span> | <span>EN</span> | <span>RU</span>
+          <span
+            className={locale === "hy" ? "active" : ""}
+            onClick={() => setLocale("hy")}
+            role="button"
+            tabIndex={0}
+            title="Հայերեն (Բնօրինակ)"
+            onKeyDown={(e) => e.key === "Enter" && setLocale("hy")}
+          >
+            AM
+          </span>
+          <span style={{ cursor: "default", opacity: 0.4 }}>|</span>
+          <span
+            className={locale === "en" ? "active" : ""}
+            onClick={() => setLocale("en")}
+            role="button"
+            tabIndex={0}
+            title="English (AI Translation)"
+            onKeyDown={(e) => e.key === "Enter" && setLocale("en")}
+          >
+            EN
+          </span>
+          <span style={{ cursor: "default", opacity: 0.4 }}>|</span>
+          <span
+            className={locale === "ru" ? "active" : ""}
+            onClick={() => setLocale("ru")}
+            role="button"
+            tabIndex={0}
+            title="Русский (AI перевод)"
+            onKeyDown={(e) => e.key === "Enter" && setLocale("ru")}
+          >
+            RU
+          </span>
         </div>
 
         <button 
@@ -194,7 +227,7 @@ export default function Header() {
             justifyContent: "center",
             transition: "all 0.3s ease"
           }}
-          title={theme === "light" ? "Անցնել Մուգ Թեմային" : "Անցնել Լուսավոր Թեմային"}
+          title={theme === "light" ? t("theme.dark") : t("theme.light")}
         >
           {theme === "light" ? "🌙" : "☀️"}
         </button>

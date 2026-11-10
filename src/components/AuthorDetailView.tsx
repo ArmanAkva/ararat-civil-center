@@ -11,6 +11,7 @@ import { getAuthorContent } from "@/lib/contentService";
 import AuthorLoading from "@/app/authors/[id]/loading";
 import PdfViewerModal from "@/components/publications/PdfViewerModal";
 import PdfUploadField from "@/components/publications/PdfUploadField";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface Props {
   initialAuthor: Thinker;
@@ -23,6 +24,10 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
   const [loading, setLoading] = useState(true);
   const { user, isAdmin } = useAuth();
   const { isEditMode, toggleEditMode, saveAuthor, saveCenter, savePublication, deletePublication } = useEditMode();
+  const { applyLocale } = useLanguage();
+
+  const displayAuthor = applyLocale(author);
+  const displayCiv = applyLocale(civ);
 
   const [selectedPublication, setSelectedPublication] = useState<Publication | null>(null);
   const [isPubModalOpen, setIsPubModalOpen] = useState(false);

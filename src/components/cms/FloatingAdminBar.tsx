@@ -1,10 +1,25 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
+import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useEditMode } from "@/context/EditModeContext";
+import {
+  translatePageWithAi,
+  translateCivilizationWithAi,
+  getPageContent,
+  getCivilizationContent,
+} from "@/lib/contentService";
+import {
+  defaultHomeContent,
+  defaultAboutContent,
+  defaultCivilizationsContent,
+  defaultDialogueContent,
+  defaultForumContent,
+} from "@/lib/defaultSiteContent";
 
 export default function FloatingAdminBar() {
+  const pathname = usePathname();
   const { user, isAdmin, isSuperAdmin } = useAuth();
   const {
     isEditMode,
@@ -14,21 +29,102 @@ export default function FloatingAdminBar() {
     statusMessage,
   } = useEditMode();
 
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [translateFeedback, setTranslateFeedback] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
+
   if (!user || !isAdmin) {
     return null;
   }
 
+  const handleTranslateCurrentPage = async () => {
+    setIsTranslating(true);
+    setTranslateFeedback(null);
+
+    try {
+      if (pathname === "/") {
+        const homeData = await getPageContent("home", defaultHomeContent);
+        const res = await translatePageWithAi("home", homeData);
+        if (res.success) {
+          setTranslateFeedback({ type: "success", text: "✓ Գլխավոր էջը թարգմանվեց EN & RU և պահպանվեց:" });
+          setTimeout(() => window.location.reload(), 1200);
+        } else {
+          setTranslateFeedback({ type: "error", text: res.message });
+        }
+      } else if (pathname.startsWith("/about")) {
+        const aboutData = await getPageContent("about", defaultAboutContent);
+        const res = await translatePageWithAi("about", aboutData);
+        if (res.success) {
+          setTranslateFeedback({ type: "success", text: "✓ «Մեր մասին» էջը թարգմանվեց EN & RU և պահպանվեց:" });
+          setTimeout(() => window.location.reload(), 1200);
+        } else {
+          setTranslateFeedback({ type: "error", text: res.message });
+        }
+      } else if (pathname === "/civilizations") {
+        const civPageData = await getPageContent("civilizations", defaultCivilizationsContent);
+        const res = await translatePageWithAi("civilizations", civPageData);
+        if (res.success) {
+          setTranslateFeedback({ type: "success", text: "✓ Քաղաքակրթությունների էջը թարգմանվեց EN & RU:" });
+          setTimeout(() => window.location.reload(), 1200);
+        } else {
+          setTranslateFeedback({ type: "error", text: res.message });
+        }
+      } else if (pathname.startsWith("/civilizations/")) {
+        const slug = pathname.replace("/civilizations/", "").split("/")[0];
+        const civData = await getCivilizationContent(slug);
+        if (civData) {
+          const res = await translateCivilizationWithAi(civData.id, civData);
+          if (res.success) {
+            setTranslateFeedback({ type: "success", text: `✓ «${civData.nameHy}» թարգմանվեց EN & RU:` });
+            setTimeout(() => window.location.reload(), 1200);
+          } else {
+            setTranslateFeedback({ type: "error", text: res.message });
+          }
+        }
+      } else if (pathname.startsWith("/dialogue")) {
+        const diagData = await getPageContent("dialogue", defaultDialogueContent);
+        const res = await translatePageWithAi("dialogue", diagData);
+        if (res.success) {
+          setTranslateFeedback({ type: "success", text: "✓ Երկխոսության էջը թարգմանվեց EN & RU:" });
+          setTimeout(() => window.location.reload(), 1200);
+        } else {
+          setTranslateFeedback({ type: "error", text: res.message });
+        }
+      } else if (pathname.startsWith("/forum")) {
+        const forumData = await getPageContent("forum", defaultForumContent);
+        const res = await translatePageWithAi("forum", forumData);
+        if (res.success) {
+          setTranslateFeedback({ type: "success", text: "✓ Ֆորումի էջը թարգմանվեց EN & RU:" });
+          setTimeout(() => window.location.reload(), 1200);
+        } else {
+          setTranslateFeedback({ type: "error", text: res.message });
+        }
+      } else {
+        setTranslateFeedback({ type: "error", text: "Այս էջի համար ավտոմատ թարգմանություն հասանելի չէ:" });
+      }
+    } catch (err: any) {
+      setTranslateFeedback({ type: "error", text: `Սխալ. ${err.message || err}` });
+    } finally {
+      setIsTranslating(false);
+      setTimeout(() => setTranslateFeedback(null), 5000);
+    }
+  };
+
+  const activeToast = translateFeedback || statusMessage;
+
   return (
     <>
       {/* Toast Notification */}
-      {statusMessage && (
+      {activeToast && (
         <div
           style={{
             position: "fixed",
             bottom: "85px",
             right: "24px",
             zIndex: 9999,
-            background: statusMessage.type === "success" ? "#10b981" : "#ef4444",
+            background: activeToast.type === "success" ? "#10b981" : "#ef4444",
             color: "#ffffff",
             padding: "0.85rem 1.4rem",
             borderRadius: "0.75rem",
@@ -41,8 +137,8 @@ export default function FloatingAdminBar() {
             animation: "fadeIn 0.2s ease",
           }}
         >
-          <span>{statusMessage.type === "success" ? "✓" : "⚠️"}</span>
-          <span>{statusMessage.text}</span>
+          <span>{activeToast.type === "success" ? "✓" : "⚠️"}</span>
+          <span>{activeToast.text}</span>
         </div>
       )}
 
@@ -163,6 +259,34 @@ export default function FloatingAdminBar() {
           >
             <span>{isEditMode ? "✏️" : "👁"}</span>
             <span>{isEditMode ? "Խմբագրումը՝ ԱԿՏԻՎ" : "Խմբագրել Էջը"}</span>
+          </button>
+
+          {/* AI Translation Button */}
+          <button
+            type="button"
+            onClick={handleTranslateCurrentPage}
+            disabled={isTranslating}
+            title="Թարգմանել ընթացիկ էջի տեքստերը EN և RU տարբերակների AI-ի միջոցով և պահպանել Firestore-ում"
+            style={{
+              background: isTranslating
+                ? "rgba(183, 121, 31, 0.3)"
+                : "rgba(255, 255, 255, 0.08)",
+              color: isTranslating ? "var(--gold-accent)" : "#e2e8f0",
+              border: "1px solid rgba(183, 121, 31, 0.4)",
+              borderRadius: "999px",
+              padding: "0.52rem 1rem",
+              fontSize: "0.82rem",
+              fontWeight: "700",
+              cursor: isTranslating ? "wait" : "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.45rem",
+              transition: "all 0.25s ease",
+              opacity: isTranslating ? 0.8 : 1,
+            }}
+          >
+            <span>{isTranslating ? "⏳" : "🌐"}</span>
+            <span>{isTranslating ? "Թարգմանվում է..." : "AI Թարգմանություն"}</span>
           </button>
 
           {/* Minimize / Hide Button */}
