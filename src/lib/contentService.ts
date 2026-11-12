@@ -724,7 +724,7 @@ export async function translateCivilizationWithAi(
 }
 
 /**
- * Translates an Author / Thinker (title, bio, quote) with AI and saves to Firestore.
+ * Translates an Author / Thinker (name, title, bio, quote) with AI and saves to Firestore.
  */
 export async function translateAuthorWithAi(
   civId: string,
@@ -732,12 +732,13 @@ export async function translateAuthorWithAi(
 ): Promise<{ success: boolean; message: string; translations?: any }> {
   try {
     const textsToTranslate: Record<string, string> = {};
+    if (author.name) textsToTranslate.name = author.name;
     if (author.title) textsToTranslate.title = author.title;
     if (author.bio) textsToTranslate.bio = author.bio;
     if (author.quote) textsToTranslate.quote = author.quote;
 
     if (Object.keys(textsToTranslate).length === 0) {
-      return { success: false, message: "No translatable text found for this author." };
+      return { success: false, message: "Թարգմանության համար որևէ տեքստ չգտնվեց:" };
     }
 
     const response = await fetch("/api/translate", {
@@ -760,6 +761,8 @@ export async function translateAuthorWithAi(
     await setDoc(
       authorRef,
       cleanFirestoreData({
+        ...author,
+        id: author.id,
         translations: result.translations,
         updatedAt: new Date().toISOString(),
       }),
@@ -768,7 +771,7 @@ export async function translateAuthorWithAi(
 
     return {
       success: true,
-      message: "✓ Author translated and saved to Firestore!",
+      message: "✓ Հեղինակի տվյալները թարգմանվեցին և պահպանվեցին:",
       translations: result.translations,
     };
   } catch (error: any) {
@@ -777,7 +780,7 @@ export async function translateAuthorWithAi(
 }
 
 /**
- * Translates a Center / Think Tank (description, city, country) with AI and saves to Firestore.
+ * Translates a Center / Think Tank (name, description, city, country) with AI and saves to Firestore.
  */
 export async function translateCenterWithAi(
   civId: string,
@@ -785,12 +788,13 @@ export async function translateCenterWithAi(
 ): Promise<{ success: boolean; message: string; translations?: any }> {
   try {
     const textsToTranslate: Record<string, string> = {};
+    if (center.name) textsToTranslate.name = center.name;
     if (center.description) textsToTranslate.description = center.description;
     if (center.city) textsToTranslate.city = center.city;
     if (center.country) textsToTranslate.country = center.country;
 
     if (Object.keys(textsToTranslate).length === 0) {
-      return { success: false, message: "No translatable text found for this center." };
+      return { success: false, message: "Թարգմանության համար որևէ տեքստ չգտնվեց:" };
     }
 
     const response = await fetch("/api/translate", {
@@ -813,6 +817,8 @@ export async function translateCenterWithAi(
     await setDoc(
       centerRef,
       cleanFirestoreData({
+        ...center,
+        id: center.id,
         translations: result.translations,
         updatedAt: new Date().toISOString(),
       }),
@@ -821,7 +827,7 @@ export async function translateCenterWithAi(
 
     return {
       success: true,
-      message: "✓ Center translated and saved to Firestore!",
+      message: "✓ Կենտրոնի տվյալները թարգմանվեցին և պահպանվեցին:",
       translations: result.translations,
     };
   } catch (error: any) {
@@ -1041,6 +1047,64 @@ export async function getCenterContent(
     }
   }
 
+  // Check directly across all 8 civilizations' centers subcollections
+  try {
+    const civChecks = await Promise.all(
+      civilizationsData.map(async (c) => {
+        try {
+          const docRef = doc(db, "civilizations", c.id, "centers", centerId);
+          const snap = await getDoc(docRef);
+          if (snap.exists()) {
+            return { snap, civId: c.id };
+          }
+        } catch {
+          // ignore
+        }
+        return null;
+      })
+    );
+    const foundDirect = civChecks.find((res) => res !== null);
+    if (foundDirect) {
+      const fullCiv = await getCivilizationContent(foundDirect.civId);
+      const data = foundDirect.snap.data() as ThinkTank;
+      return {
+        center: {
+          ...(local?.center || {}),
+          ...data,
+          id: data.id || foundDirect.snap.id || centerId,
+          name: data.name || local?.center?.name || "",
+        },
+        civ: fullCiv || civilizationsData.find((c) => c.id === foundDirect.civId) || civilizationsData[0],
+      };
+    }
+  } catch (e) {
+    console.warn("Direct civs search for center failed:", e);
+  }
+
+  // Query collectionGroup to find center anywhere in Firestore
+  try {
+    const q = query(collectionGroup(db, "centers"), where("id", "==", centerId));
+    const snap = await getDocs(q);
+    if (!snap.empty) {
+      const docSnap = snap.docs[0];
+      const firestoreCenter = docSnap.data() as ThinkTank;
+      const parentCivId = docSnap.ref.parent.parent?.id || (firestoreCenter as any).civId || "arm";
+      const fullCiv = await getCivilizationContent(parentCivId);
+      const resolvedCiv = fullCiv || civilizationsData.find((c) => c.id === parentCivId) || civilizationsData[0];
+      return {
+        center: {
+          ...(local?.center || {}),
+          ...firestoreCenter,
+          id: firestoreCenter.id || docSnap.id || centerId,
+          name: firestoreCenter.name || local?.center?.name || "",
+        },
+        civ: resolvedCiv,
+      };
+    }
+  } catch (e) {
+    console.warn(`collectionGroup query for center ${centerId} failed:`, e);
+  }
+
   // Search all civilizations if not found directly
   try {
     const allCivs = await getAllCivilizationsContent();
@@ -1092,6 +1156,64 @@ export async function getAuthorContent(
     }
   }
 
+  // Check directly across all 8 civilizations' author subcollections
+  try {
+    const civChecks = await Promise.all(
+      civilizationsData.map(async (c) => {
+        try {
+          const docRef = doc(db, "civilizations", c.id, "authors", authorId);
+          const snap = await getDoc(docRef);
+          if (snap.exists()) {
+            return { snap, civId: c.id };
+          }
+        } catch {
+          // ignore
+        }
+        return null;
+      })
+    );
+    const foundDirect = civChecks.find((res) => res !== null);
+    if (foundDirect) {
+      const fullCiv = await getCivilizationContent(foundDirect.civId);
+      const data = foundDirect.snap.data() as Thinker;
+      return {
+        author: {
+          ...(local?.author || {}),
+          ...data,
+          id: data.id || foundDirect.snap.id || authorId,
+          name: data.name || local?.author?.name || "",
+        },
+        civ: fullCiv || civilizationsData.find((c) => c.id === foundDirect.civId) || civilizationsData[0],
+      };
+    }
+  } catch (e) {
+    console.warn("Direct civs search for author failed:", e);
+  }
+
+  // Query collectionGroup to find author anywhere in Firestore
+  try {
+    const q = query(collectionGroup(db, "authors"), where("id", "==", authorId));
+    const snap = await getDocs(q);
+    if (!snap.empty) {
+      const docSnap = snap.docs[0];
+      const firestoreAuthor = docSnap.data() as Thinker;
+      const parentCivId = docSnap.ref.parent.parent?.id || (firestoreAuthor as any).civId || "arm";
+      const fullCiv = await getCivilizationContent(parentCivId);
+      const resolvedCiv = fullCiv || civilizationsData.find((c) => c.id === parentCivId) || civilizationsData[0];
+      return {
+        author: {
+          ...(local?.author || {}),
+          ...firestoreAuthor,
+          id: firestoreAuthor.id || docSnap.id || authorId,
+          name: firestoreAuthor.name || local?.author?.name || "",
+        },
+        civ: resolvedCiv,
+      };
+    }
+  } catch (e) {
+    console.warn(`collectionGroup query for author ${authorId} failed:`, e);
+  }
+
   // Search all civilizations if not found directly
   try {
     const allCivs = await getAllCivilizationsContent();
@@ -1099,6 +1221,14 @@ export async function getAuthorContent(
       const found = c.authors?.find((a) => a.id && a.id.toLowerCase() === authorId.toLowerCase());
       if (found) {
         return { author: { ...found, id: found.id || authorId }, civ: c };
+      }
+      if (c.centers) {
+        for (const center of c.centers) {
+          const centerAuthor = center.authors?.find((a) => a.id && a.id.toLowerCase() === authorId.toLowerCase());
+          if (centerAuthor) {
+            return { author: { ...centerAuthor, id: centerAuthor.id || authorId }, civ: c };
+          }
+        }
       }
     }
   } catch (e) {

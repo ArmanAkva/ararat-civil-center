@@ -24,7 +24,7 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
   const [loading, setLoading] = useState(true);
   const { user, isAdmin } = useAuth();
   const { isEditMode, toggleEditMode, saveAuthor, saveCenter, savePublication, deletePublication } = useEditMode();
-  const { applyLocale } = useLanguage();
+  const { applyLocale, t } = useLanguage();
 
   const displayAuthor = applyLocale(author);
   const displayCiv = applyLocale(civ);
@@ -298,11 +298,11 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
       {/* Top Breadcrumb Nav */}
       <nav style={{ margin: "2rem 0", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
         <Link
-          href={`/hubs/${civ.slug}`}
+          href={`/hubs/${displayCiv.slug || civ.slug}`}
           className="back-link"
           style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}
         >
-          <span>←</span> Դեպի {civ.nameHy}
+          <span>←</span> Դեպի {displayCiv.nameHy || civ.nameHy}
         </Link>
         <div style={{ display: "flex", alignItems: "center", gap: "0.8rem", flexWrap: "wrap" }}>
           {isAdmin && (
@@ -356,7 +356,7 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <span style={{ fontSize: "1.2rem" }}>{civ.symbol}</span>
             <span style={{ fontSize: "0.9rem", color: "var(--gold-accent)", fontWeight: "600" }}>
-              {civ.nameHy}
+              {displayCiv.nameHy || civ.nameHy}
             </span>
           </div>
         </div>
@@ -390,14 +390,14 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
               flexShrink: 0,
             }}
           >
-            {author.name ? author.name.charAt(0) : "M"}
+            {(displayAuthor.name || author.name || "M").charAt(0)}
           </div>
 
           <div style={{ flex: 1, minWidth: "260px" }}>
             <EditableText
               tag="h1"
               label="Հեղինակի Անուն"
-              value={author.name}
+              value={isEditMode ? author.name : displayAuthor.name}
               style={{
                 fontFamily: "var(--font-serif)",
                 fontSize: "clamp(2rem, 4vw, 2.8rem)",
@@ -408,11 +408,11 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
               onSave={(val) => handleSaveField("name", val)}
             />
 
-            {author.nameOriginal && (
+            {(author.nameOriginal || displayAuthor.nameOriginal) && (
               <EditableText
                 tag="h2"
                 label="Բնօրինակ / Լատիներեն Անուն"
-                value={author.nameOriginal}
+                value={isEditMode ? (author.nameOriginal || "") : (displayAuthor.nameOriginal || author.nameOriginal || "")}
                 style={{
                   fontSize: "1.05rem",
                   color: "var(--gold-accent)",
@@ -427,7 +427,7 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
             <EditableText
               tag="p"
               label="Գիտական Կոչում / Դեր"
-              value={author.title}
+              value={isEditMode ? author.title : (displayAuthor.title || author.title)}
               style={{
                 fontSize: "1.1rem",
                 color: "var(--text-secondary)",
@@ -439,7 +439,7 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
         </div>
 
         {/* Famous Quote block */}
-        {author.quote && (
+        {(isEditMode ? author.quote : displayAuthor.quote) && (
           <div
             style={{
               marginTop: "2.5rem",
@@ -457,7 +457,7 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
               tag="blockquote"
               multiline
               label="Նշանավոր Մեջբերում"
-              value={author.quote}
+              value={isEditMode ? (author.quote || "") : (displayAuthor.quote || author.quote || "")}
               style={{
                 fontSize: "1.2rem",
                 fontStyle: "italic",
@@ -480,7 +480,7 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
             tag="p"
             multiline
             label="Կենսագրություն"
-            value={author.bio}
+            value={isEditMode ? author.bio : displayAuthor.bio}
             style={{
               fontSize: "1.15rem",
               lineHeight: "1.85",
@@ -548,7 +548,9 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
           </div>
         ) : (
           <div style={{ display: "grid", gap: "1.2rem" }}>
-            {authorPublications.map((pub, idx) => (
+            {authorPublications.map((pub, idx) => {
+              const localizedPub = applyLocale(pub);
+              return (
               <div
                 key={pub.id || idx}
                 className="glass-card"
@@ -564,7 +566,7 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
               >
                 <div style={{ flex: 1, minWidth: "260px" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginBottom: "0.4rem", flexWrap: "wrap" }}>
-                    <span className="pub-tag-badge">📄 {pub.type || "Հոդված"}</span>
+                    <span className="pub-tag-badge">📄 {localizedPub.type || pub.type || "Հոդված"}</span>
                     <span style={{ fontSize: "0.85rem", color: "var(--gold-accent)", fontWeight: "600" }}>
                       {pub.year && `${pub.year}թ.`}
                       {pub.pages && ` • ${pub.pages} էջ`}
@@ -578,13 +580,13 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
 
                   <h3 style={{ margin: "0 0 0.5rem 0", color: "var(--text-primary)", fontSize: "1.25rem", fontFamily: "var(--font-serif)" }}>
                     <Link href={`/publications/${pub.id}`} style={{ color: "inherit", textDecoration: "none" }}>
-                      {pub.title}
+                      {localizedPub.title || pub.title}
                     </Link>
                   </h3>
 
-                  {pub.description && (
+                  {(localizedPub.description || pub.description) && (
                     <p style={{ margin: "0 0 0.6rem 0", color: "var(--text-secondary)", fontSize: "0.95rem", lineHeight: "1.6" }}>
-                      {pub.description}
+                      {localizedPub.description || pub.description}
                     </p>
                   )}
 
@@ -721,7 +723,8 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
                   )}
                 </div>
               </div>
-            ))}
+              );
+            })}
 
             {(isEditMode || isAdmin) && (
               <button
