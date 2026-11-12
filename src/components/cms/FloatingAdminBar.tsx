@@ -7,8 +7,14 @@ import { useEditMode } from "@/context/EditModeContext";
 import {
   translatePageWithAi,
   translateCivilizationWithAi,
+  translateCenterWithAi,
+  translateAuthorWithAi,
+  translatePublicationWithAi,
   getPageContent,
   getCivilizationContent,
+  getCenterContent,
+  getAuthorContent,
+  getPublicationContent,
 } from "@/lib/contentService";
 import {
   defaultHomeContent,
@@ -71,17 +77,99 @@ export default function FloatingAdminBar() {
         } else {
           setTranslateFeedback({ type: "error", text: res.message });
         }
-      } else if (pathname.startsWith("/civilizations/")) {
-        const slug = pathname.replace("/civilizations/", "").split("/")[0];
+      } else if (pathname.startsWith("/civilizations/") || pathname.startsWith("/hubs/")) {
+        const slug = pathname.startsWith("/hubs/")
+          ? pathname.replace("/hubs/", "").split("/")[0]
+          : pathname.replace("/civilizations/", "").split("/")[0];
         const civData = await getCivilizationContent(slug);
         if (civData) {
           const res = await translateCivilizationWithAi(civData.id, civData);
           if (res.success) {
-            setTranslateFeedback({ type: "success", text: `✓ «${civData.nameHy}» թարգմանվեց EN & RU:` });
+            setTranslateFeedback({
+              type: "success",
+              text: `✓ «${civData.nameHy || slug}» հաբը և ենթաբաժինները թարգմանվեցին EN & RU:`,
+            });
             setTimeout(() => window.location.reload(), 1200);
           } else {
             setTranslateFeedback({ type: "error", text: res.message });
           }
+        } else {
+          setTranslateFeedback({
+            type: "error",
+            text: `Քաղաքակրթական հաբը չգտնվեց (${slug}):`,
+          });
+        }
+      } else if (pathname.startsWith("/centers/")) {
+        const centerId = pathname.replace("/centers/", "").split("/")[0];
+        const centerRes = await getCenterContent(centerId);
+        if (centerRes) {
+          const res = await translateCenterWithAi(centerRes.civ.id, centerRes.center);
+          if (res.success) {
+            setTranslateFeedback({
+              type: "success",
+              text: `✓ «${centerRes.center.name}» կենտրոնը թարգմանվեց EN & RU:`,
+            });
+            setTimeout(() => window.location.reload(), 1200);
+          } else {
+            setTranslateFeedback({ type: "error", text: res.message });
+          }
+        } else {
+          setTranslateFeedback({
+            type: "error",
+            text: `Կենտրոնը չգտնվեց (${centerId}):`,
+          });
+        }
+      } else if (pathname.startsWith("/authors/")) {
+        const authorId = pathname.replace("/authors/", "").split("/")[0];
+        const authorRes = await getAuthorContent(authorId);
+        if (authorRes) {
+          const res = await translateAuthorWithAi(authorRes.civ.id, authorRes.author);
+          if (res.success) {
+            setTranslateFeedback({
+              type: "success",
+              text: `✓ «${authorRes.author.name}» հեղինակի տվյալները թարգմանվեցին EN & RU:`,
+            });
+            setTimeout(() => window.location.reload(), 1200);
+          } else {
+            setTranslateFeedback({ type: "error", text: res.message });
+          }
+        } else {
+          setTranslateFeedback({
+            type: "error",
+            text: `Հեղինակը չգտնվեց (${authorId}):`,
+          });
+        }
+      } else if (pathname.startsWith("/publications/")) {
+        const pubId = pathname.replace("/publications/", "").split("/")[0];
+        const pubRes = await getPublicationContent(pubId);
+        if (pubRes) {
+          const res = await translatePublicationWithAi(pubRes.civ.id, pubRes.pub);
+          if (res.success) {
+            setTranslateFeedback({
+              type: "success",
+              text: `✓ «${pubRes.pub.title}» աշխատությունը թարգմանվեց EN & RU:`,
+            });
+            setTimeout(() => window.location.reload(), 1200);
+          } else {
+            setTranslateFeedback({ type: "error", text: res.message });
+          }
+        } else {
+          setTranslateFeedback({
+            type: "error",
+            text: `Աշխատությունը չգտնվեց (${pubId}):`,
+          });
+        }
+      } else if (pathname === "/publications") {
+        const civPageData = await getPageContent("civilizations", defaultCivilizationsContent);
+        const res = await translatePageWithAi("civilizations", civPageData);
+        if (res.success) {
+          setTranslateFeedback({
+            type: "success",
+            text: "✓ Գրադարանի էջը թարգմանվեց EN & RU:",
+          });
+          setTimeout(() => window.location.reload(), 1200);
+        } else {
+          setTranslateFeedback({ type: "error", text: res.message });
         }
       } else if (pathname.startsWith("/dialogue")) {
         const diagData = await getPageContent("dialogue", defaultDialogueContent);
@@ -101,6 +189,11 @@ export default function FloatingAdminBar() {
         } else {
           setTranslateFeedback({ type: "error", text: res.message });
         }
+      } else if (pathname.startsWith("/profile")) {
+        setTranslateFeedback({
+          type: "success",
+          text: "✓ Պրոֆիլի էջի բոլոր տեքստերն արդեն ինտեգրված են բազմալեզու համակարգում:",
+        });
       } else {
         setTranslateFeedback({ type: "error", text: "Այս էջի համար ավտոմատ թարգմանություն հասանելի չէ:" });
       }

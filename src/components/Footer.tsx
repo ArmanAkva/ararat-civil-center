@@ -120,6 +120,7 @@ export default function Footer() {
 
   return (
     <footer
+      suppressHydrationWarning
       className="global-site-footer"
       style={{
         marginTop: "5rem",
@@ -294,7 +295,10 @@ export default function Footer() {
               }}
               onSave={(val) => handleSaveField("navTitle", val)}
             />
-            <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "0.65rem" }}>
+            <ul
+              suppressHydrationWarning
+              style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "0.65rem" }}
+            >
               <li>
                 <Link href="/" className="footer-link">{t("nav.home")}</Link>
               </li>

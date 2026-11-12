@@ -138,6 +138,7 @@ export async function getCivilizationContent(
         tagline: parentData.tagline || localCiv?.tagline || "",
         credo: parentData.credo || localCiv?.credo || "",
         overview: parentData.overview || localCiv?.overview || "",
+        translations: parentData.translations || localCiv?.translations,
         centers: mergedCenters,
         authors: mergedAuthors,
         publications: mergedPublications,
@@ -516,7 +517,8 @@ export async function translatePageWithAi(
 }
 
 /**
- * Translates a Civilization document (badge, credo, overview, tagline) with AI and saves to Firestore.
+ * Translates a Civilization document (badge, credo, overview, tagline) as well as its
+ * centers, authors, and publications with AI and saves all of them to Firestore.
  */
 export async function translateCivilizationWithAi(
   civId: string,
@@ -531,6 +533,36 @@ export async function translateCivilizationWithAi(
       }
     }
 
+    const centers: ThinkTank[] = Array.isArray(civData.centers) ? civData.centers : [];
+    const authors: Thinker[] = Array.isArray(civData.authors) ? civData.authors : [];
+    const publications: Publication[] = Array.isArray(civData.publications) ? civData.publications : [];
+
+    centers.forEach((center, idx) => {
+      const cKey = center.id || `c_${idx}`;
+      if (center.name) textsToTranslate[`ctr_${cKey}_name`] = center.name;
+      if (center.description) textsToTranslate[`ctr_${cKey}_desc`] = center.description;
+      if (center.city) textsToTranslate[`ctr_${cKey}_city`] = center.city;
+      if (center.country) textsToTranslate[`ctr_${cKey}_country`] = center.country;
+    });
+
+    authors.forEach((author, idx) => {
+      const aKey = author.id || `a_${idx}`;
+      if (author.name) textsToTranslate[`auth_${aKey}_name`] = author.name;
+      if (author.title) textsToTranslate[`auth_${aKey}_title`] = author.title;
+      if (author.bio) textsToTranslate[`auth_${aKey}_bio`] = author.bio;
+      if (author.quote) textsToTranslate[`auth_${aKey}_quote`] = author.quote;
+    });
+
+    publications.forEach((pub, idx) => {
+      const pKey = pub.id || `p_${idx}`;
+      if (pub.title) textsToTranslate[`pub_${pKey}_title`] = pub.title;
+      if (pub.description) textsToTranslate[`pub_${pKey}_desc`] = pub.description;
+    });
+
+    if (Object.keys(textsToTranslate).length === 0) {
+      return { success: false, message: "Թարգմանության համար որևէ տեքստ չգտնվեց:" };
+    }
+
     const response = await fetch("/api/translate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -538,7 +570,7 @@ export async function translateCivilizationWithAi(
         texts: textsToTranslate,
         targetLangs: ["en", "ru"],
         sourceLang: "hy",
-        context: `Civilization worldview and credo for ID: ${civId}`,
+        context: `Civilization worldview, think tanks, thinkers and publications for ID: ${civId}`,
       }),
     });
 
@@ -547,12 +579,122 @@ export async function translateCivilizationWithAi(
       throw new Error(result.message || "Failed to translate civilization with AI");
     }
 
-    await updateCivilizationTranslations(civId, result.translations);
+    // 1. Unpack civilization translations
+    const civTranslations: Record<string, Record<string, string>> = { en: {}, ru: {} };
+    for (const lang of ["en", "ru"] as const) {
+      civTranslations[lang] = {
+        _isAiTranslated: "true",
+        _translatedAt: new Date().toISOString(),
+      };
+      for (const key of translatableKeys) {
+        if (result.translations?.[lang]?.[key]) {
+          civTranslations[lang][key] = result.translations[lang][key];
+        }
+      }
+    }
+    await updateCivilizationTranslations(civId, civTranslations);
+
+    // 2. Unpack and save centers translations
+    for (const center of centers) {
+      if (!center.id) continue;
+      const cKey = center.id;
+      const centerTrans: Record<string, Record<string, string>> = { en: {}, ru: {} };
+      for (const lang of ["en", "ru"] as const) {
+        const langObj = result.translations?.[lang] || {};
+        const fields: Record<string, string> = {};
+        if (langObj[`ctr_${cKey}_name`]) fields.name = langObj[`ctr_${cKey}_name`];
+        if (langObj[`ctr_${cKey}_desc`]) fields.description = langObj[`ctr_${cKey}_desc`];
+        if (langObj[`ctr_${cKey}_city`]) fields.city = langObj[`ctr_${cKey}_city`];
+        if (langObj[`ctr_${cKey}_country`]) fields.country = langObj[`ctr_${cKey}_country`];
+        if (Object.keys(fields).length > 0) {
+          centerTrans[lang] = {
+            ...fields,
+            _isAiTranslated: "true",
+            _translatedAt: new Date().toISOString(),
+          };
+        }
+      }
+      if (Object.keys(centerTrans.en).length > 0 || Object.keys(centerTrans.ru).length > 0) {
+        const centerRef = doc(db, "civilizations", civId, "centers", center.id);
+        await setDoc(
+          centerRef,
+          cleanFirestoreData({
+            translations: centerTrans,
+            updatedAt: new Date().toISOString(),
+          }),
+          { merge: true }
+        );
+      }
+    }
+
+    // 3. Unpack and save authors translations
+    for (const author of authors) {
+      if (!author.id) continue;
+      const aKey = author.id;
+      const authorTrans: Record<string, Record<string, string>> = { en: {}, ru: {} };
+      for (const lang of ["en", "ru"] as const) {
+        const langObj = result.translations?.[lang] || {};
+        const fields: Record<string, string> = {};
+        if (langObj[`auth_${aKey}_name`]) fields.name = langObj[`auth_${aKey}_name`];
+        if (langObj[`auth_${aKey}_title`]) fields.title = langObj[`auth_${aKey}_title`];
+        if (langObj[`auth_${aKey}_bio`]) fields.bio = langObj[`auth_${aKey}_bio`];
+        if (langObj[`auth_${aKey}_quote`]) fields.quote = langObj[`auth_${aKey}_quote`];
+        if (Object.keys(fields).length > 0) {
+          authorTrans[lang] = {
+            ...fields,
+            _isAiTranslated: "true",
+            _translatedAt: new Date().toISOString(),
+          };
+        }
+      }
+      if (Object.keys(authorTrans.en).length > 0 || Object.keys(authorTrans.ru).length > 0) {
+        const authorRef = doc(db, "civilizations", civId, "authors", author.id);
+        await setDoc(
+          authorRef,
+          cleanFirestoreData({
+            translations: authorTrans,
+            updatedAt: new Date().toISOString(),
+          }),
+          { merge: true }
+        );
+      }
+    }
+
+    // 4. Unpack and save publications translations
+    for (const pub of publications) {
+      if (!pub.id) continue;
+      const pKey = pub.id;
+      const pubTrans: Record<string, Record<string, string>> = { en: {}, ru: {} };
+      for (const lang of ["en", "ru"] as const) {
+        const langObj = result.translations?.[lang] || {};
+        const fields: Record<string, string> = {};
+        if (langObj[`pub_${pKey}_title`]) fields.title = langObj[`pub_${pKey}_title`];
+        if (langObj[`pub_${pKey}_desc`]) fields.description = langObj[`pub_${pKey}_desc`];
+        if (Object.keys(fields).length > 0) {
+          pubTrans[lang] = {
+            ...fields,
+            _isAiTranslated: "true",
+            _translatedAt: new Date().toISOString(),
+          };
+        }
+      }
+      if (Object.keys(pubTrans.en).length > 0 || Object.keys(pubTrans.ru).length > 0) {
+        const pubRef = doc(db, "civilizations", civId, "publications", pub.id);
+        await setDoc(
+          pubRef,
+          cleanFirestoreData({
+            translations: pubTrans,
+            updatedAt: new Date().toISOString(),
+          }),
+          { merge: true }
+        );
+      }
+    }
 
     return {
       success: true,
-      message: "✓ Civilization successfully translated with AI and saved to Firestore!",
-      translations: result.translations,
+      message: "✓ Քաղաքակրթության հաբը (տվյալներ, կենտրոններ, հեղինակներ, աշխատություններ) թարգմանվեց EN & RU և պահպանվեց:",
+      translations: civTranslations,
     };
   } catch (error: any) {
     console.error("translateCivilizationWithAi error:", error);
