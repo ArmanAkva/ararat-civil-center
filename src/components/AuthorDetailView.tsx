@@ -60,6 +60,10 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
 
   useEffect(() => {
     let isMounted = true;
+    if (!initialAuthor?.id) {
+      setLoading(false);
+      return;
+    }
     getAuthorContent(initialAuthor.id)
       .then((res) => {
         if (isMounted) {
@@ -77,7 +81,7 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
     return () => {
       isMounted = false;
     };
-  }, [initialAuthor.id]);
+  }, [initialAuthor?.id]);
 
   const handleSaveField = async (field: keyof Thinker, val: any) => {
     const updated = { ...author, [field]: val };

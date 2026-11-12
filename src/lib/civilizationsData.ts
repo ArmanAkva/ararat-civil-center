@@ -1183,30 +1183,35 @@ export function getAllCivilizations(): Civilization[] {
   return civilizationsData;
 }
 
-export function getCivilizationBySlug(slug: string): Civilization | undefined {
+export function getCivilizationBySlug(slug?: string): Civilization | undefined {
+  if (!slug || typeof slug !== "string") return undefined;
   const normalized = slug.toLowerCase().trim();
   return civilizationsData.find(
-    (civ) => civ.slug.toLowerCase() === normalized || civ.id.toLowerCase() === normalized
+    (civ) => (civ.slug && civ.slug.toLowerCase() === normalized) || (civ.id && civ.id.toLowerCase() === normalized)
   );
 }
 
-export function findCenterById(id: string): { center: ThinkTank; civ: Civilization } | undefined {
+export function findCenterById(id?: string): { center: ThinkTank; civ: Civilization } | undefined {
+  if (!id || typeof id !== "string") return undefined;
   const normalized = id.toLowerCase().trim();
   for (const civ of civilizationsData) {
-    const center = civ.centers.find(
-      (c) => c.id.toLowerCase() === normalized || c.name.toLowerCase() === normalized
-    );
-    if (center) return { center, civ };
+    if (civ.centers) {
+      const center = civ.centers.find(
+        (c) => (c.id && c.id.toLowerCase() === normalized) || (c.name && c.name.toLowerCase() === normalized)
+      );
+      if (center) return { center, civ };
+    }
   }
   return undefined;
 }
 
-export function findAuthorById(id: string): { author: Thinker; civ: Civilization } | undefined {
+export function findAuthorById(id?: string): { author: Thinker; civ: Civilization } | undefined {
+  if (!id || typeof id !== "string") return undefined;
   const normalized = id.toLowerCase().trim();
   for (const civ of civilizationsData) {
     if (civ.authors) {
       const author = civ.authors.find(
-        (a) => a.id.toLowerCase() === normalized || a.name.toLowerCase() === normalized
+        (a) => (a.id && a.id.toLowerCase() === normalized) || (a.name && a.name.toLowerCase() === normalized)
       );
       if (author) return { author, civ };
     }
@@ -1214,7 +1219,7 @@ export function findAuthorById(id: string): { author: Thinker; civ: Civilization
       for (const center of civ.centers) {
         if (center.authors) {
           const author = center.authors.find(
-            (a) => a.id.toLowerCase() === normalized || a.name.toLowerCase() === normalized
+            (a) => (a.id && a.id.toLowerCase() === normalized) || (a.name && a.name.toLowerCase() === normalized)
           );
           if (author) return { author, civ };
         }
@@ -1256,18 +1261,23 @@ export function getAllAuthorIds(): string[] {
 }
 
 export function findPublicationById(
-  pubId: string
+  pubId?: string
 ): { pub: Publication; civ: Civilization } | undefined {
-  const normalized = pubId.toLowerCase();
+  if (!pubId || typeof pubId !== "string") return undefined;
+  const normalized = pubId.toLowerCase().trim();
   for (const civ of civilizationsData) {
     if (civ.publications) {
-      const pub = civ.publications.find((p) => p.id?.toLowerCase() === normalized);
+      const pub = civ.publications.find(
+        (p) => (p.id && p.id.toLowerCase() === normalized) || (p.title && p.title.toLowerCase() === normalized)
+      );
       if (pub) return { pub, civ };
     }
     if (civ.authors) {
       for (const a of civ.authors) {
         if (a.publications) {
-          const pub = a.publications.find((p) => p.id?.toLowerCase() === normalized);
+          const pub = a.publications.find(
+            (p) => (p.id && p.id.toLowerCase() === normalized) || (p.title && p.title.toLowerCase() === normalized)
+          );
           if (pub) return { pub, civ };
         }
       }
@@ -1275,7 +1285,9 @@ export function findPublicationById(
     if (civ.centers) {
       for (const c of civ.centers) {
         if (c.publications) {
-          const pub = c.publications.find((p) => p.id?.toLowerCase() === normalized);
+          const pub = c.publications.find(
+            (p) => (p.id && p.id.toLowerCase() === normalized) || (p.title && p.title.toLowerCase() === normalized)
+          );
           if (pub) return { pub, civ };
         }
       }

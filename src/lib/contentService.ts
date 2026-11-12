@@ -61,7 +61,11 @@ export async function getCivilizationContent(
     let fetchedCenters: ThinkTank[] = [];
     if (centersSnap && !centersSnap.empty) {
       centersSnap.forEach((d) => {
-        fetchedCenters.push(d.data() as ThinkTank);
+        const cData = d.data() as ThinkTank;
+        fetchedCenters.push({
+          ...cData,
+          id: cData.id || d.id,
+        });
       });
     }
 
@@ -69,7 +73,11 @@ export async function getCivilizationContent(
     let fetchedAuthors: Thinker[] = [];
     if (authorsSnap && !authorsSnap.empty) {
       authorsSnap.forEach((d) => {
-        fetchedAuthors.push(d.data() as Thinker);
+        const aData = d.data() as Thinker;
+        fetchedAuthors.push({
+          ...aData,
+          id: aData.id || d.id,
+        });
       });
     }
 
@@ -77,7 +85,11 @@ export async function getCivilizationContent(
     let fetchedPublications: Publication[] = [];
     if (publicationsSnap && !publicationsSnap.empty) {
       publicationsSnap.forEach((d) => {
-        fetchedPublications.push(d.data() as Publication);
+        const pData = d.data() as Publication;
+        fetchedPublications.push({
+          ...pData,
+          id: pData.id || d.id,
+        });
       });
     }
 
@@ -619,6 +631,8 @@ export async function translateCivilizationWithAi(
         await setDoc(
           centerRef,
           cleanFirestoreData({
+            ...center,
+            id: center.id,
             translations: centerTrans,
             updatedAt: new Date().toISOString(),
           }),
@@ -652,6 +666,8 @@ export async function translateCivilizationWithAi(
         await setDoc(
           authorRef,
           cleanFirestoreData({
+            ...author,
+            id: author.id,
             translations: authorTrans,
             updatedAt: new Date().toISOString(),
           }),
@@ -683,6 +699,8 @@ export async function translateCivilizationWithAi(
         await setDoc(
           pubRef,
           cleanFirestoreData({
+            ...pub,
+            id: pub.id,
             translations: pubTrans,
             updatedAt: new Date().toISOString(),
           }),
@@ -992,8 +1010,11 @@ export async function seedAllContentToFirestore(): Promise<{
  * Reads a single center and its parent civilization
  */
 export async function getCenterContent(
-  centerId: string
+  centerId?: string
 ): Promise<{ center: ThinkTank; civ: Civilization } | undefined> {
+  if (!centerId || typeof centerId !== "string") {
+    return undefined;
+  }
   const local = findCenterById(centerId);
   const civId = local?.civ.id;
 
@@ -1003,9 +1024,16 @@ export async function getCenterContent(
       const snap = await getDoc(docRef);
       if (snap.exists()) {
         const fullCiv = await getCivilizationContent(civId);
+        const data = snap.data();
+        const mergedCenter: ThinkTank = {
+          ...(local?.center || {}),
+          ...data,
+          id: data.id || local?.center?.id || centerId,
+          name: data.name || local?.center?.name || "",
+        };
         return {
-          center: snap.data() as ThinkTank,
-          civ: fullCiv || local.civ,
+          center: mergedCenter,
+          civ: fullCiv || local?.civ || civilizationsData[0],
         };
       }
     } catch (e) {
@@ -1017,24 +1045,27 @@ export async function getCenterContent(
   try {
     const allCivs = await getAllCivilizationsContent();
     for (const c of allCivs) {
-      const found = c.centers?.find((ct) => ct.id.toLowerCase() === centerId.toLowerCase());
+      const found = c.centers?.find((ct) => ct.id && ct.id.toLowerCase() === centerId.toLowerCase());
       if (found) {
-        return { center: found, civ: c };
+        return { center: { ...found, id: found.id || centerId }, civ: c };
       }
     }
   } catch (e) {
     console.warn("Global search for center failed:", e);
   }
 
-  return local;
+  return local ? { ...local, center: { ...local.center, id: local.center.id || centerId } } : undefined;
 }
 
 /**
  * Reads a single author and their parent civilization
  */
 export async function getAuthorContent(
-  authorId: string
+  authorId?: string
 ): Promise<{ author: Thinker; civ: Civilization } | undefined> {
+  if (!authorId || typeof authorId !== "string") {
+    return undefined;
+  }
   const local = findAuthorById(authorId);
   const civId = local?.civ.id;
 
@@ -1044,9 +1075,16 @@ export async function getAuthorContent(
       const snap = await getDoc(docRef);
       if (snap.exists()) {
         const fullCiv = await getCivilizationContent(civId);
+        const data = snap.data();
+        const mergedAuthor: Thinker = {
+          ...(local?.author || {}),
+          ...data,
+          id: data.id || local?.author?.id || authorId,
+          name: data.name || local?.author?.name || "",
+        };
         return {
-          author: snap.data() as Thinker,
-          civ: fullCiv || local.civ,
+          author: mergedAuthor,
+          civ: fullCiv || local?.civ || civilizationsData[0],
         };
       }
     } catch (e) {
@@ -1058,16 +1096,16 @@ export async function getAuthorContent(
   try {
     const allCivs = await getAllCivilizationsContent();
     for (const c of allCivs) {
-      const found = c.authors?.find((a) => a.id.toLowerCase() === authorId.toLowerCase());
+      const found = c.authors?.find((a) => a.id && a.id.toLowerCase() === authorId.toLowerCase());
       if (found) {
-        return { author: found, civ: c };
+        return { author: { ...found, id: found.id || authorId }, civ: c };
       }
     }
   } catch (e) {
     console.warn("Global search for author failed:", e);
   }
 
-  return local;
+  return local ? { ...local, author: { ...local.author, id: local.author.id || authorId } } : undefined;
 }
 
 /**

@@ -79,6 +79,10 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
 
   useEffect(() => {
     let isMounted = true;
+    if (!initialCenter?.id) {
+      setLoading(false);
+      return;
+    }
     getCenterContent(initialCenter.id)
       .then((res) => {
         if (isMounted) {
@@ -96,7 +100,7 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
     return () => {
       isMounted = false;
     };
-  }, [initialCenter.id]);
+  }, [initialCenter?.id]);
 
   const handleSaveField = async (field: keyof ThinkTank, val: any) => {
     const updated = { ...center, [field]: val };
