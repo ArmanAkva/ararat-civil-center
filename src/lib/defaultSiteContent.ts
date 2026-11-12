@@ -212,36 +212,14 @@ export const defaultDialogueContent: DialoguePageContent = {
   kpiExpertsLabel: "Փորձագիտական Կարծիքներ",
   suggestButtonText: "Առաջարկել Նոր Հարցադրում",
   activeTopic: {
-    number: "ՀԱՐՑԱԴՐՈՒՄ #12",
-    date: "2026թ. ԱՇՈՒՆ",
-    title: "Թվային անթրոպոցիդ. Ինչպե՞ս պաշտպանել ավանդական արժեքները AI դարաշրջանում",
-    description:
-      "Արհեստական բանականության սրընթաց զարգացումը ստեղծում է մարդակենտրոն արժեքների ոչնչացման վտանգ։ Կազմկոմիտեն հրավիրում է մտածողներին գտնել հավասարակշռության նոր բանաձևեր։",
+    number: "",
+    date: "",
+    title: "",
+    description: "",
   },
-  expertResponses: [
-    {
-      id: "resp-1",
-      name: "Ալեն դը Բենուա",
-      civilization: "Եվրոպական քաղաքակրթություն",
-      quote: "«Տեխնոլոգիան չի կարող փոխարինել մշակութային արմատներին...»",
-    },
-    {
-      id: "resp-2",
-      name: "Ժաո Տինյան",
-      civilization: "Չինական քաղաքակրթություն",
-      quote: "«Տյանսյա հայեցակարգը որպես զսպիչ ուժ...»",
-    },
-  ],
-  publicFeed: [
-    {
-      author: "Դոկտոր Ա. Գրիգորյան (ԵՊՀ)",
-      text: "Կարևոր է ձևավորել ազգային AI էթիկայի չափորոշիչներ...",
-    },
-  ],
-  archiveTopics: [
-    "Հարցադրում #11 | Բազմաբևեռ աշխարհի ճարտարապետությունը",
-    "Հարցադրում #10 | Ավանդույթ և Մոդեռնիզմ",
-  ],
+  expertResponses: [],
+  publicFeed: [],
+  archiveTopics: [],
   translations: {
     en: {
       heroBadge: "Ararat Center · Philosophical Forum",
@@ -254,36 +232,14 @@ export const defaultDialogueContent: DialoguePageContent = {
       kpiExpertsLabel: "Expert Insights",
       suggestButtonText: "Propose a New Inquiry",
       activeTopic: {
-        number: "INQUIRY #12",
-        date: "AUTUMN 2026",
-        title: "Digital Anthropocide: How to Protect Traditional Values in the AI Era",
-        description:
-          "The rapid development of Artificial Intelligence threatens anthropocentric values. The organizing committee invites thinkers to discover new formulas of balance.",
+        number: "",
+        date: "",
+        title: "",
+        description: "",
       },
-      expertResponses: [
-        {
-          id: "resp-1",
-          name: "Alain de Benoist",
-          civilization: "European Civilization",
-          quote: "“Technology cannot replace cultural roots...”",
-        },
-        {
-          id: "resp-2",
-          name: "Zhao Tingyang",
-          civilization: "Chinese Civilization",
-          quote: "“The Tianxia concept as a restraining force...”",
-        },
-      ],
-      publicFeed: [
-        {
-          author: "Dr. A. Grigoryan (YSU)",
-          text: "It is crucial to establish national AI ethics standards...",
-        },
-      ],
-      archiveTopics: [
-        "Inquiry #11 | Architecture of a Multipolar World",
-        "Inquiry #10 | Tradition and Modernism",
-      ],
+      expertResponses: [],
+      publicFeed: [],
+      archiveTopics: [],
       _isAiTranslated: true,
       _translatedAt: "2026-11-12T00:00:00.000Z",
     },
@@ -298,36 +254,14 @@ export const defaultDialogueContent: DialoguePageContent = {
       kpiExpertsLabel: "Экспертные Оценки",
       suggestButtonText: "Предложить Новое Вопрошание",
       activeTopic: {
-        number: "ВОПРОШАНИЕ #12",
-        date: "ОСЕНЬ 2026",
-        title: "Цифровой антропоцид: Как защитить традиционные ценности в эпоху ИИ",
-        description:
-          "Стремительное развитие искусственного интеллекта создает угрозу уничтожения антропоцентрических ценностей. Оргкомитет приглашает мыслителей выработать новые формулы равновесия.",
+        number: "",
+        date: "",
+        title: "",
+        description: "",
       },
-      expertResponses: [
-        {
-          id: "resp-1",
-          name: "Ален де Бенуа",
-          civilization: "Европейская цивилизация",
-          quote: "«Технологии не могут заменить культурные корни...»",
-        },
-        {
-          id: "resp-2",
-          name: "Чжао Тинян",
-          civilization: "Китайская цивилизация",
-          quote: "«Концепция Тянься как сдерживающая сила...»",
-        },
-      ],
-      publicFeed: [
-        {
-          author: "Д-р А. Григорян (ЕГУ)",
-          text: "Важно сформировать национальные стандарты этики ИИ...",
-        },
-      ],
-      archiveTopics: [
-        "Вопрошание #11 | Архитектура многополярного мира",
-        "Вопрошание #10 | Традиция и Модернизм",
-      ],
+      expertResponses: [],
+      publicFeed: [],
+      archiveTopics: [],
       _isAiTranslated: true,
       _translatedAt: "2026-11-12T00:00:00.000Z",
     },
