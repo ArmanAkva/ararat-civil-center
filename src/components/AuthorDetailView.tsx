@@ -302,7 +302,7 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
           className="back-link"
           style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}
         >
-          <span>←</span> Դեպի {displayCiv.nameHy || civ.nameHy}
+          <span>←</span> {t("btn.backToCiv")} {displayCiv.nameHy || civ.nameHy}
         </Link>
         <div style={{ display: "flex", alignItems: "center", gap: "0.8rem", flexWrap: "wrap" }}>
           {isAdmin && (
@@ -326,7 +326,7 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
                 }}
               >
                 <span>✏️</span>
-                <span>Խմբագրել Պրոֆիլը</span>
+                <span>{t("btn.editProfile")}</span>
               </button>
 
               <button
@@ -346,10 +346,10 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
                   gap: "0.4rem",
                   transition: "all 0.2s ease",
                 }}
-                title="Խմբագրման ռեժիմի միացում"
+                title={t("label.toggleEditMode")}
               >
                 <span>{isEditMode ? "✓" : "👁"}</span>
-                <span>{isEditMode ? "Խմբագրումը՝ ԱԿՏԻՎ" : "Խմբագրման Ռեժիմ"}</span>
+                <span>{isEditMode ? t("label.editActive") : t("label.editMode")}</span>
               </button>
             </div>
           )}
@@ -451,7 +451,7 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
             }}
           >
             <div style={{ fontSize: "0.8rem", color: "var(--gold-accent)", fontWeight: "bold", textTransform: "uppercase", marginBottom: "0.5rem" }}>
-              ✧ Գաղափարական Պատգամ / Մեջբերում
+              {t("label.philosophyQuote")}
             </div>
             <EditableText
               tag="blockquote"
@@ -474,7 +474,7 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
         {/* Biography */}
         <div style={{ marginTop: "2.5rem", borderTop: "1px solid var(--card-border)", paddingTop: "2rem" }}>
           <h3 style={{ fontSize: "1.2rem", color: "var(--gold-accent)", marginBottom: "1rem", fontFamily: "var(--font-serif)" }}>
-            Կենսագրություն և Գիտական Նշանակություն
+            {t("label.bioAndHeritage")}
           </h3>
           <EditableText
             tag="p"
@@ -497,10 +497,10 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem", borderBottom: "1px solid var(--card-border)", paddingBottom: "1rem", flexWrap: "wrap", gap: "1rem" }}>
           <div>
             <h2 style={{ fontFamily: "var(--font-serif)", color: "var(--gold-accent)", margin: "0 0 0.25rem 0", fontSize: "1.8rem" }}>
-              Գիտական Աշխատություններ և Հոդվածներ ({authorPublications.length})
+              {t("tab.publications")} ({authorPublications.length})
             </h2>
             <p style={{ margin: 0, color: "var(--text-secondary)", fontSize: "0.88rem" }}>
-              Հեղինակի գրքերը, մենագրությունները, վերլուծական հոդվածները և զեկույցները
+              {t("label.authorWorksSubtitle")}
             </p>
           </div>
           {(isEditMode || isAdmin) && (
@@ -514,7 +514,7 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
               style={{ fontSize: "0.85rem", padding: "0.55rem 1.15rem", display: "inline-flex", alignItems: "center", gap: "0.4rem" }}
             >
               <span>📚＋</span>
-              <span>Կցել / Ավելացնել Աշխատություն</span>
+              <span>{t("btn.attachPublication")}</span>
             </button>
           )}
         </div>
@@ -531,7 +531,7 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
             }}
           >
             <div style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>📚</div>
-            <p style={{ margin: "0 0 1rem 0" }}>Աշխատություններ կամ հոդվածներ դեռ ավելացված չեն:</p>
+            <p style={{ margin: "0 0 1rem 0" }}>{t("label.noWorksYet")}</p>
             {(isEditMode || isAdmin) && (
               <button
                 type="button"
@@ -542,7 +542,7 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
                 className="btn-primary"
                 style={{ fontSize: "0.85rem" }}
               >
-                + Կցել Քաղաքակրթության Գրադարանից կամ Ստեղծել Նորը
+                {t("btn.attachOrCreatePub")}
               </button>
             )}
           </div>
@@ -568,12 +568,12 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
                   <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginBottom: "0.4rem", flexWrap: "wrap" }}>
                     <span className="pub-tag-badge">📄 {localizedPub.type || pub.type || "Հոդված"}</span>
                     <span style={{ fontSize: "0.85rem", color: "var(--gold-accent)", fontWeight: "600" }}>
-                      {pub.year && `${pub.year}թ.`}
-                      {pub.pages && ` • ${pub.pages} էջ`}
+                      {pub.year && `${pub.year}${t("label.yearSuffix")}`}
+                      {pub.pages && ` • ${pub.pages} ${t("label.pages")}`}
                     </span>
                     {pub.downloadUrl && (
                       <span style={{ fontSize: "0.78rem", color: "#10b981", background: "rgba(16, 185, 129, 0.12)", padding: "0.15rem 0.5rem", borderRadius: "999px", border: "1px solid rgba(16, 185, 129, 0.3)" }}>
-                        ✓ Առցանց հասանելի
+                        {t("label.onlineAvailable")}
                       </span>
                     )}
                   </div>
@@ -593,7 +593,7 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
                   {/* Attached Centers Tags */}
                   {pub.centerIds && pub.centerIds.length > 0 && (
                     <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap", alignItems: "center" }}>
-                      <span style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Կենտրոն՝</span>
+                      <span style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>{t("label.centerLabel")}</span>
                       {pub.centerIds.map((cId) => {
                         const centerObj = (civ.centers || []).find((c) => c.id === cId);
                         return (
@@ -629,7 +629,7 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
                     className="credo-action-btn"
                     style={{ padding: "0.5rem 0.9rem", fontSize: "0.85rem", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "0.3rem" }}
                   >
-                    📖 Բացել էջում
+                    {t("pub.readOnline")}
                   </Link>
 
                   <button
@@ -638,7 +638,7 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
                     className="credo-action-btn"
                     style={{ padding: "0.5rem 1rem", fontSize: "0.85rem" }}
                   >
-                    Մանրամասն
+                    {t("btn.details")}
                   </button>
 
                   {pub.downloadUrl && (
@@ -664,7 +664,7 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
                           color: "var(--gold-accent)",
                         }}
                       >
-                        👁 Դիտել PDF
+                        {t("pub.viewPdf")}
                       </button>
                       <a
                         href={pub.downloadUrl}
@@ -673,9 +673,9 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
                         download={pub.fileName || `${pub.title}.pdf`}
                         className="credo-action-btn"
                         style={{ padding: "0.5rem 0.85rem", fontSize: "0.85rem", textDecoration: "none" }}
-                        title="Ներբեռնել PDF"
+                        title={t("pub.downloadPdf")}
                       >
-                        ⬇️ Ներբեռնել
+                        ⬇️ {t("pub.download")}
                       </a>
                     </div>
                   )}
@@ -698,10 +698,10 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
                           alignItems: "center",
                           gap: "0.3rem",
                         }}
-                        title="Խմբագրել աշխատությունը"
+                        title={t("btn.edit")}
                       >
                         <span>✏️</span>
-                        <span>Խմբագրել</span>
+                        <span>{t("btn.edit")}</span>
                       </button>
                       <button
                         type="button"
@@ -715,7 +715,7 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
                           cursor: "pointer",
                           fontSize: "0.85rem",
                         }}
-                        title="Անջատել այս հեղինակից"
+                        title={t("btn.detachAuthor")}
                       >
                         🔗✕
                       </button>
@@ -751,7 +751,7 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
                 }}
               >
                 <span>📚＋</span>
-                <span>Կցել կամ ավելացնել աշխատություն այս հեղինակին</span>
+                <span>{t("btn.attachPublication")}</span>
               </button>
             )}
           </div>
@@ -771,7 +771,7 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
               fontSize: "1.8rem",
             }}
           >
-            Հարակից Ուղեղային Կենտրոններ ({civ.nameHy})
+            {t("label.affiliatedCenters")} ({displayCiv.nameHy || civ.nameHy})
           </h2>
 
           <div className="cards-grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))" }}>
@@ -809,7 +809,7 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
                             borderRadius: "999px",
                           }}
                         >
-                          🏛 Գիտաշխատող / Անդամ
+                          🏛 {t("label.affiliatedFellow")}
                         </span>
                       )}
                     </div>
@@ -840,7 +840,7 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
                         href={`/centers/${center.id}`}
                         style={{ color: "var(--gold-accent)", fontSize: "0.85rem", fontWeight: "600", textDecoration: "none" }}
                       >
-                        Դիտել կենտրոնի էջը →
+                        {t("label.viewCenterPage")}
                       </Link>
 
                       {(isEditMode || isAdmin) && (
@@ -859,7 +859,7 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
                             border: isAffiliated ? "1px solid rgba(239, 68, 68, 0.4)" : "none",
                           }}
                         >
-                          {isAffiliated ? "✓ Կցված է (Անջատել)" : "＋ Կցել այս կենտրոնին"}
+                          {isAffiliated ? t("label.affiliatedLinked") : t("label.affiliateAttachToCenter")}
                         </button>
                       )}
                     </div>
@@ -888,17 +888,17 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
               type="button"
               className="civ-modal-close"
               onClick={() => setIsPubModalOpen(false)}
-              aria-label="Փակել"
+              aria-label={t("btn.close")}
             >
               ✕
             </button>
 
             <div style={{ marginBottom: "1.5rem" }}>
               <h2 style={{ fontFamily: "var(--font-serif)", color: "var(--gold-accent)", margin: "0 0 0.5rem 0", fontSize: "1.6rem" }}>
-                Կցել կամ Ստեղծել Գիտական Աշխատություն
+                {t("label.modalAttachOrCreatePub")}
               </h2>
               <p style={{ margin: 0, color: "var(--text-secondary)", fontSize: "0.9rem" }}>
-                Հեղինակ՝ <strong style={{ color: "var(--text-primary)" }}>{author.name}</strong> ({civ.nameHy})
+                {t("label.authorLabel")} <strong style={{ color: "var(--text-primary)" }}>{author.name}</strong> ({displayCiv.nameHy || civ.nameHy})
               </p>
             </div>
 
@@ -919,7 +919,7 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
                   transition: "all 0.2s ease",
                 }}
               >
-                📚 Ընտրել Քաղաքակրթության Գրադարանից ({civ.publications?.length || 0})
+                📚 {t("label.selectFromCivLib")} ({civ.publications?.length || 0})
               </button>
               <button
                 type="button"
@@ -936,7 +936,7 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
                   transition: "all 0.2s ease",
                 }}
               >
-                ＋ Ստեղծել Նոր Աշխատություն
+                ＋ {t("label.createNewPub")}
               </button>
             </div>
 
@@ -946,7 +946,7 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
                 <div style={{ marginBottom: "1.2rem" }}>
                   <input
                     type="text"
-                    placeholder="Որոնել աշխատությունը ըստ վերնագրի կամ տեսակի..."
+                    placeholder={t("search.pubsModalPlaceholder")}
                     value={pubSearchQuery}
                     onChange={(e) => setPubSearchQuery(e.target.value)}
                     style={{
@@ -961,14 +961,14 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
                     }}
                   />
                   <div style={{ marginTop: "0.5rem", fontSize: "0.8rem", color: "var(--gold-accent)", opacity: 0.9 }}>
-                    💡 Կարող եք կցել արդեն իսկ քաղաքակրթության գրադարանում առկա աշխատությունները:
+                    💡 {t("label.canAttachExistingPubs")}
                   </div>
                 </div>
 
                 <div style={{ display: "grid", gap: "0.8rem", maxHeight: "360px", overflowY: "auto", paddingRight: "0.3rem" }}>
                   {(!civ.publications || civ.publications.length === 0) ? (
                     <div style={{ textAlign: "center", padding: "2rem", color: "var(--text-secondary)" }}>
-                      Այս քաղաքակրթությունում դեռևս առանձին աշխատություններ չկան: Օգտվեք «Ստեղծել Նոր Աշխատություն» ներդիրից:
+                      {t("empty.noPubsInCivYet")}
                     </div>
                   ) : (
                     civ.publications
@@ -1030,7 +1030,7 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
                                 border: isLinked ? "1px solid rgba(239, 68, 68, 0.4)" : "none",
                               }}
                             >
-                              {isLinked ? "✓ Կցված է (Անջատել)" : "＋ Կցել Հեղինակին"}
+                              {isLinked ? t("label.affiliatedLinked") : t("label.affiliateAttachAuthor")}
                             </button>
                           </div>
                         );
@@ -1045,7 +1045,7 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
               <form onSubmit={handleCreateAndLinkPublication} style={{ display: "grid", gap: "1rem" }}>
                 <div>
                   <label style={{ display: "block", fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "0.4rem" }}>
-                    Աշխատության Վերնագիր *
+                    {t("label.pubTitle")} *
                   </label>
                   <input
                     type="text"
@@ -1068,7 +1068,7 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
                   <div>
                     <label style={{ display: "block", fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "0.4rem" }}>
-                      Տեսակ
+                      {t("label.pubType")}
                     </label>
                     <select
                       value={newPubData.type}
@@ -1093,7 +1093,7 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
 
                   <div>
                     <label style={{ display: "block", fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "0.4rem" }}>
-                      Հրատարակման Տարեթիվ
+                      {t("label.pubYear")}
                     </label>
                     <input
                       type="text"
@@ -1116,7 +1116,7 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
                   <div>
                     <label style={{ display: "block", fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "0.4rem" }}>
-                      Էջերի Քանակ (ընտրովի)
+                      {t("label.pubPages")}
                     </label>
                     <input
                       type="number"
@@ -1137,7 +1137,7 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
 
                   <div>
                     <label style={{ display: "block", fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "0.4rem" }}>
-                      Կից Ուղեղային Կենտրոն (ընտրովի)
+                      {t("label.attachedCenterOptional")}
                     </label>
                     <select
                       value={newPubData.centerId}
@@ -1152,7 +1152,7 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
                         boxSizing: "border-box",
                       }}
                     >
-                      <option value="">-- Առանց կոնկրետ կենտրոնի --</option>
+                      <option value="">-- {t("label.noSpecificCenter")} --</option>
                       {(civ.centers || []).map((c) => (
                         <option key={c.id} value={c.id}>
                           {c.name}
@@ -1164,7 +1164,7 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
 
                 <div>
                   <label style={{ display: "block", fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "0.4rem" }}>
-                    Ամփոփագիր / Գիտական Թեզիսներ
+                    {t("label.summaryAbstract")}
                   </label>
                   <textarea
                     rows={3}
@@ -1210,10 +1210,10 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
                     className="credo-action-btn"
                     onClick={() => setIsPubModalOpen(false)}
                   >
-                    Չեղարկել
+                    {t("btn.cancel")}
                   </button>
                   <button type="submit" className="btn-primary">
-                    <span>Ստեղծել և Կցել Հեղինակին</span>
+                    <span>{t("btn.createAndAttach")}</span>
                   </button>
                 </div>
               </form>
@@ -1263,7 +1263,7 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
               type="button"
               className="civ-modal-close"
               onClick={() => setSelectedPublication(null)}
-              aria-label="Փակել"
+              aria-label={t("btn.close")}
             >
               ✕
             </button>
@@ -1278,13 +1278,13 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
             </h2>
 
             <div style={{ color: "var(--text-secondary)", fontSize: "0.95rem", marginBottom: "1.5rem" }}>
-              Հեղինակ՝ <strong style={{ color: "var(--gold-accent)" }}>{author.name}</strong>
-              {selectedPublication.pages && ` (${selectedPublication.pages} էջ)`}
+              {t("label.authorLabel")} <strong style={{ color: "var(--gold-accent)" }}>{author.name}</strong>
+              {selectedPublication.pages && ` (${selectedPublication.pages} ${t("label.pages")})`}
             </div>
 
             <div style={{ background: "var(--input-bg)", padding: "1.25rem", borderRadius: "0.75rem", border: "1px solid var(--card-border)", marginBottom: "2rem" }}>
               <h4 style={{ margin: "0 0 0.5rem 0", fontSize: "0.9rem", color: "var(--text-primary)" }}>
-                Ամփոփագիր և Գիտական Նկարագիր
+                {t("label.summaryAndScientificDesc")}
               </h4>
               <p style={{ margin: 0, color: "var(--text-secondary)", lineHeight: "1.7", fontSize: "0.95rem" }}>
                 {selectedPublication.description ||
@@ -1298,7 +1298,7 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
                 className="credo-action-btn"
                 onClick={() => setSelectedPublication(null)}
               >
-                Փակել
+                {t("btn.close")}
               </button>
               {selectedPublication.downloadUrl ? (
                 <>
@@ -1320,7 +1320,7 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
                     }}
                     style={{ padding: "0.55rem 1.1rem", fontSize: "0.88rem" }}
                   >
-                    👁 Դիտել PDF-ը
+                    {t("pub.viewPdf")}
                   </button>
                   <a
                     href={selectedPublication.downloadUrl}
@@ -1330,7 +1330,7 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
                     className="btn-primary"
                     style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "0.4rem" }}
                   >
-                    <span>⬇️ Ներբեռնել PDF</span>
+                    <span>⬇️ {t("pub.downloadPdf")}</span>
                   </a>
                 </>
               ) : (
@@ -1341,7 +1341,7 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
                     alert(`«${selectedPublication.title}» աշխատության թվային տարբերակը պատրաստվում է ներբեռնման (Արարատյան Գրադարան)։`);
                   }}
                 >
-                  <span>Ներբեռնել PDF</span>
+                  <span>{t("pub.downloadPdf")}</span>
                 </button>
               )}
             </div>

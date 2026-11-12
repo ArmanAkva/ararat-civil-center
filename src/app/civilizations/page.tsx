@@ -21,7 +21,7 @@ export default function Civilizations() {
   const [loading, setLoading] = useState(true);
 
   const { isEditMode, savePageField, saveCivilizationField, saveCivilizationFull } = useEditMode();
-  const { locale, applyLocale } = useLanguage();
+  const { locale, applyLocale, t } = useLanguage();
 
   const displayContent = applyLocale(content);
   const displayCivilizations = applyLocale(civilizations);
@@ -156,7 +156,7 @@ export default function Civilizations() {
                   }}
                   title={`Խմբագրել «${civ.nameHy}» քարտը`}
                 >
-                  ✎ Խմբագրել
+                  ✎ {t("btn.edit")}
                 </button>
               )}
 
@@ -296,8 +296,8 @@ export default function Civilizations() {
                     gap: "0.75rem",
                   }}
                 >
-                  <span>🏛 {civ.centers?.length || 0} կենտրոն</span>
-                  <span>🖋 {civ.authors?.length || 0} հեղինակ</span>
+                  <span>🏛 {civ.centers?.length || 0} {t("label.centersCount")}</span>
+                  <span>🖋 {civ.authors?.length || 0} {t("label.authorsCount")}</span>
                 </div>
                 {isEditMode ? (
                   <Link
@@ -312,7 +312,7 @@ export default function Civilizations() {
                       textDecoration: "none",
                     }}
                   >
-                    Բացել էջը →
+                    {t("btn.openPage")}
                   </Link>
                 ) : (
                   <span
@@ -325,7 +325,7 @@ export default function Civilizations() {
                       gap: "0.25rem",
                     }}
                   >
-                    Բացել էջը →
+                    {t("btn.openPage")}
                   </span>
                 )}
               </div>

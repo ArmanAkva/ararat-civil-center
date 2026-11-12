@@ -16,7 +16,7 @@ export default function About() {
   const [content, setContent] = useState<AboutPageContent>(defaultAboutContent);
   const [loading, setLoading] = useState(true);
   const { savePageField } = useEditMode();
-  const { applyLocale } = useLanguage();
+  const { applyLocale, locale, t } = useLanguage();
 
   const displayContent = applyLocale(content);
 
@@ -130,14 +130,30 @@ export default function About() {
           }}
         />
         <ul style={{ fontSize: "1.1rem", lineHeight: "2.2", color: "var(--text-primary)", listStyleType: "none", padding: 0 }}>
-          <li style={{ marginBottom: "0.5rem" }}>🇦🇲 <strong>Հայկական քաղաքակրթություն</strong> (Որպես սրբազան հանգույց՝ Հոգևոր Էակի և Արդար պետության կենսահայեցակարգ)</li>
-          <li style={{ marginBottom: "0.5rem" }}>🇷🇺 <strong>Ռուսական քաղաքակրթություն</strong> (Հարության քաղաքակրթական կենսիմաստ)</li>
-          <li style={{ marginBottom: "0.5rem" }}>🇪🇺 <strong>Եվրոպական քաղաքակրթություն</strong> (Ավանդական Եվրոպայի պահպանողական միտք)</li>
-          <li style={{ marginBottom: "0.5rem" }}>🇮🇷 <strong>Իրանական քաղաքակրթություն</strong> (Իսլամական արդիականության և ակադեմիական մտքի կենտրոններ)</li>
-          <li style={{ marginBottom: "0.5rem" }}>🇦🇪 <strong>Արաբական քաղաքակրթություն</strong> (Բեյրութի, Կահիրեի և Աբու Դաբիի ինտելեկտուալ օրրաններ)</li>
-          <li style={{ marginBottom: "0.5rem" }}>🇨🇳 <strong>Չինական քաղաքակրթություն</strong> («Տյանսյա» համակարգ)</li>
-          <li style={{ marginBottom: "0.5rem" }}>🇬🇷 <strong>Հունական քաղաքակրթություն</strong> (Անտիկ ժառանգություն, Բյուզանդական կոդ և Աթոսի հոգևոր միտք)</li>
-          <li style={{ marginBottom: "0.5rem" }}>🇮🇳 <strong>Հնդկական քաղաքակրթություն</strong> (Վեդայական ավանդույթ և «Վասուդհայվա Կուտումբակամ» տեսլական)</li>
+          <li style={{ marginBottom: "0.5rem" }}>
+            🇦🇲 <strong>{locale === "en" ? "Armenian Civilization" : locale === "ru" ? "Армянская цивилизация" : "Հայկական քաղաքակրթություն"}</strong> {locale === "en" ? "(As a sacred crossroads: vision of the Spiritual Being and Just State)" : locale === "ru" ? "(Как священный узел: концепция Духовного Бытия и Справедливого государства)" : "(Որպես սրբազան հանգույց՝ Հոգևոր Էակի և Արդար պետության կենսահայեցակարգ)"}
+          </li>
+          <li style={{ marginBottom: "0.5rem" }}>
+            🇷🇺 <strong>{locale === "en" ? "Russian Civilization" : locale === "ru" ? "Русская цивилизация" : "Ռուսական քաղաքակրթություն"}</strong> {locale === "en" ? "(Civilizational vital meaning of Resurrection)" : locale === "ru" ? "(Цивилизационный жизненный смысл Воскресения)" : "(Հարության քաղաքակրթական կենսիմաստ)"}
+          </li>
+          <li style={{ marginBottom: "0.5rem" }}>
+            🇪🇺 <strong>{locale === "en" ? "European Civilization" : locale === "ru" ? "Европейская цивилизация" : "Եվրոպական քաղաքակրթություն"}</strong> {locale === "en" ? "(Conservative thought of traditional Europe)" : locale === "ru" ? "(Консервативная мысль традиционной Европы)" : "(Ավանդական Եվրոպայի պահպանողական միտք)"}
+          </li>
+          <li style={{ marginBottom: "0.5rem" }}>
+            🇮🇷 <strong>{locale === "en" ? "Iranian Civilization" : locale === "ru" ? "Иранская цивилизация" : "Իրանական քաղաքակրթություն"}</strong> {locale === "en" ? "(Centers of Islamic modernity and academic thought)" : locale === "ru" ? "(Центры исламского модерна и академической мысли)" : "(Իսլամական արդիականության և ակադեմիական մտքի կենտրոններ)"}
+          </li>
+          <li style={{ marginBottom: "0.5rem" }}>
+            🇦🇪 <strong>{locale === "en" ? "Arab Civilization" : locale === "ru" ? "Арабская цивилизация" : "Արաբական քաղաքակրթություն"}</strong> {locale === "en" ? "(Intellectual cradles of Beirut, Cairo and Abu Dhabi)" : locale === "ru" ? "(Интеллектуальные колыбели Бейрута, Каира и Абу-Даби)" : "(Բեյրութի, Կահիրեի և Աբու Դաբիի ինտելեկտուալ օրրաններ)"}
+          </li>
+          <li style={{ marginBottom: "0.5rem" }}>
+            🇨🇳 <strong>{locale === "en" ? "Chinese Civilization" : locale === "ru" ? "Китайская цивилизация" : "Չինական քաղաքակրթություն"}</strong> {locale === "en" ? "(Tianxia system)" : locale === "ru" ? "(Система «Тянься»)" : "(«Տյանսյա» համակարգ)"}
+          </li>
+          <li style={{ marginBottom: "0.5rem" }}>
+            🇬🇷 <strong>{locale === "en" ? "Greek Civilization" : locale === "ru" ? "Греческая цивилизация" : "Հունական քաղաքակրթություն"}</strong> {locale === "en" ? "(Antique heritage, Byzantine code and Athos spiritual thought)" : locale === "ru" ? "(Античное наследие, византийский код и духовная мысль Афона)" : "(Անտիկ ժառանգություն, Բյուզանդական կոդ և Աթոսի հոգևոր միտք)"}
+          </li>
+          <li style={{ marginBottom: "0.5rem" }}>
+            🇮🇳 <strong>{locale === "en" ? "Indian Civilization" : locale === "ru" ? "Индийская цивилизация" : "Հնդկական քաղաքակրթություն"}</strong> {locale === "en" ? "(Vedic tradition and 'Vasudhaiva Kutumbakam' vision)" : locale === "ru" ? "(Ведическая традиция и видение «Васудхайва Кутумбакам»)" : "(Վեդայական ավանդույթ և «Վասուդհայվա Կուտումբակամ» տեսլական)"}
+          </li>
         </ul>
       </div>
 
@@ -293,7 +309,7 @@ export default function About() {
             }}
           >
             <span>✧</span>
-            <span>ՀԱՄԱՐԱՐՉԱԿԱՆ ԿՈՉ</span>
+            <span>{t("about.callEyebrow")}</span>
             <span>✧</span>
           </div>
 
@@ -388,7 +404,7 @@ export default function About() {
                 gap: "0.4rem",
               }}
             >
-              <span>💬 Միանալ Քննարկումներին</span>
+              <span>{t("btn.joinDiscussions")}</span>
             </Link>
             <Link
               href="/civilizations"
@@ -415,7 +431,7 @@ export default function About() {
                 e.currentTarget.style.color = "var(--text-primary)";
               }}
             >
-              <span>🏛️ Դիտել Քաղաքակրթությունները</span>
+              <span>{t("btn.exploreCivilizations")}</span>
             </Link>
           </div>
         </div>

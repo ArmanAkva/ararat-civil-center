@@ -10,11 +10,14 @@ import { useAuth } from "@/context/AuthContext";
 import ForumOwnerModal from "@/components/forum/ForumOwnerModal";
 import ForumOrganizerModal from "@/components/forum/ForumOrganizerModal";
 import { MemberAvatar } from "@/components/ui/MemberCard";
+import { useLanguage } from "@/context/LanguageContext";
+import { t } from "@/lib/i18n";
 
 export default function ForumOrganizersPage() {
   const [content, setContent] = useState<ForumPageContent>(defaultForumContent);
   const { isEditMode, savePageField } = useEditMode();
   const { isAdmin } = useAuth();
+  const { locale } = useLanguage();
 
   // Search & Filter
   const [searchQuery, setSearchQuery] = useState("");
@@ -165,7 +168,7 @@ export default function ForumOrganizersPage() {
           className="back-link"
           style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}
         >
-          <span>←</span> Վերադառնալ Ֆորումի Գլխավոր Էջ
+          {t("organizers.backToForum", locale)}
         </Link>
 
         {(isEditMode || isAdmin) && (
@@ -185,7 +188,7 @@ export default function ForumOrganizersPage() {
                 fontWeight: "600",
               }}
             >
-              👑 Սահմանել Ղեկավարին
+              {t("organizers.setOwner", locale)}
             </button>
 
             <button
@@ -195,7 +198,7 @@ export default function ForumOrganizersPage() {
               className="btn-primary"
               style={{ fontSize: "0.85rem", padding: "0.5rem 1.1rem" }}
             >
-              + Ավելացնել Կազմկոմիտեի Անդամ
+              {t("organizers.addMember", locale)}
             </button>
           </div>
         )}
@@ -283,7 +286,7 @@ export default function ForumOrganizersPage() {
                     marginBottom: "0.5rem",
                   }}
                 >
-                  👑 ՖՈՐՈՒՄԻ ԳԼԽԱՎՈՐ ՀԱՄԱԿԱՐԳՈՂ & ՂԵԿԱՎԱՐ
+                  {t("organizers.ownerBadge", locale)}
                 </div>
 
                 <h2
@@ -348,7 +351,7 @@ export default function ForumOrganizersPage() {
                   cursor: "pointer",
                 }}
               >
-                ✎ Խմբագրել Ղեկավարին
+                {t("organizers.editOwner", locale)}
               </button>
             )}
           </div>
@@ -417,7 +420,7 @@ export default function ForumOrganizersPage() {
                 gap: "0.6rem",
               }}
             >
-              <span>Կազմկոմիտեի Անդամներ</span>
+              <span>{t("organizers.committeeMembers", locale)}</span>
               <span
                 style={{
                   fontSize: "0.85rem",
@@ -428,7 +431,7 @@ export default function ForumOrganizersPage() {
                   fontWeight: "bold",
                 }}
               >
-                {filteredOrganizers.length} անդամ
+                {filteredOrganizers.length} {t("organizers.membersCount", locale)}
               </span>
             </h2>
             <p style={{ margin: "0.2rem 0 0", color: "var(--text-secondary)", fontSize: "0.9rem" }}>
@@ -441,7 +444,7 @@ export default function ForumOrganizersPage() {
             <input
               type="text"
               id="input-search-organizers"
-              placeholder="Փնտրել ըստ անվան, դերի կամ կենտրոնի..."
+              placeholder={t("organizers.searchPlaceholder", locale)}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{
@@ -466,7 +469,7 @@ export default function ForumOrganizersPage() {
             onClick={() => setDepartmentFilter("all")}
             className={`forum-pill-btn ${departmentFilter === "all" ? "active" : ""}`}
           >
-            Բոլոր Հանձնախմբերը ({organizersList.length})
+            {t("organizers.filterAll", locale)} ({organizersList.length})
           </button>
           <button
             type="button"

@@ -476,7 +476,7 @@ export default function Forum() {
               fontSize: "0.85rem",
             }}
           >
-            🏛️ Ֆորումի Ծրագիր և Օրակարգ
+            {t("forum.programAndAgenda", locale)}
           </span>
           <Link
             href="/forum/organizers"
@@ -484,7 +484,7 @@ export default function Forum() {
             className="forum-pill-btn"
             style={{ textDecoration: "none" }}
           >
-            👥 Կազմկոմիտե և Թիմ →
+            {t("forum.committeeAndTeam", locale)}
           </Link>
         </div>
       </div>
@@ -606,7 +606,7 @@ export default function Forum() {
                   fontWeight: "600",
                 }}
               >
-                ՕՐ
+                {t("forum.days", locale)}
               </div>
             </div>
 
@@ -646,7 +646,7 @@ export default function Forum() {
                   fontWeight: "600",
                 }}
               >
-                ԺԱՄ
+                {t("forum.hours", locale)}
               </div>
             </div>
 
@@ -686,7 +686,7 @@ export default function Forum() {
                   fontWeight: "600",
                 }}
               >
-                ՐՈՊԵ
+                {t("forum.minutes", locale)}
               </div>
             </div>
 
@@ -726,7 +726,7 @@ export default function Forum() {
                   fontWeight: "600",
                 }}
               >
-                ՎԱՅՐԿՅԱՆ
+                {t("forum.seconds", locale)}
               </div>
             </div>
           </div>
@@ -769,7 +769,7 @@ export default function Forum() {
                   cursor: "pointer",
                 }}
               >
-                ✎ Փոխել Ժամը
+                ✎ {t("forum.changeTime", locale)}
               </button>
             )}
           </div>
@@ -794,7 +794,7 @@ export default function Forum() {
               transition: "all 0.25s ease",
             }}
           >
-            <span>🗓️</span> Առաջարկել այլընտրանքային ժամկետ / Հաստատել մասնակցությունը
+            {t("forum.suggestAlternative", locale)}
           </button>
         </div>
       </div>
@@ -931,7 +931,7 @@ export default function Forum() {
             fontSize: "1.9rem",
           }}
         >
-          Օրակարգային 3 Ուղերձներ և Քննարկում
+          {t("forum.messagesTitle", locale)}
         </h2>
         <button
           id="btn-open-message-comment-modal"
@@ -949,7 +949,7 @@ export default function Forum() {
           className="btn-primary"
           style={{ fontSize: "0.88rem", padding: "0.5rem 1.1rem" }}
         >
-          + Ավելացնել Առաջարկ / Դիտարկում
+          {t("forum.addProposal", locale)}
         </button>
       </div>
 
@@ -1075,7 +1075,7 @@ export default function Forum() {
                 gap: "0.5rem",
               }}
             >
-              <span>💬</span> Ավելացնել առաջարկ «{currentMessage?.title}»-ի շուրջ
+              <span>💬</span> {t("forum.addProposalAround", locale)} «{currentMessage?.title}»
             </div>
             <textarea
               id="input-quick-comment-text"
@@ -1098,7 +1098,7 @@ export default function Forum() {
             />
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <span style={{ fontSize: "0.82rem", color: "var(--text-secondary)" }}>
-                Հեղինակ՝ {profile?.displayName || user?.displayName || "Հետազոտող"} •{" "}
+                {t("label.authorLabel", locale)} {profile?.displayName || user?.displayName || "Հետազոտող"} •{" "}
                 {profile?.civilizationAffiliation || "Արարատյան Կենտրոն"}
               </span>
               <button
@@ -1108,7 +1108,7 @@ export default function Forum() {
                 className="btn-primary"
                 style={{ padding: "0.6rem 1.8rem", fontSize: "0.9rem" }}
               >
-                {sendingQuickComment ? "Ուղարկվում է..." : "Ուղարկել Առաջարկը"}
+                {sendingQuickComment ? t("forum.sending", locale) : t("forum.sendProposal", locale)}
               </button>
             </div>
           </form>
@@ -1125,12 +1125,12 @@ export default function Forum() {
                 paddingBottom: "0.5rem",
               }}
             >
-              Քննարկումներ և Առաջարկներ ({activeMessageSuggestions.length})
+              {t("forum.discussionsAndProposals", locale)} ({activeMessageSuggestions.length})
             </div>
 
             {activeMessageSuggestions.length === 0 ? (
               <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem", fontStyle: "italic" }}>
-                Այս ուղերձի շուրջ դեռ առաջարկներ չեն գրանցվել։ Եղեք առաջինը։
+                {t("forum.noProposalsYet", locale)}
               </p>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
@@ -1201,7 +1201,7 @@ export default function Forum() {
                           fontSize: "0.85rem",
                         }}
                       >
-                        💬 Պատասխանել
+                        {t("forum.reply", locale)}
                       </button>
 
                       {(isAdmin || item.authorUid === user?.uid) && (
@@ -1217,7 +1217,7 @@ export default function Forum() {
                             marginLeft: "auto",
                           }}
                         >
-                          Ջնջել
+                          {t("forum.delete", locale)}
                         </button>
                       )}
                     </div>
@@ -1248,7 +1248,7 @@ export default function Forum() {
                       <div style={{ marginTop: "0.85rem", display: "flex", gap: "0.5rem" }}>
                         <input
                           type="text"
-                          placeholder="Գրեք Ձեր պատասխանը..."
+                          placeholder={t("forum.writeReplyPlaceholder", locale)}
                           value={replyText}
                           onChange={(e) => setReplyText(e.target.value)}
                           style={{
@@ -1268,7 +1268,7 @@ export default function Forum() {
                           className="btn-primary"
                           style={{ padding: "0.45rem 1rem", fontSize: "0.85rem" }}
                         >
-                          Ուղարկել
+                          {t("forum.send", locale)}
                         </button>
                       </div>
                     )}
@@ -1304,10 +1304,10 @@ export default function Forum() {
               fontSize: "1.9rem",
             }}
           >
-            3-Օրյա Օրակարգ (Նախնական)
+            {t("forum.agendaTitle", locale)}
           </h2>
           <p style={{ margin: "0.2rem 0 0", color: "var(--text-secondary)", fontSize: "0.9rem" }}>
-            Ծրագրային հիմնական հանգրվանները և քննարկումների վայրերը
+            {t("forum.agendaSubtitle", locale)}
           </p>
         </div>
 
@@ -1323,7 +1323,7 @@ export default function Forum() {
             }
             className="forum-pill-btn"
           >
-            💡 Առաջարկել Լրացում Օրակարգում
+            {t("forum.proposeAgendaAddition", locale)}
           </button>
 
           {isEditMode && (
@@ -1334,7 +1334,7 @@ export default function Forum() {
               className="btn-primary"
               style={{ fontSize: "0.85rem", padding: "0.4rem 0.9rem" }}
             >
-              + Ավելացնել Օրակարգ
+              {t("forum.addAgendaItem", locale)}
             </button>
           )}
         </div>
@@ -1494,7 +1494,7 @@ export default function Forum() {
                 marginBottom: "0.6rem",
               }}
             >
-              👑 ՖՈՐՈՒՄԻ ՂԵԿԱՎԱՐՈՒԹՅՈՒՆ
+              {t("forum.leadershipEyebrow", locale)}
             </div>
 
             <h2
@@ -1546,7 +1546,7 @@ export default function Forum() {
                 boxShadow: "0 4px 15px rgba(212, 175, 55, 0.25)",
               }}
             >
-              <span>👥</span> Դիտել Կազմկոմիտեի Ամբողջ Թիմը →
+              {t("forum.viewEntireTeam", locale)}
             </Link>
 
             {(isEditMode || isAdmin) && (
@@ -1636,7 +1636,7 @@ export default function Forum() {
             onClick={() => setSuggestionFilter("all")}
             className={`forum-pill-btn ${suggestionFilter === "all" ? "active" : ""}`}
           >
-            Բոլորը ({suggestions.length})
+            {t("forum.tabAll", locale)} ({suggestions.length})
           </button>
           <button
             type="button"
@@ -1644,7 +1644,7 @@ export default function Forum() {
             onClick={() => setSuggestionFilter("manifesto")}
             className={`forum-pill-btn ${suggestionFilter === "manifesto" ? "active" : ""}`}
           >
-            📜 Մանիֆեստ ({suggestions.filter((s) => s.type === "manifesto").length})
+            {t("forum.tabManifesto", locale)} ({suggestions.filter((s) => s.type === "manifesto").length})
           </button>
           <button
             type="button"
@@ -1652,7 +1652,7 @@ export default function Forum() {
             onClick={() => setSuggestionFilter("message")}
             className={`forum-pill-btn ${suggestionFilter === "message" ? "active" : ""}`}
           >
-            💬 Ուղերձներ ({suggestions.filter((s) => s.type === "message").length})
+            {t("forum.tabMessages", locale)} ({suggestions.filter((s) => s.type === "message").length})
           </button>
           <button
             type="button"
@@ -1660,7 +1660,7 @@ export default function Forum() {
             onClick={() => setSuggestionFilter("agenda")}
             className={`forum-pill-btn ${suggestionFilter === "agenda" ? "active" : ""}`}
           >
-            🗓️ Օրակարգ ({suggestions.filter((s) => s.type === "agenda").length})
+            {t("forum.tabAgenda", locale)} ({suggestions.filter((s) => s.type === "agenda").length})
           </button>
           <button
             type="button"
@@ -1668,7 +1668,7 @@ export default function Forum() {
             onClick={() => setSuggestionFilter("date_location")}
             className={`forum-pill-btn ${suggestionFilter === "date_location" ? "active" : ""}`}
           >
-            📍 Ժամկետներ & Վայր ({suggestions.filter((s) => s.type === "date_location").length})
+            {t("forum.tabDateLocation", locale)} ({suggestions.filter((s) => s.type === "date_location").length})
           </button>
         </div>
 
@@ -1685,7 +1685,7 @@ export default function Forum() {
             }}
           >
             <div style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>💬</div>
-            Այս բաժնում դեռևս առաջարկներ չկան։ Սեղմեք «+ Ավելացնել Նոր Առաջարկ» առաջինը ներկայացնելու համար։
+            {t("forum.noProposalsSection", locale)}
           </div>
         ) : (
           <div style={{ display: "grid", gap: "1.25rem" }}>

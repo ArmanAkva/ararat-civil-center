@@ -838,7 +838,7 @@ function DialogueHubContent() {
                 transition: "all 0.2s ease",
               }}
             >
-              Բոլորը ({topics.filter((t) => isAdmin || t.status === "active" || t.status === "archived" || (user?.uid && t.authorUid === user.uid)).length})
+              {t("label.dialogueFilterAll", locale)} ({topics.filter((t) => isAdmin || t.status === "active" || t.status === "archived" || (user?.uid && t.authorUid === user.uid)).length})
             </button>
 
             <button
@@ -856,7 +856,7 @@ function DialogueHubContent() {
                 transition: "all 0.2s ease",
               }}
             >
-              🟢 Ակտիվ ({activeCount})
+              🟢 {t("label.dialogueFilterActive", locale)} ({activeCount})
             </button>
 
             <button
@@ -874,7 +874,7 @@ function DialogueHubContent() {
                 transition: "all 0.2s ease",
               }}
             >
-              📁 Արխիվ ({archivedCount})
+              📁 {t("label.dialogueFilterArchived", locale)} ({archivedCount})
             </button>
 
             {/* Admin: Pending Tab */}
@@ -897,7 +897,7 @@ function DialogueHubContent() {
                   gap: "0.35rem",
                 }}
               >
-                <span>⏳ Հաստատման Սպասող</span>
+                <span>⏳ {t("label.dialogueFilterPending", locale)}</span>
                 <span
                   style={{
                     background: statusFilter === "pending" ? "#ffffff" : "#f59e0b",
@@ -1374,7 +1374,7 @@ function DialogueHubContent() {
                       title="Գրանցված մեկնաբանությունների թիվը"
                     >
                       <span>💬</span>
-                      <span>{commentCount} կարծիք</span>
+                      <span>{commentCount} {t("dialogue.opinionsCount", locale)}</span>
                     </span>
 
                     {/* Expert opinions */}
@@ -1393,7 +1393,7 @@ function DialogueHubContent() {
                         title="Հրապարակված փորձագիտական դիրքորոշումներ"
                       >
                         <PersonWithLoupeIcon size={15} color="var(--gold-accent)" />
-                        <span>{expertCount} փորձագետ</span>
+                        <span>{expertCount} {t("dialogue.expertsCount", locale)}</span>
                       </span>
                     )}
 
@@ -1454,10 +1454,10 @@ function DialogueHubContent() {
                     >
                       <span>
                         {topic.status === "active"
-                          ? "Մասնակցել Քննարկմանը"
+                          ? t("dialogue.participate", locale)
                           : topic.status === "pending"
-                          ? "Դիտել Առաջարկը"
-                          : "Դիտել Քննարկումը"}
+                          ? t("dialogue.viewProposal", locale)
+                          : t("dialogue.viewDiscussion", locale)}
                       </span>
                       <span>→</span>
                     </Link>
@@ -1601,8 +1601,8 @@ function DialogueHubContent() {
               }}
             >
               {isAdmin
-                ? "+ Առաջարկել Նոր Հարցադրում (Admin)"
-                : "💡 Առաջարկել Հարցադրում Քննարկման Համար"}
+                ? t("dialogue.proposeNewTopicAdmin", locale)
+                : t("dialogue.proposeNewTopic", locale)}
             </h3>
             <p
               style={{

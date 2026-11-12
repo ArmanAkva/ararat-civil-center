@@ -26,7 +26,7 @@ interface Props {
 export default function CivilizationView({ civilization: initialCiv }: Props) {
   const [civ, setCiv] = useState<Civilization>(initialCiv);
   const [loading, setLoading] = useState(true);
-  const { locale, applyLocale } = useLanguage();
+  const { locale, applyLocale, t } = useLanguage();
   const displayCiv = applyLocale(civ);
   const {
     isEditMode,
@@ -224,22 +224,29 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
   return (
     <main className="subpage-container">
       {/* Top Bar: Back to Civilizations & Quick Switcher */}
-      <nav className="subpage-top-nav" aria-label="Քաղաքակրթությունների նավիգացիա">
+      <nav className="subpage-top-nav" aria-label="Civilizations Navigation">
         <Link href="/civilizations" className="back-link">
-          <span>←</span> Բոլոր քաղաքակրթությունները
+          <span>←</span> {t("btn.backToAllCivs")}
         </Link>
         <div className="civ-quick-pills">
-          {civilizationsData.map((c) => (
-            <Link
-              key={c.id}
-              href={`/hubs/${c.slug}`}
-              className={`civ-pill ${c.id === civ.id ? "active" : ""}`}
-              title={c.nameHy}
-            >
-              <span>{c.symbol}</span>
-              <span>{c.nameHy.replace(" քաղաքակրթություն", "")}</span>
-            </Link>
-          ))}
+          {civilizationsData.map((c) => {
+            const locC = applyLocale(c);
+            const shortName = (locC.nameHy || c.nameHy)
+              .replace(" քաղաքակրթություն", "")
+              .replace(" Civilization", "")
+              .replace(" цивилизация", "");
+            return (
+              <Link
+                key={c.id}
+                href={`/hubs/${c.slug}`}
+                className={`civ-pill ${c.id === civ.id ? "active" : ""}`}
+                title={locC.nameHy || c.nameHy}
+              >
+                <span>{c.symbol}</span>
+                <span>{shortName}</span>
+              </Link>
+            );
+          })}
         </div>
       </nav>
 
@@ -313,7 +320,7 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
         </div>
 
         <div className="credo-header-label">
-          <span>✧</span> Քաղաքակրթական Կոդ և Գլխավոր Ասելիք (Core Credo)
+          <span>✧</span> {t("label.credo")}
         </div>
 
         <blockquote className="credo-quote-text">
@@ -333,7 +340,7 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
           <div className="credo-author-sign">
             <span>⚜️</span>
             <span>
-              <strong>Արարատյան Ֆորում</strong> | {displayCiv.nameHy}
+              <strong>{t("label.brandName")}</strong> | {displayCiv.nameHy}
             </span>
           </div>
 
@@ -341,17 +348,17 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
             type="button"
             onClick={handleCopyCredo}
             className="credo-action-btn"
-            title="Պատճենել մեջբերումը"
+            title={t("btn.copyCredo")}
           >
             {copiedCredo ? (
               <>
                 <span style={{ color: "var(--gold-accent)" }}>✓</span>
-                <span>Պատճենված է</span>
+                <span>{t("btn.copied")}</span>
               </>
             ) : (
               <>
                 <span>📋</span>
-                <span>Պատճենել Ասելիքը</span>
+                <span>{t("btn.copyCredo")}</span>
               </>
             )}
           </button>
@@ -360,10 +367,8 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
 
       {/* =========================================================
           ԲԼՈԿ Գ (Navigation Tabs - SPA logic)
-          Երկու ակտիվ կոճակ/տաբ (Tabs)՝ [Կենտրոններ] և [Հեղինակներ],
-          որոնք փոխվում են առանց էջի վերաբեռնման
           ========================================================= */}
-      <section className="block-tabs-section" aria-label="Քաղաքակրթության ներքին բաժիններ">
+      <section className="block-tabs-section" aria-label="Civilization Sections">
         <div className="tabs-header-bar">
           {/* Active Navigation Tabs */}
           <div className="tabs-nav-group" role="tablist">
@@ -375,7 +380,7 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
               className={`tab-nav-btn ${activeTab === "centers" ? "active" : ""}`}
             >
               <span>🏛</span>
-              <span>Կենտրոններ</span>
+              <span>{t("tab.centers")}</span>
               <span className="tab-counter">{civ.centers.length}</span>
             </button>
 
@@ -387,7 +392,7 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
               className={`tab-nav-btn ${activeTab === "authors" ? "active" : ""}`}
             >
               <span>🖋</span>
-              <span>Հեղինակներ</span>
+              <span>{t("tab.authors")}</span>
               <span className="tab-counter">{civ.authors.length}</span>
             </button>
 
@@ -399,7 +404,7 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
               className={`tab-nav-btn ${activeTab === "publications" ? "active" : ""}`}
             >
               <span>📚</span>
-              <span>Գիտական Աշխատություններ</span>
+              <span>{t("tab.publications")}</span>
               <span className="tab-counter">{civ.publications?.length || 0}</span>
             </button>
           </div>
@@ -419,9 +424,9 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
                   border: "1px solid var(--gold-accent)",
                   color: "var(--gold-accent)",
                 }}
-                title="Ակտիվացնել Խմբագրման ռեժիմը՝ նոր կենտրոններ կամ հեղինակներ ավելացնելու համար"
+                title={t("btn.enableEdit")}
               >
-                <span>✏️ Միացնել Խմբագրումը</span>
+                <span>{t("btn.enableEdit")}</span>
               </button>
             )}
 
@@ -455,7 +460,7 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
                 }}
               >
                 <span>🏛➕</span>
-                <span>Ավելացնել Կենտրոն</span>
+                <span>{t("btn.addCenter")}</span>
               </button>
             )}
 
@@ -487,7 +492,7 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
                 }}
               >
                 <span>🖋➕</span>
-                <span>Ավելացնել Հեղինակ</span>
+                <span>{t("btn.addAuthor")}</span>
               </button>
             )}
 
@@ -522,7 +527,7 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
                 }}
               >
                 <span>📚➕</span>
-                <span>Ավելացնել Աշխատություն</span>
+                <span>{t("btn.addPublication")}</span>
               </button>
             )}
 
@@ -538,10 +543,10 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={
                   activeTab === "centers"
-                    ? "Որոնել կենտրոններ, քաղաք, ոլորտ..."
+                    ? t("search.centersPlaceholder")
                     : activeTab === "authors"
-                    ? "Որոնել հեղինակ, աշխատություն..."
-                    : "Որոնել աշխատություն, տեսակ, թեմա..."
+                    ? t("search.authorsPlaceholder")
+                    : t("search.pubsPlaceholder")
                 }
               />
             </div>
@@ -609,10 +614,10 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
                       fontFamily: "var(--font-serif)",
                     }}
                   >
-                    + Ավելացնել Նոր Կենտրոն
+                    {t("btn.addCenter")}
                   </h3>
                   <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-secondary)", maxWidth: "240px" }}>
-                    Սեղմեք՝ նոր գիտահետազոտական կամ ուղեղային կենտրոն ավելացնելու համար
+                    {t("label.centerAuthorsSubtitle")}
                   </p>
                 </div>
               )}
@@ -635,9 +640,9 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
                         onClick={() => setEditingCenter({ center, isNew: false })}
                         className="credo-action-btn"
                         style={{ padding: "0.3rem 0.6rem", fontSize: "0.75rem", background: "var(--bg-secondary)" }}
-                        title="Խմբագրել կենտրոնի տվյալները"
+                        title={t("btn.editCenter")}
                       >
-                        ✏️ Խմբագրել
+                        ✏️ {t("btn.edit")}
                       </button>
                       <button
                         type="button"
@@ -652,9 +657,9 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
                           fontSize: "0.75rem",
                           fontWeight: "600",
                         }}
-                        title="Հեռացնել կենտրոնը"
+                        title={t("btn.delete")}
                       >
-                        🗑 Ջնջել
+                        🗑 {t("btn.delete")}
                       </button>
                     </div>
                   )}
@@ -668,7 +673,7 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
                         </span>
                         {center.foundedYear && (
                           <span style={{ opacity: 0.7, marginLeft: "0.25rem" }}>
-                            • հիմնադրված {center.foundedYear}թ.
+                            • {t("label.foundedIn")} {center.foundedYear}{t("label.yearSuffix")}
                           </span>
                         )}
                       </div>
@@ -750,7 +755,7 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
                               }}
                             >
                               <span>📄</span>
-                              <span>{pubCount} աշխատություն</span>
+                              <span>{pubCount} {t("label.pubsCount")}</span>
                             </span>
                           )}
                         </div>
@@ -770,7 +775,7 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
                           gap: "0.25rem",
                         }}
                       >
-                        <span>Մանրամասն էջը →</span>
+                        <span>{t("btn.openPage")}</span>
                       </Link>
                       {center.website ? (
                         <a
@@ -779,11 +784,11 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
                           rel="noopener noreferrer"
                           className="center-link-btn"
                         >
-                          <span>Պաշտոնական կայք ↗</span>
+                          <span>{t("btn.officialWebsite")}</span>
                         </a>
                       ) : (
                         <span className="center-link-btn" style={{ cursor: "default" }}>
-                          Գործընկեր ինստիտուտ
+                          {t("label.partnerInstitute")}
                         </span>
                       )}
                     </div>
@@ -803,7 +808,7 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
                   border: "1px dashed var(--card-border)",
                 }}
               >
-                Որոնմանը համապատասխանող կենտրոն չգտնվեց:
+                {t("empty.centers")}
               </div>
             )}
           </div>
@@ -868,10 +873,10 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
                       fontFamily: "var(--font-serif)",
                     }}
                   >
-                    + Ավելացնել Նոր Հեղինակ
+                    {t("btn.addAuthor")}
                   </h3>
                   <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-secondary)", maxWidth: "240px" }}>
-                    Սեղմեք՝ նոր մտածող, փիլիսոփա կամ գիտնական ավելացնելու համար
+                    {t("label.authorWorksSubtitle")}
                   </p>
                 </div>
               )}
@@ -894,9 +899,9 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
                         onClick={() => setEditingAuthor({ author, isNew: false })}
                         className="credo-action-btn"
                         style={{ padding: "0.3rem 0.6rem", fontSize: "0.75rem", background: "var(--bg-secondary)" }}
-                        title="Խմբագրել հեղինակի տվյալները"
+                        title={t("btn.editProfile")}
                       >
-                        ✏️ Խմբագրել
+                        ✏️ {t("btn.edit")}
                       </button>
                       <button
                         type="button"
@@ -911,9 +916,9 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
                           fontSize: "0.75rem",
                           fontWeight: "600",
                         }}
-                        title="Հեռացնել հեղինակին"
+                        title={t("btn.delete")}
                       >
-                        🗑 Ջնջել
+                        🗑 {t("btn.delete")}
                       </button>
                     </div>
                   )}
@@ -983,10 +988,10 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
                   {/* Publications section: Show only 1 key work */}
                   <div className="author-publications-section">
                     <div className="publications-header-title">
-                      <span>Առանցքային Աշխատություն</span>
+                      <span>{t("label.keyWork")}</span>
                       <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
                         <span style={{ fontSize: "0.75rem", color: "var(--gold-accent)" }}>
-                          {author.publications ? author.publications.length : 0} նյութ
+                          {author.publications ? author.publications.length : 0} {t("label.pubsCount")}
                         </span>
                         {(isEditMode || canEdit) && (
                           <button
@@ -1005,9 +1010,9 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
                               cursor: "pointer",
                               fontWeight: "600",
                             }}
-                            title="Ավելացնել աշխատություն այս հեղինակին"
+                            title={t("btn.addPublication")}
                           >
-                            + Աշխատություն
+                            + {t("label.pubsCount")}
                           </button>
                         )}
                       </div>
@@ -1085,7 +1090,7 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
                                 gap: "0.3rem",
                               }}
                             >
-                              <span>+ ևս {author.publications.length - 1} աշխատություն հեղինակի էջում</span>
+                              <span>+ {author.publications.length - 1} {t("label.pubsCount")}</span>
                               <span>→</span>
                             </Link>
                           </div>
@@ -1093,7 +1098,7 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
                       </>
                     ) : (
                       <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)", fontStyle: "italic", padding: "0.5rem 0" }}>
-                        Առանցքային աշխատություն նշված չէ
+                        {t("label.noKeyWork")}
                       </div>
                     )}
                   </div>
@@ -1111,7 +1116,7 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
                         gap: "0.25rem",
                       }}
                     >
-                      <span>Մանրամասն հեղինակի էջը →</span>
+                      <span>{t("btn.viewProfile")}</span>
                     </Link>
                   </div>
                 </article>
@@ -1129,7 +1134,7 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
                   border: "1px dashed var(--card-border)",
                 }}
               >
-                Որոնմանը համապատասխանող մտածող չգտնվեց:
+                {t("empty.authors")}
               </div>
             )}
           </div>
@@ -1195,15 +1200,17 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
                       fontFamily: "var(--font-serif)",
                     }}
                   >
-                    + Ավելացնել Նոր Աշխատություն
+                    {t("btn.addPublication")}
                   </h3>
                   <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-secondary)", maxWidth: "240px" }}>
-                    Սեղմեք՝ քաղաքակրթության գրադարանում նոր զեկույց, մենագրություն կամ հոդված ավելացնելու համար
+                    {t("label.centerWorksSubtitle")}
                   </p>
                 </div>
               )}
 
-              {filteredPublications.map((pub, idx) => (
+              {filteredPublications.map((pub, idx) => {
+                const localizedPub = applyLocale(pub);
+                return (
                 <article
                   key={pub.id || idx}
                   className="publication-card"
@@ -1224,7 +1231,7 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
                         onClick={() => setEditingLibraryPub({ pub, isNew: false })}
                         className="credo-action-btn"
                         style={{ padding: "0.25rem 0.55rem", fontSize: "0.75rem", background: "var(--bg-secondary)" }}
-                        title="Խմբագրել աշխատությունը"
+                        title={t("btn.edit")}
                       >
                         ✏️
                       </button>
@@ -1241,7 +1248,7 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
                           fontSize: "0.75rem",
                           fontWeight: "600",
                         }}
-                        title="Հեռացնել աշխատությունը"
+                        title={t("btn.delete")}
                       >
                         🗑
                       </button>
@@ -1250,27 +1257,27 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
 
                   <div className="pub-card-body">
                     <div className="pub-card-top-badges">
-                      <span className="pub-tag-badge">📄 {pub.type || "Զեկույց"}</span>
+                      <span className="pub-tag-badge">📄 {localizedPub.type || pub.type || "Զեկույց"}</span>
                       <span style={{ fontSize: "0.82rem", color: "var(--gold-accent)", fontWeight: "600" }}>
-                        {pub.year && `${pub.year}թ.`}
-                        {pub.pages && ` • ${pub.pages} էջ`}
+                        {pub.year && `${pub.year}${t("label.yearSuffix")}`}
+                        {pub.pages && ` • ${pub.pages} ${t("pub.pagesCount")}`}
                       </span>
                       {pub.downloadUrl && (
                         <span style={{ fontSize: "0.75rem", color: "#10b981", background: "rgba(16, 185, 129, 0.12)", padding: "0.15rem 0.5rem", borderRadius: "999px", border: "1px solid rgba(16, 185, 129, 0.3)" }}>
-                          ✓ PDF առկա
+                          {t("label.pdfAvailable")}
                         </span>
                       )}
                     </div>
 
                     <h3 className="pub-card-title" style={{ paddingRight: (isEditMode || canEdit) ? "70px" : "0" }}>
                       <Link href={`/publications/${pub.id}`} style={{ color: "inherit", textDecoration: "none" }}>
-                        {pub.title}
+                        {localizedPub.title || pub.title}
                       </Link>
                     </h3>
 
-                    {pub.description && (
+                    {(localizedPub.description || pub.description) && (
                       <p className="pub-card-desc">
-                        {pub.description}
+                        {localizedPub.description || pub.description}
                       </p>
                     )}
 
@@ -1278,9 +1285,10 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
                     <div className="pub-card-affiliations">
                       {pub.authorIds && pub.authorIds.length > 0 && (
                         <div style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap", alignItems: "center" }}>
-                          <span style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>Հեղինակ՝</span>
+                          <span style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>{t("label.authorLabel")}</span>
                           {pub.authorIds.map((aId) => {
                             const authorObj = (civ.authors || []).find((a) => a.id === aId);
+                            const locAuthor = authorObj ? applyLocale(authorObj) : undefined;
                             return (
                               <Link
                                 key={aId}
@@ -1300,7 +1308,7 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
                                 }}
                               >
                                 <span>🖋</span>
-                                <span>{authorObj?.name || aId}</span>
+                                <span>{locAuthor?.name || authorObj?.name || aId}</span>
                               </Link>
                             );
                           })}
@@ -1309,9 +1317,10 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
 
                       {pub.centerIds && pub.centerIds.length > 0 && (
                         <div style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap", alignItems: "center" }}>
-                          <span style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>Կենտրոն՝</span>
+                          <span style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>{t("label.centerLabel")}</span>
                           {pub.centerIds.map((cId) => {
                             const centerObj = (civ.centers || []).find((c) => c.id === cId);
+                            const locCenter = centerObj ? applyLocale(centerObj) : undefined;
                             return (
                               <Link
                                 key={cId}
@@ -1331,7 +1340,7 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
                                 }}
                               >
                                 <span>🏛</span>
-                                <span>{centerObj?.name || cId}</span>
+                                <span>{locCenter?.name || centerObj?.name || cId}</span>
                               </Link>
                             );
                           })}
@@ -1346,7 +1355,7 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
                       className="credo-action-btn"
                       style={{ padding: "0.45rem 0.8rem", fontSize: "0.8rem", textDecoration: "none" }}
                     >
-                      📖 Բացել էջում
+                      {t("pub.readOnline")}
                     </Link>
 
                     {pub.downloadUrl ? (
@@ -1356,8 +1365,8 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
                           onClick={() =>
                             setViewingPdf({
                               url: pub.downloadUrl!,
-                              title: pub.title,
-                              authorName: civ.nameHy,
+                              title: localizedPub.title || pub.title,
+                              authorName: displayCiv.nameHy || civ.nameHy,
                               year: pub.year,
                               pages: pub.pages,
                               fileName: pub.fileName,
@@ -1381,7 +1390,7 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
                           download={pub.fileName || `${pub.title}.pdf`}
                           className="credo-action-btn"
                           style={{ padding: "0.45rem 0.75rem", fontSize: "0.8rem", textDecoration: "none" }}
-                          title="Ներբեռնել PDF"
+                          title={t("pub.downloadPdf")}
                         >
                           ⬇️
                         </a>
@@ -1389,16 +1398,17 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
                     ) : (
                       <button
                         type="button"
-                        onClick={() => setSelectedPublication({ pub, authorName: civ.nameHy })}
+                        onClick={() => setSelectedPublication({ pub, authorName: displayCiv.nameHy || civ.nameHy })}
                         className="credo-action-btn"
                         style={{ padding: "0.45rem 0.75rem", fontSize: "0.78rem" }}
                       >
-                        Մանրամասն
+                        {t("btn.details")}
                       </button>
                     )}
                   </div>
                 </article>
-              ))}
+                );
+              })}
             </div>
 
             {filteredPublications.length === 0 && !isEditMode && (
@@ -1412,7 +1422,7 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
                   border: "1px dashed var(--card-border)",
                 }}
               >
-                Որոնմանը համապատասխանող գիտական աշխատություն չգտնվեց:
+                {t("empty.pubs")}
               </div>
             )}
           </div>

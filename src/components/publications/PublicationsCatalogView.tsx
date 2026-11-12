@@ -528,7 +528,7 @@ export default function PublicationsCatalogView({ initialPublications, civilizat
                     gap: "0.4rem",
                   }}
                 >
-                  <span>＋ Ավելացնել Աշխատություն</span>
+                  <span>{t("btn.addPublication", locale)}</span>
                 </button>
               )}
             </div>
@@ -537,7 +537,7 @@ export default function PublicationsCatalogView({ initialPublications, civilizat
           {/* Civilization Filter Pills */}
           <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap", alignItems: "center" }}>
             <span style={{ fontSize: "0.82rem", color: "var(--text-secondary)", marginRight: "0.4rem" }}>
-              {locale === "en" ? "Civilization:" : locale === "ru" ? "Цивилизация:" : "Քաղաքակրթություն՝"}
+              {t("label.civilizationLabel", locale)}
             </span>
             <button
               type="button"
@@ -554,7 +554,7 @@ export default function PublicationsCatalogView({ initialPublications, civilizat
                 border: selectedCiv === "all" ? "1px solid var(--gold-accent)" : "1px solid var(--card-border)",
               }}
             >
-              {locale === "en" ? "All" : locale === "ru" ? "Все" : "Բոլորը"} ({publications.length})
+              {t("label.all", locale)} ({publications.length})
             </button>
             {civilizations.map((civ) => {
               const count = publications.filter((p) => p.civ.id.toLowerCase() === civ.id.toLowerCase()).length;
@@ -588,7 +588,7 @@ export default function PublicationsCatalogView({ initialPublications, civilizat
           {publicationTypes.length > 0 && (
             <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap", alignItems: "center", marginTop: "0.85rem" }}>
               <span style={{ fontSize: "0.82rem", color: "var(--text-secondary)", marginRight: "0.4rem" }}>
-                {locale === "en" ? "Type:" : locale === "ru" ? "Тип:" : "Տեսակ՝"}
+                {t("label.typeLabel", locale)}
               </span>
               <button
                 type="button"
@@ -604,7 +604,7 @@ export default function PublicationsCatalogView({ initialPublications, civilizat
                   border: selectedType === "all" ? "1px solid var(--gold-accent)" : "1px solid transparent",
                 }}
               >
-                {locale === "en" ? "All" : locale === "ru" ? "Все" : "Բոլորը"}
+                {t("label.all", locale)}
               </button>
               {publicationTypes.map((type) => {
                 const isSelected = selectedType === type;
@@ -661,7 +661,7 @@ export default function PublicationsCatalogView({ initialPublications, civilizat
                 textDecoration: "underline",
               }}
             >
-              {locale === "en" ? "Clear all filters" : locale === "ru" ? "Сбросить все фильтры" : "Մաքրել բոլոր ֆիլտրերը"}
+              {t("btn.clearFilters", locale)}
             </button>
           )}
         </div>
@@ -951,7 +951,7 @@ export default function PublicationsCatalogView({ initialPublications, civilizat
                 setOnlyWithPdf(false);
               }}
             >
-              <span>{locale === "en" ? "Show all publications" : locale === "ru" ? "Показать все публикации" : "Ցուցադրել բոլոր աշխատությունները"}</span>
+              <span>{t("btn.showAllPubs", locale)}</span>
             </button>
           </div>
         )}
@@ -965,19 +965,19 @@ export default function PublicationsCatalogView({ initialPublications, civilizat
               type="button"
               className="civ-modal-close"
               onClick={() => setIsCreateModalOpen(false)}
-              aria-label="Փակել"
+              aria-label={t("btn.close", locale)}
             >
               ✕
             </button>
 
             <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "1.5rem", color: "var(--gold-accent)", margin: "0 0 1.25rem 0" }}>
-              Ավելացնել Նոր Գիտական Աշխատություն
+              {t("label.createNewPub", locale)}
             </h2>
 
             <form onSubmit={handleCreatePublication} style={{ display: "grid", gap: "1rem" }}>
               <div>
                 <label style={{ display: "block", fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "0.35rem" }}>
-                  Քաղաքակրթություն *
+                  {t("label.civilization", locale)} *
                 </label>
                 <select
                   value={newCivId}
@@ -1001,7 +1001,7 @@ export default function PublicationsCatalogView({ initialPublications, civilizat
 
               <div>
                 <label style={{ display: "block", fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "0.35rem" }}>
-                  Աշխատության Վերնագիր *
+                  {t("label.pubTitle", locale)} *
                 </label>
                 <input
                   type="text"
@@ -1024,7 +1024,7 @@ export default function PublicationsCatalogView({ initialPublications, civilizat
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
                 <div>
                   <label style={{ display: "block", fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "0.35rem" }}>
-                    Տեսակ
+                    {t("label.pubType", locale)}
                   </label>
                   <select
                     value={newPubForm.type}
@@ -1048,7 +1048,7 @@ export default function PublicationsCatalogView({ initialPublications, civilizat
 
                 <div>
                   <label style={{ display: "block", fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "0.35rem" }}>
-                    Հրատարակման Տարեթիվ
+                    {t("label.pubYear", locale)}
                   </label>
                   <input
                     type="text"
@@ -1071,7 +1071,7 @@ export default function PublicationsCatalogView({ initialPublications, civilizat
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
                 <div>
                   <label style={{ display: "block", fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "0.35rem" }}>
-                    Հեղինակ (ընտրովի)
+                    {t("label.attachedAuthorOptional", locale)}
                   </label>
                   <select
                     value={newPubForm.authorId}
@@ -1085,7 +1085,7 @@ export default function PublicationsCatalogView({ initialPublications, civilizat
                       color: "var(--text-primary)",
                     }}
                   >
-                    <option value="">-- Առանց կոնկրետ հեղինակի --</option>
+                    <option value="">-- {t("label.noSpecificAuthor", locale)} --</option>
                     {(currentCivData?.authors || []).map((a) => (
                       <option key={a.id} value={a.id}>
                         {a.name}
@@ -1096,7 +1096,7 @@ export default function PublicationsCatalogView({ initialPublications, civilizat
 
                 <div>
                   <label style={{ display: "block", fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "0.35rem" }}>
-                    Կենտրոն (ընտրովի)
+                    {t("label.attachedCenterOptional", locale)}
                   </label>
                   <select
                     value={newPubForm.centerId}
@@ -1110,7 +1110,7 @@ export default function PublicationsCatalogView({ initialPublications, civilizat
                       color: "var(--text-primary)",
                     }}
                   >
-                    <option value="">-- Առանց կոնկրետ կենտրոնի --</option>
+                    <option value="">-- {t("label.noSpecificCenter", locale)} --</option>
                     {(currentCivData?.centers || []).map((c) => (
                       <option key={c.id} value={c.id}>
                         {c.name}
@@ -1122,7 +1122,7 @@ export default function PublicationsCatalogView({ initialPublications, civilizat
 
               <div>
                 <label style={{ display: "block", fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "0.35rem" }}>
-                  Էջերի Քանակ
+                  {t("label.pubPages", locale)}
                 </label>
                 <input
                   type="number"
@@ -1143,7 +1143,7 @@ export default function PublicationsCatalogView({ initialPublications, civilizat
 
               <div>
                 <label style={{ display: "block", fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "0.35rem" }}>
-                  Ամփոփագիր / Գիտական Նկարագրություն
+                  {t("label.summaryAbstract", locale)}
                 </label>
                 <textarea
                   rows={3}
@@ -1186,10 +1186,10 @@ export default function PublicationsCatalogView({ initialPublications, civilizat
                   className="credo-action-btn"
                   onClick={() => setIsCreateModalOpen(false)}
                 >
-                  Չեղարկել
+                  {t("btn.cancel", locale)}
                 </button>
                 <button type="submit" className="btn-primary">
-                  <span>Պահպանել Աշխատությունը</span>
+                  <span>{t("btn.save", locale)}</span>
                 </button>
               </div>
             </form>

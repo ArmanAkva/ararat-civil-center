@@ -5,10 +5,13 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { civilizationsData } from "@/lib/civilizationsData";
+import { useLanguage } from "@/context/LanguageContext";
+import { t } from "@/lib/i18n";
 
 export default function AuthPage() {
   const router = useRouter();
   const { user, signInWithEmail, signUpWithEmail, signInWithGoogle, resetPassword } = useAuth();
+  const { locale } = useLanguage();
 
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
@@ -27,17 +30,17 @@ export default function AuthPage() {
         <div className="glass-card" style={{ maxWidth: "500px", margin: "0 auto", padding: "3rem" }}>
           <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>✨</div>
           <h2 style={{ fontFamily: "var(--font-serif)", color: "var(--gold-accent)", margin: "0 0 1rem 0" }}>
-            Դուք արդեն մուտք եք գործել
+            {t("auth.alreadyLoggedIn", locale)}
           </h2>
           <p style={{ color: "var(--text-secondary)", marginBottom: "2rem" }}>
-            Մուտք եք գործել որպես <strong>{user.email}</strong>
+            {t("auth.loggedInAs", locale)} <strong>{user.email}</strong>
           </p>
           <div style={{ display: "flex", gap: "1rem", justifyContent: "center" }}>
             <Link href="/profile" className="btn-primary">
-              Իմ Պրոֆիլը →
+              {t("auth.myProfile", locale)}
             </Link>
             <Link href="/" className="credo-action-btn">
-              Գլխավոր Էջ
+              {t("auth.homePage", locale)}
             </Link>
           </div>
         </div>
@@ -147,7 +150,7 @@ export default function AuthPage() {
             margin: "0 0 0.5rem 0",
           }}
         >
-          {mode === "signin" ? "Մուտք Համակարգ" : "Անդամագրում Կենտրոնին"}
+          {mode === "signin" ? t("auth.signInTitle", locale) : t("auth.signUpTitle", locale)}
         </h1>
         <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem", margin: 0 }}>
           Արարատյան Քաղաքակրթական Կենտրոնի Անձնական Տիրույթ
@@ -254,7 +257,7 @@ export default function AuthPage() {
                   fontWeight: "600",
                 }}
               >
-                {resettingPassword ? "..." : "Վերականգնե՞լ"}
+                {resettingPassword ? "..." : t("auth.reset", locale)}
               </button>
             )}
           </div>
@@ -301,7 +304,7 @@ export default function AuthPage() {
                 required
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
-                placeholder="օրինակ՝ Արմեն Ղազարյան"
+                placeholder={t("auth.fullNamePlaceholder", locale)}
                 style={{
                   width: "100%",
                   padding: "0.8rem 1rem",
@@ -383,7 +386,7 @@ export default function AuthPage() {
                     textDecoration: "underline",
                   }}
                 >
-                  {resettingPassword ? "Ուղարկվում է..." : "Մոռացե՞լ եք գաղտնաբառը"}
+                  {resettingPassword ? t("auth.processing", locale) : t("auth.forgotPassword", locale)}
                 </button>
               )}
             </div>
@@ -457,10 +460,10 @@ export default function AuthPage() {
             }}
           >
             {submitting
-              ? "Մշակվում է..."
+              ? t("auth.processing", locale)
               : mode === "signin"
-              ? "Մուտք Գործել"
-              : "Գրանցվել որպես Անդամ"}
+              ? t("auth.submitSignIn", locale)
+              : t("auth.submitSignUp", locale)}
           </button>
         </form>
 
@@ -476,7 +479,7 @@ export default function AuthPage() {
           }}
         >
           <div style={{ flex: 1, height: "1px", background: "var(--card-border)" }}></div>
-          <span>Կամ</span>
+          <span>{t("auth.or", locale)}</span>
           <div style={{ flex: 1, height: "1px", background: "var(--card-border)" }}></div>
         </div>
 
@@ -528,7 +531,7 @@ export default function AuthPage() {
               d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
             />
           </svg>
-          <span>Շարունակել Google-ով</span>
+          <span>{t("auth.continueGoogle", locale)}</span>
         </button>
       </div>
     </main>

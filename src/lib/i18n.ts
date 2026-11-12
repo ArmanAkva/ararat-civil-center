@@ -96,6 +96,831 @@ export const UI_STRINGS: Record<string, Record<Locale, string>> = {
     en: "✓ Translations saved to Firestore",
     ru: "✓ Переводы сохранены в Firestore",
   },
+  "btn.edit": {
+    hy: "Խմբագրել",
+    en: "Edit",
+    ru: "Редактировать",
+  },
+  "btn.delete": {
+    hy: "Ջնջել",
+    en: "Delete",
+    ru: "Удалить",
+  },
+  "btn.details": {
+    hy: "Մանրամասն",
+    en: "Details",
+    ru: "Подробнее",
+  },
+  "btn.openPage": {
+    hy: "Բացել էջը →",
+    en: "Open Page →",
+    ru: "Открыть страницу →",
+  },
+  "btn.viewProfile": {
+    hy: "Դիտել էջը →",
+    en: "View Profile →",
+    ru: "Посмотреть профиль →",
+  },
+  "btn.officialWebsite": {
+    hy: "Պաշտոնական կայք ↗",
+    en: "Official Website ↗",
+    ru: "Официальный сайт ↗",
+  },
+  "btn.viewPdf": {
+    hy: "👁 Դիտել PDF",
+    en: "👁 View PDF",
+    ru: "👁 Просмотр PDF",
+  },
+  "btn.downloadPdf": {
+    hy: "⬇️ Ներբեռնել",
+    en: "⬇️ Download",
+    ru: "⬇️ Скачать",
+  },
+  "btn.downloadPdfFull": {
+    hy: "Ներբեռնել PDF",
+    en: "Download PDF",
+    ru: "Скачать PDF",
+  },
+  "btn.copyCredo": {
+    hy: "Պատճենել Ասելիքը",
+    en: "Copy Credo",
+    ru: "Копировать кредо",
+  },
+  "btn.copied": {
+    hy: "Պատճենված է",
+    en: "Copied!",
+    ru: "Скопировано!",
+  },
+  "btn.enableEdit": {
+    hy: "✏️ Միացնել Խմբագրումը",
+    en: "✏️ Enable Edit Mode",
+    ru: "✏️ Включить режим редактирования",
+  },
+  "btn.editActive": {
+    hy: "Խմբագրումը՝ ԱԿՏԻՎ",
+    en: "Editing: ACTIVE",
+    ru: "Редактирование: АКТИВНО",
+  },
+  "btn.editMode": {
+    hy: "Խմբագրման Ռեժիմ",
+    en: "Edit Mode",
+    ru: "Режим редактирования",
+  },
+  "btn.editProfile": {
+    hy: "Խմբագրել Պրոֆիլը",
+    en: "Edit Profile",
+    ru: "Редактировать профиль",
+  },
+  "btn.editCenter": {
+    hy: "Խմբագրել Կենտրոնը",
+    en: "Edit Center",
+    ru: "Редактировать центр",
+  },
+  "btn.addCenter": {
+    hy: "+ Ավելացնել Կենտրոն",
+    en: "+ Add Center",
+    ru: "+ Добавить центр",
+  },
+  "btn.addAuthor": {
+    hy: "+ Ավելացնել Հեղինակ",
+    en: "+ Add Author",
+    ru: "+ Добавить автора",
+  },
+  "btn.addPublication": {
+    hy: "+ Ավելացնել Աշխատություն",
+    en: "+ Add Publication",
+    ru: "+ Добавить публикацию",
+  },
+  "btn.attachPublication": {
+    hy: "Կցել / Ավելացնել Աշխատություն",
+    en: "Attach / Add Publication",
+    ru: "Прикрепить / Добавить публикацию",
+  },
+  "btn.attachAuthor": {
+    hy: "Կցել / Ավելացնել Հեղինակ",
+    en: "Attach / Add Author",
+    ru: "Прикрепить / Добавить автора",
+  },
+  "btn.backToAllCivs": {
+    hy: "← Բոլոր քաղաքակրթությունները",
+    en: "← All Civilizations",
+    ru: "← Все цивилизации",
+  },
+  "btn.backToCiv": {
+    hy: "Դեպի",
+    en: "To",
+    ru: "К",
+  },
+  "btn.backToLibrary": {
+    hy: "Վերադառնալ Գրադարան",
+    en: "Back to Library",
+    ru: "Вернуться в библиотеку",
+  },
+  "btn.clearFilters": {
+    hy: "Մաքրել բոլոր ֆիլտրերը",
+    en: "Clear all filters",
+    ru: "Очистить все фильтры",
+  },
+  "btn.showAllPubs": {
+    hy: "Ցուցադրել բոլոր աշխատությունները",
+    en: "Show all publications",
+    ru: "Показать все публикации",
+  },
+  "about.callEyebrow": {
+    hy: "ՀԱՄԱՐԱՐՉԱԿԱՆ ԿՈՉ",
+    en: "CALL TO CO-CREATION",
+    ru: "ПРИЗЫВ К СОТВОРЧЕСТВУ",
+  },
+  "btn.joinDiscussions": {
+    hy: "💬 Միանալ Քննարկումներին",
+    en: "💬 Join Discussions",
+    ru: "💬 Присоединиться к дискуссиям",
+  },
+  "btn.exploreCivilizations": {
+    hy: "🏛️ Դիտել Քաղաքակրթությունները",
+    en: "🏛️ Explore Civilizations",
+    ru: "🏛️ Исследовать цивилизации",
+  },
+
+  // Tabs & Navigation
+  "tab.centers": {
+    hy: "Կենտրոններ",
+    en: "Think Tanks",
+    ru: "Центры",
+  },
+  "tab.authors": {
+    hy: "Հեղինակներ",
+    en: "Thinkers & Scholars",
+    ru: "Мыслители и авторы",
+  },
+  "tab.publications": {
+    hy: "Գիտական Աշխատություններ",
+    en: "Scholarly Works",
+    ru: "Научные труды",
+  },
+
+  // Counts & Labels
+  "label.centersCount": {
+    hy: "կենտրոն",
+    en: "centers",
+    ru: "центров",
+  },
+  "label.authorsCount": {
+    hy: "հեղինակ",
+    en: "authors",
+    ru: "авторов",
+  },
+  "label.pubsCount": {
+    hy: "աշխատություն",
+    en: "works",
+    ru: "работ",
+  },
+  "label.credo": {
+    hy: "Քաղաքակրթական Կոդ և Գլխավոր Ասելիք (Core Credo)",
+    en: "Civilizational Code & Core Credo",
+    ru: "Цивилизационный код и главное кредо",
+  },
+  "label.brandName": {
+    hy: "Արարատյան Ֆորում",
+    en: "Ararat Forum",
+    ru: "Араратский Форум",
+  },
+  "label.keyWork": {
+    hy: "Առանցքային Աշխատություն",
+    en: "Key Publication",
+    ru: "Ключевой труд",
+  },
+  "label.noKeyWork": {
+    hy: "Առանցքային աշխատություն նշված չէ",
+    en: "No key publication specified",
+    ru: "Ключевой труд не указан",
+  },
+  "label.partnerInstitute": {
+    hy: "Գործընկեր ինստիտուտ",
+    en: "Partner Institute",
+    ru: "Партнерский институт",
+  },
+  "label.pdfAvailable": {
+    hy: "✓ PDF առկա",
+    en: "✓ PDF available",
+    ru: "✓ PDF доступен",
+  },
+  "label.onlineAvailable": {
+    hy: "✓ Առցանց հասանելի",
+    en: "✓ Available online",
+    ru: "✓ Доступно онлайн",
+  },
+  "label.authorLabel": {
+    hy: "Հեղինակ՝",
+    en: "Author:",
+    ru: "Автор:",
+  },
+  "label.centerLabel": {
+    hy: "Կենտրոն՝",
+    en: "Center:",
+    ru: "Центр:",
+  },
+  "label.civilizationLabel": {
+    hy: "Քաղաքակրթություն՝",
+    en: "Civilization:",
+    ru: "Цивилизация:",
+  },
+  "label.typeLabel": {
+    hy: "Տեսակ՝",
+    en: "Type:",
+    ru: "Тип:",
+  },
+  "label.all": {
+    hy: "Բոլորը",
+    en: "All",
+    ru: "Все",
+  },
+  "label.foundedIn": {
+    hy: "հիմնադրված",
+    en: "founded in",
+    ru: "основан в",
+  },
+  "label.yearSuffix": {
+    hy: "թ.",
+    en: "",
+    ru: "г.",
+  },
+  "label.focusAreas": {
+    hy: "Հետազոտական Ուղղություններ",
+    en: "Research Focus Areas",
+    ru: "Направления исследований",
+  },
+  "label.bioAndHeritage": {
+    hy: "Կենսագրություն և Գիտական Նշանակություն",
+    en: "Biography & Intellectual Heritage",
+    ru: "Биография и научное значение",
+  },
+  "label.philosophyQuote": {
+    hy: "✧ Գաղափարական Պատգամ / Մեջբերում",
+    en: "✧ Philosophical Credo / Quote",
+    ru: "✧ Идейное кредо / Цитата",
+  },
+  "label.authorWorksSubtitle": {
+    hy: "Հեղինակի գրքերը, մենագրությունները, վերլուծական հոդվածները և զեկույցները",
+    en: "Books, monographs, analytical papers, and treatises by the author",
+    ru: "Книги, монографии, аналитические статьи и доклады автора",
+  },
+  "label.centerWorksSubtitle": {
+    hy: "Կենտրոնի հետազոտական հրապարակումները, քաղաքականության զեկույցները և մենագրությունները",
+    en: "Research publications, policy papers, and treatises of the center",
+    ru: "Исследовательские публикации, доклады и монографии центра",
+  },
+  "label.centerAuthorsSubtitle": {
+    hy: "Կենտրոնի առաջատար հետազոտողները, վերլուծաբանները և գիտական մտածողները",
+    en: "Leading researchers, analysts, and scientific thinkers of the center",
+    ru: "Ведущие исследователи, аналитики и мыслители центра",
+  },
+  "label.affiliatedCenters": {
+    hy: "Հարակից Ուղեղային Կենտրոններ",
+    en: "Affiliated Think Tanks",
+    ru: "Связанные аналитические центры",
+  },
+  "label.noWorksYet": {
+    hy: "Աշխատություններ կամ հոդվածներ դեռ ավելացված չեն:",
+    en: "No publications or papers added yet.",
+    ru: "Публикации или статьи пока не добавлены.",
+  },
+  "label.noAuthorsYet": {
+    hy: "Այս կենտրոնին դեռևս կցված չեն գիտաշխատողներ կամ հեղինակներ:",
+    en: "No researchers or authors attached to this center yet.",
+    ru: "К этому центру пока не прикреплены исследователи или авторы.",
+  },
+  "label.showingWorks": {
+    hy: "Ցուցադրված է",
+    en: "Showing",
+    ru: "Показано",
+  },
+
+  // Search Placeholders & Empty States
+  "search.centersPlaceholder": {
+    hy: "Որոնել կենտրոններ, քաղաք, ոլորտ...",
+    en: "Search think tanks, city, focus area...",
+    ru: "Поиск центров, города, направления...",
+  },
+  "search.authorsPlaceholder": {
+    hy: "Որոնել հեղինակ, աշխատություն...",
+    en: "Search thinkers, publications...",
+    ru: "Поиск авторов, трудов...",
+  },
+  "search.pubsPlaceholder": {
+    hy: "Որոնել աշխատություն, տեսակ, թեմա...",
+    en: "Search publications, type, topic...",
+    ru: "Поиск трудов, типа, темы...",
+  },
+  "empty.centers": {
+    hy: "Որոնմանը համապատասխանող կենտրոն չգտնվեց:",
+    en: "No think tanks found matching your search.",
+    ru: "Центры по заданному запросу не найдены.",
+  },
+  "empty.authors": {
+    hy: "Որոնմանը համապատասխանող մտածող չգտնվեց:",
+    en: "No thinkers found matching your search.",
+    ru: "Мыслители по заданному запросу не найдены.",
+  },
+  "empty.pubs": {
+    hy: "Որոնմանը համապատասխանող գիտական աշխատություն չգտնվեց:",
+    en: "No publications found matching your search.",
+    ru: "Публикации по заданному запросу не найдены.",
+  },
+
+  // Types
+  "type.report": {
+    hy: "Զեկույց",
+    en: "Report",
+    ru: "Доклад",
+  },
+  "type.monograph": {
+    hy: "Մենագրություն",
+    en: "Monograph",
+    ru: "Монография",
+  },
+  "type.article": {
+    hy: "Հոդված",
+    en: "Article",
+    ru: "Статья",
+  },
+  "type.book": {
+    hy: "Գիրք",
+    en: "Book",
+    ru: "Книга",
+  },
+  "type.pdfDoc": {
+    hy: "PDF Փաստաթուղթ",
+    en: "PDF Document",
+    ru: "Документ PDF",
+  },
+
+  // Forum Countdown & Headers
+  "forum.days": {
+    hy: "ՕՐ",
+    en: "DAYS",
+    ru: "ДНЕЙ",
+  },
+  "forum.hours": {
+    hy: "ԺԱՄ",
+    en: "HOURS",
+    ru: "ЧАСОВ",
+  },
+  "forum.minutes": {
+    hy: "ՐՈՊԵ",
+    en: "MINUTES",
+    ru: "МИНУТ",
+  },
+  "forum.seconds": {
+    hy: "ՎԱՅՐԿՅԱՆ",
+    en: "SECONDS",
+    ru: "СЕКУНД",
+  },
+  "forum.programAndAgenda": {
+    hy: "🏛️ Ֆորումի Ծրագիր և Օրակարգ",
+    en: "🏛️ Forum Program & Agenda",
+    ru: "🏛️ Программа и повестка форума",
+  },
+  "forum.committeeAndTeam": {
+    hy: "👥 Կազմկոմիտե և Թիմ →",
+    en: "👥 Organizing Committee & Team →",
+    ru: "👥 Оргкомитет и команда →",
+  },
+  "forum.messagesTitle": {
+    hy: "Օրակարգային 3 Ուղերձներ և Քննարկում",
+    en: "3 Key Agenda Messages & Discussion",
+    ru: "3 Ключевых Послания Повестки и Дискуссия",
+  },
+  "forum.addProposal": {
+    hy: "+ Ավելացնել Առաջարկ / Դիտարկում",
+    en: "+ Add Proposal / Comment",
+    ru: "+ Добавить предложение / комментарий",
+  },
+  "forum.suggestAlternative": {
+    hy: "🗓️ Առաջարկել այլընտրանքային ժամկետ / Հաստատել մասնակցությունը",
+    en: "🗓️ Suggest alternative dates / Confirm attendance",
+    ru: "🗓️ Предложить альтернативные сроки / Подтвердить участие",
+  },
+  "forum.changeTime": {
+    hy: "✎ Փոխել Ժամը",
+    en: "✎ Change Time",
+    ru: "✎ Изменить время",
+  },
+  "forum.addProposalAround": {
+    hy: "Ավելացնել առաջարկ",
+    en: "Add proposal",
+    ru: "Добавить предложение",
+  },
+  "forum.sendProposal": {
+    hy: "Ուղարկել Առաջարկը",
+    en: "Submit Proposal",
+    ru: "Отправить предложение",
+  },
+  "forum.sending": {
+    hy: "Ուղարկվում է...",
+    en: "Sending...",
+    ru: "Отправка...",
+  },
+  "forum.discussionsAndProposals": {
+    hy: "Քննարկումներ և Առաջարկներ",
+    en: "Discussions & Proposals",
+    ru: "Дискуссии и Предложения",
+  },
+  "forum.noProposalsYet": {
+    hy: "Այս ուղերձի շուրջ դեռ առաջարկներ չեն գրանցվել։ Եղեք առաջինը։",
+    en: "No proposals registered for this message yet. Be the first.",
+    ru: "По этому посланию пока нет предложений. Будьте первыми.",
+  },
+  "forum.reply": {
+    hy: "💬 Պատասխանել",
+    en: "💬 Reply",
+    ru: "💬 Ответить",
+  },
+  "forum.delete": {
+    hy: "Ջնջել",
+    en: "Delete",
+    ru: "Удалить",
+  },
+  "forum.writeReplyPlaceholder": {
+    hy: "Գրեք Ձեր պատասխանը...",
+    en: "Write your reply...",
+    ru: "Напишите ваш ответ...",
+  },
+  "forum.send": {
+    hy: "Ուղարկել",
+    en: "Send",
+    ru: "Отправить",
+  },
+  "forum.agendaTitle": {
+    hy: "3-Օրյա Օրակարգ (Նախնական)",
+    en: "3-Day Agenda (Tentative)",
+    ru: "3-дневная программа (предварительная)",
+  },
+  "forum.agendaSubtitle": {
+    hy: "Ծրագրային հիմնական հանգրվանները և քննարկումների վայրերը",
+    en: "Key program milestones and discussion venues",
+    ru: "Основные этапы программы и места обсуждений",
+  },
+  "forum.proposeAgendaAddition": {
+    hy: "💡 Առաջարկել Լրացում Օրակարգում",
+    en: "💡 Propose Agenda Addition",
+    ru: "💡 Предложить дополнение к повестке",
+  },
+  "forum.addAgendaItem": {
+    hy: "+ Ավելացնել Օրակարգ",
+    en: "+ Add Agenda Item",
+    ru: "+ Добавить пункт повестки",
+  },
+  "forum.leadershipEyebrow": {
+    hy: "👑 ՖՈՐՈՒՄԻ ՂԵԿԱՎԱՐՈՒԹՅՈՒՆ",
+    en: "👑 FORUM LEADERSHIP",
+    ru: "👑 РУКОВОДСТВО ФОРУМА",
+  },
+  "forum.leadershipTitle": {
+    hy: "Ֆորումի Ղեկավարություն և Կազմկոմիտե",
+    en: "Forum Leadership & Organizing Committee",
+    ru: "Руководство Форума и Оргкомитет",
+  },
+  "forum.viewEntireTeam": {
+    hy: "👥 Դիտել Կազմկոմիտեի Ամբողջ Թիմը →",
+    en: "👥 View Entire Committee Team →",
+    ru: "👥 Вся команда оргкомитета →",
+  },
+  "forum.publicProposalsTitle": {
+    hy: "Ֆորումի Հանրային Առաջարկներ և Քննարկումներ",
+    en: "Forum Public Proposals & Discussions",
+    ru: "Общественные предложения и дискуссии форума",
+  },
+  "forum.publicProposalsDesc": {
+    hy: "Գիտնականների, մտածողների և մասնակիցների առաջարկները Մանիֆեստի, ուղերձների և օրակարգի շուրջ",
+    en: "Proposals from scholars, thinkers, and participants on Manifesto, messages, and agenda",
+    ru: "Предложения ученых, мыслителей и участников по Манифесту, посланиям и повестке",
+  },
+  "forum.addNewProposal": {
+    hy: "+ Ավելացնել Նոր Առաջարկ",
+    en: "+ Add New Proposal",
+    ru: "+ Добавить новое предложение",
+  },
+  "forum.tabAll": {
+    hy: "Բոլորը",
+    en: "All",
+    ru: "Все",
+  },
+  "forum.tabManifesto": {
+    hy: "📜 Մանիֆեստ",
+    en: "📜 Manifesto",
+    ru: "📜 Манифест",
+  },
+  "forum.tabMessages": {
+    hy: "💬 Ուղերձներ",
+    en: "💬 Messages",
+    ru: "💬 Послания",
+  },
+  "forum.tabAgenda": {
+    hy: "🗓️ Օրակարգ",
+    en: "🗓️ Agenda",
+    ru: "🗓️ Повестка",
+  },
+  "forum.tabDateLocation": {
+    hy: "📍 Ժամկետներ & Վայր",
+    en: "📍 Dates & Venue",
+    ru: "📍 Сроки и Место",
+  },
+  "forum.noProposalsSection": {
+    hy: "Այս բաժնում դեռևս առաջարկներ չկան։ Սեղմեք «+ Ավելացնել Նոր Առաջարկ» առաջինը ներկայացնելու համար։",
+    en: "There are no proposals in this section yet. Click '+ Add New Proposal' to submit the first one.",
+    ru: "В этом разделе пока нет предложений. Нажмите «+ Добавить новое предложение», чтобы быть первым.",
+  },
+  "label.editActive": {
+    hy: "Խմբագրումը՝ ԱԿՏԻՎ",
+    en: "Editing ACTIVE",
+    ru: "Редактирование АКТИВНО",
+  },
+  "label.editMode": {
+    hy: "Խմբագրման Ռեժիմ",
+    en: "Edit Mode",
+    ru: "Режим Редактирования",
+  },
+  "label.toggleEditMode": {
+    hy: "Խմբագրման ռեժիմի միացում",
+    en: "Toggle edit mode",
+    ru: "Включение режима редактирования",
+  },
+  "label.affiliatedFellow": {
+    hy: "Գիտաշխատող / Անդամ",
+    en: "Fellow / Member",
+    ru: "Научный сотрудник / Член",
+  },
+  "label.viewCenterPage": {
+    hy: "Դիտել կենտրոնի էջը →",
+    en: "View center page →",
+    ru: "Смотреть страницу центра →",
+  },
+  "label.viewAuthorPage": {
+    hy: "Դիտել հեղինակի էջը →",
+    en: "View thinker page →",
+    ru: "Смотреть страницу автора →",
+  },
+  "label.affiliatedLinked": {
+    hy: "✓ Կցված է (Անջատել)",
+    en: "✓ Attached (Detach)",
+    ru: "✓ Прикреплен (Открепить)",
+  },
+  "label.affiliateAttach": {
+    hy: "＋ Կցել",
+    en: "＋ Attach",
+    ru: "＋ Прикрепить",
+  },
+  "label.affiliateAttachToCenter": {
+    hy: "＋ Կցել այս կենտրոնին",
+    en: "＋ Attach to this center",
+    ru: "＋ Прикрепить к этому центру",
+  },
+  "label.affiliateAttachAuthor": {
+    hy: "＋ Կցել Հեղինակին",
+    en: "＋ Attach to Author",
+    ru: "＋ Прикрепить к автору",
+  },
+  "label.affiliateAttachCenter": {
+    hy: "＋ Կցել Կենտրոնին",
+    en: "＋ Attach to Center",
+    ru: "＋ Прикрепить к центру",
+  },
+  "label.pages": {
+    hy: "էջ",
+    en: "pages",
+    ru: "стр.",
+  },
+  "label.adjacentThinkers": {
+    hy: "Հարակից Մտածողներ",
+    en: "Affiliated Thinkers",
+    ru: "Связанные мыслители",
+  },
+  "btn.detachAuthor": {
+    hy: "Անջատել այս հեղինակից",
+    en: "Detach from this author",
+    ru: "Открепить от этого автора",
+  },
+  "btn.detachCenter": {
+    hy: "Անջատել այս կենտրոնից",
+    en: "Detach from this center",
+    ru: "Открепить от этого центра",
+  },
+  "btn.attachOrCreatePub": {
+    hy: "+ Կցել Քաղաքակրթության Գրադարանից կամ Ստեղծել Նորը",
+    en: "+ Attach from Civ Library or Create New",
+    ru: "+ Прикрепить из библиотеки или создать",
+  },
+  "btn.attachOrCreateAuthor": {
+    hy: "+ Կցել Քաղաքակրթության Հեղինակներից կամ Ստեղծել Նորը",
+    en: "+ Attach from Civ Thinkers or Create New",
+    ru: "+ Прикрепить из мыслителей или создать",
+  },
+  "btn.createAndAttach": {
+    hy: "Ստեղծել և Կցել",
+    en: "Create & Attach",
+    ru: "Создать и прикрепить",
+  },
+  "btn.cancel": {
+    hy: "Չեղարկել",
+    en: "Cancel",
+    ru: "Отмена",
+  },
+  "btn.save": {
+    hy: "Պահպանել",
+    en: "Save",
+    ru: "Сохранить",
+  },
+  "label.modalAttachOrCreatePub": {
+    hy: "Կցել կամ Ստեղծել Գիտական Աշխատություն",
+    en: "Attach or Create Scholarly Work",
+    ru: "Прикрепить или создать научный труд",
+  },
+  "label.modalAttachOrCreateAuthor": {
+    hy: "Կցել կամ Ստեղծել Հեղինակ",
+    en: "Attach or Create Thinker",
+    ru: "Прикрепить или создать автора",
+  },
+  "label.selectFromCivLib": {
+    hy: "Ընտրել Քաղաքակրթության Գրադարանից",
+    en: "Select from Civilization Library",
+    ru: "Выбрать из библиотеки цивилизации",
+  },
+  "label.createNewPub": {
+    hy: "Ստեղծել Նոր Աշխատություն",
+    en: "Create New Publication",
+    ru: "Создать новую публикацию",
+  },
+  "label.selectFromCivAuthors": {
+    hy: "Ընտրել Քաղաքակրթության Հեղինակներից",
+    en: "Select from Civilization Thinkers",
+    ru: "Выбрать из авторов цивилизации",
+  },
+  "label.createNewAuthor": {
+    hy: "Ստեղծել Նոր Հեղինակ",
+    en: "Create New Thinker",
+    ru: "Создать нового автора",
+  },
+  "label.canAttachExistingPubs": {
+    hy: "Կարող եք կցել արդեն իսկ քաղաքակրթության գրադարանում առկա աշխատությունները:",
+    en: "You can attach works already available in the civilization library.",
+    ru: "Вы можете прикрепить труды, уже имеющиеся в библиотеке цивилизации.",
+  },
+  "empty.noPubsInCivYet": {
+    hy: "Այս քաղաքակրթությունում դեռևս առանձին աշխատություններ չկան: Օգտվեք «Ստեղծել Նոր Աշխատություն» ներդիրից:",
+    en: "There are no individual publications in this civilization yet. Use the 'Create New Publication' tab.",
+    ru: "В этой цивилизации пока нет отдельных публикаций. Воспользуйтесь вкладкой «Создать новую публикацию».",
+  },
+  "empty.noAuthorsInCivYet": {
+    hy: "Այս քաղաքակրթությունում դեռևս առանձին հեղինակներ չկան: Օգտվեք «Ստեղծել Նոր Հեղինակ» ներդիրից:",
+    en: "There are no individual thinkers in this civilization yet. Use the 'Create New Thinker' tab.",
+    ru: "В этой цивилизации пока нет отдельных мыслителей. Воспользуйтесь вкладкой «Создать нового автора».",
+  },
+  "search.pubsModalPlaceholder": {
+    hy: "Որոնել աշխատությունը ըստ վերնագրի կամ տեսակի...",
+    en: "Search publication by title or type...",
+    ru: "Поиск публикации по названию или типу...",
+  },
+  "search.authorsModalPlaceholder": {
+    hy: "Որոնել հեղինակին ըստ անվան...",
+    en: "Search thinker by name...",
+    ru: "Поиск мыслителя по имени...",
+  },
+  "label.pubTitle": {
+    hy: "Աշխատության Վերնագիր",
+    en: "Publication Title",
+    ru: "Название публикации",
+  },
+  "label.pubType": {
+    hy: "Տեսակ",
+    en: "Type",
+    ru: "Тип",
+  },
+  "label.pubYear": {
+    hy: "Հրատարակման Տարեթիվ",
+    en: "Publication Year",
+    ru: "Год публикации",
+  },
+  "label.pubPages": {
+    hy: "Էջերի Քանակ",
+    en: "Page Count",
+    ru: "Количество страниц",
+  },
+  "label.attachedCenterOptional": {
+    hy: "Կից Ուղեղային Կենտրոն (ընտրովի)",
+    en: "Affiliated Think Tank (optional)",
+    ru: "Связанный мозговой центр (опционально)",
+  },
+  "label.attachedAuthorOptional": {
+    hy: "Հեղինակ (ընտրովի կցում)",
+    en: "Author (optional)",
+    ru: "Автор (опционально)",
+  },
+  "label.noSpecificCenter": {
+    hy: "Առանց կոնկրետ կենտրոնի",
+    en: "Without specific center",
+    ru: "Без конкретного центра",
+  },
+  "label.noSpecificAuthor": {
+    hy: "Առանց կոնկրետ հեղինակի",
+    en: "Without specific author",
+    ru: "Без конкретного автора",
+  },
+  "label.summaryAbstract": {
+    hy: "Ամփոփագիր / Գիտական Թեզիսներ",
+    en: "Abstract / Scientific Theses",
+    ru: "Аннотация / Научные тезисы",
+  },
+  "label.summaryAndScientificDesc": {
+    hy: "Ամփոփագիր և Գիտական Նկարագիր",
+    en: "Abstract & Scientific Overview",
+    ru: "Аннотация и научный обзор",
+  },
+  "label.dialogueFilterAll": {
+    hy: "Բոլորը",
+    en: "All",
+    ru: "Все",
+  },
+  "label.dialogueFilterActive": {
+    hy: "Ակտիվ",
+    en: "Active",
+    ru: "Активные",
+  },
+  "label.dialogueFilterPending": {
+    hy: "Հաստատման սպասող",
+    en: "Pending",
+    ru: "На утверждении",
+  },
+  "label.dialogueFilterArchived": {
+    hy: "Արխիվացված",
+    en: "Archived",
+    ru: "В архиве",
+  },
+  "dialogue.opinionsCount": {
+    hy: "կարծիք",
+    en: "opinions",
+    ru: "мнений",
+  },
+  "dialogue.expertsCount": {
+    hy: "փորձագետ",
+    en: "experts",
+    ru: "экспертов",
+  },
+  "dialogue.participate": {
+    hy: "Մասնակցել Քննարկմանը",
+    en: "Join Discussion",
+    ru: "Участвовать в обсуждении",
+  },
+  "dialogue.viewDiscussion": {
+    hy: "Դիտել Քննարկումը",
+    en: "View Discussion",
+    ru: "Смотреть обсуждение",
+  },
+  "dialogue.viewProposal": {
+    hy: "Դիտել Առաջարկը",
+    en: "View Proposal",
+    ru: "Смотреть предложение",
+  },
+  "dialogue.proposeNewTopicAdmin": {
+    hy: "+ Առաջարկել Նոր Հարցադրում (Admin)",
+    en: "+ Propose New Topic (Admin)",
+    ru: "+ Предложить новую тему (Админ)",
+  },
+  "dialogue.proposeNewTopic": {
+    hy: "💡 Առաջարկել Հարցադրում Քննարկման Համար",
+    en: "💡 Propose Topic for Discussion",
+    ru: "💡 Предложить тему для обсуждения",
+  },
+  "dialogue.noTopicsFound": {
+    hy: "Համապատասխան հարցադրում չի գտնվել",
+    en: "No matching topics found",
+    ru: "Подходящих тем не найдено",
+  },
+  "dialogue.clearFilters": {
+    hy: "Մաքրել ֆիլտրերը",
+    en: "Clear filters",
+    ru: "Сбросить фильтры",
+  },
+  "stats.totalPubs": {
+    hy: "Ընդհանուր Աշխատություններ",
+    en: "Total Publications",
+    ru: "Всего публикаций",
+  },
+  "stats.digitalPdfs": {
+    hy: "Թվային PDF Փաստաթղթեր",
+    en: "Digital PDF Documents",
+    ru: "Цифровые PDF документы",
+  },
+  "stats.researchCenters": {
+    hy: "Գիտական Կենտրոններ",
+    en: "Research Centers",
+    ru: "Научные центры",
+  },
+  "stats.scholarsThinkers": {
+    hy: "Մտածողներ և Հեղինակներ",
+    en: "Scholars & Thinkers",
+    ru: "Мыслители и авторы",
+  },
   "theme.dark": {
     hy: "Անցնել Մուգ Թեմային",
     en: "Switch to Dark Mode",
@@ -142,6 +967,210 @@ export const UI_STRINGS: Record<string, Record<Locale, string>> = {
     hy: "Հեռացնել",
     en: "Delete",
     ru: "Удалить",
+  },
+
+  // Auth Page
+  "auth.alreadyLoggedIn": {
+    hy: "Դուք արդեն մուտք եք գործել",
+    en: "You are already signed in",
+    ru: "Вы уже вошли в систему",
+  },
+  "auth.loggedInAs": {
+    hy: "Մուտք եք գործել որպես",
+    en: "Signed in as",
+    ru: "Вы вошли как",
+  },
+  "auth.myProfile": {
+    hy: "Իմ Պրոֆիլը →",
+    en: "My Profile →",
+    ru: "Мой Профиль →",
+  },
+  "auth.homePage": {
+    hy: "Գլխավոր Էջ",
+    en: "Home Page",
+    ru: "Главная страница",
+  },
+  "auth.signIn": {
+    hy: "Մուտք (Sign In)",
+    en: "Sign In",
+    ru: "Вход",
+  },
+  "auth.signUp": {
+    hy: "Գրանցում (Sign Up)",
+    en: "Sign Up",
+    ru: "Регистрация",
+  },
+  "auth.signInTitle": {
+    hy: "Մուտք Համակարգ",
+    en: "Sign In",
+    ru: "Вход в систему",
+  },
+  "auth.signUpTitle": {
+    hy: "Անդամագրում Կենտրոնին",
+    en: "Join the Center",
+    ru: "Регистрация в центре",
+  },
+  "auth.subtitle": {
+    hy: "Արարատյան Քաղաքակրթական Կենտրոնի Անձնական Տիրույթ",
+    en: "Personal Portal of the Ararat Civilizational Center",
+    ru: "Личный кабинет Араратского Цивилизационного Центра",
+  },
+  "auth.fullName": {
+    hy: "Անուն Ազգանուն",
+    en: "Full Name",
+    ru: "Имя Фамилия",
+  },
+  "auth.fullNamePlaceholder": {
+    hy: "օրինակ՝ Արմեն Ղազարյան",
+    en: "e.g., Armen Ghazaryan",
+    ru: "например, Армен Казарян",
+  },
+  "auth.email": {
+    hy: "Էլ. Փոստ (Email)",
+    en: "Email Address",
+    ru: "Эл. Почта",
+  },
+  "auth.password": {
+    hy: "Գաղտնաբառ (Password)",
+    en: "Password",
+    ru: "Пароль",
+  },
+  "auth.forgotPassword": {
+    hy: "Մոռացե՞լ եք գաղտնաբառը",
+    en: "Forgot password?",
+    ru: "Забыли пароль?",
+  },
+  "auth.reset": {
+    hy: "Վերականգնե՞լ",
+    en: "Reset?",
+    ru: "Восстановить?",
+  },
+  "auth.fieldOfInterest": {
+    hy: "Քաղաքակրթական Ոլորտ / Հետաքրքրություն",
+    en: "Civilizational Area / Interest",
+    ru: "Цивилизационная сфера / Интерес",
+  },
+  "auth.submitSignIn": {
+    hy: "Մուտք Գործել",
+    en: "Sign In",
+    ru: "Войти",
+  },
+  "auth.submitSignUp": {
+    hy: "Գրանցվել որպես Անդամ",
+    en: "Register as Member",
+    ru: "Зарегистрироваться",
+  },
+  "auth.processing": {
+    hy: "Մշակվում է...",
+    en: "Processing...",
+    ru: "Обработка...",
+  },
+  "auth.or": {
+    hy: "Կամ",
+    en: "Or",
+    ru: "Или",
+  },
+  "auth.continueGoogle": {
+    hy: "Շարունակել Google-ով",
+    en: "Continue with Google",
+    ru: "Продолжить с Google",
+  },
+
+  // Forum Organizers
+  "organizers.backToForum": {
+    hy: "← Վերադառնալ Ֆորումի Գլխավոր Էջ",
+    en: "← Back to Forum Main Page",
+    ru: "← На главную страницу форума",
+  },
+  "organizers.setOwner": {
+    hy: "👑 Սահմանել Ղեկավարին",
+    en: "👑 Set Forum Leader",
+    ru: "👑 Назначить руководителя",
+  },
+  "organizers.addMember": {
+    hy: "+ Ավելացնել Կազմկոմիտեի Անդամ",
+    en: "+ Add Committee Member",
+    ru: "+ Добавить члена оргкомитета",
+  },
+  "organizers.eyebrow": {
+    hy: "Արարատյան Քաղաքակրթական Ֆորում 2027",
+    en: "Ararat Civilizational Forum 2027",
+    ru: "Араратский Цивилизационный Форум 2027",
+  },
+  "organizers.title": {
+    hy: "Ֆորումի Ղեկավարություն և Կազմկոմիտե",
+    en: "Forum Leadership & Organizing Committee",
+    ru: "Руководство Форума и Оргкомитет",
+  },
+  "organizers.subtitle": {
+    hy: "Արարատյան Ֆորումի գլխավոր համակարգողը, գիտական քարտուղարությունը և կազմկոմիտեի անդամները, ովքեր համակարգում են քաղաքակրթական երկխոսության նախապատրաստական աշխատանքները։",
+    en: "The General Coordinator, Scientific Secretariat, and Committee members coordinating preparatory work for the civilizational dialogue.",
+    ru: "Главный координатор, ученый секретариат и члены оргкомитета, координирующие подготовительную работу к цивилизационному диалогу.",
+  },
+  "organizers.ownerBadge": {
+    hy: "👑 ՖՈՐՈՒՄԻ ԳԼԽԱՎՈՐ ՀԱՄԱԿԱՐԳՈՂ & ՂԵԿԱՎԱՐ",
+    en: "👑 GENERAL COORDINATOR & FORUM LEADER",
+    ru: "👑 ГЛАВНЫЙ КООРДИНАТОР И РУКОВОДИТЕЛЬ ФОРУМА",
+  },
+  "organizers.editOwner": {
+    hy: "✎ Խմբագրել Ղեկավարին",
+    en: "✎ Edit Leader",
+    ru: "✎ Редактировать руководителя",
+  },
+  "organizers.visionResponsibility": {
+    hy: "Ռազմավարական Տեսլական & Պատասխանատվություն",
+    en: "Strategic Vision & Responsibility",
+    ru: "Стратегическое видение и ответственность",
+  },
+  "organizers.committeeMembers": {
+    hy: "Կազմկոմիտեի Անդամներ",
+    en: "Organizing Committee Members",
+    ru: "Члены Оргкомитета",
+  },
+  "organizers.membersCount": {
+    hy: "անդամ",
+    en: "members",
+    ru: "членов",
+  },
+  "organizers.commissionsSubtitle": {
+    hy: "Գիտական, միջազգային, գործառնական և թվային հանձնախմբեր",
+    en: "Scientific, international, operational, and digital teams",
+    ru: "Научные, международные, операционные и цифровые группы",
+  },
+  "organizers.searchPlaceholder": {
+    hy: "Փնտրել ըստ անվան, դերի կամ կենտրոնի...",
+    en: "Search by name, role, or center...",
+    ru: "Поиск по имени, роли или центру...",
+  },
+  "organizers.filterAll": {
+    hy: "Բոլոր Հանձնախմբերը",
+    en: "All Departments",
+    ru: "Все направления",
+  },
+  "organizers.filterLeadership": {
+    hy: "👑 Ղեկավարություն",
+    en: "👑 Leadership",
+    ru: "👑 Руководство",
+  },
+  "organizers.filterAcademic": {
+    hy: "📚 Գիտական Քարտուղարություն",
+    en: "📚 Scientific Secretariat",
+    ru: "📚 Ученый секретариат",
+  },
+  "organizers.filterInternational": {
+    hy: "🌐 Միջազգային Համագործակցություն",
+    en: "🌐 International Relations",
+    ru: "🌐 Международные связи",
+  },
+  "organizers.filterOperations": {
+    hy: "⚙️ Լոգիստիկա & Թվային Մեդիա",
+    en: "⚙️ Logistics & Digital Media",
+    ru: "⚙️ Логистика и медиа",
+  },
+  "organizers.noMembersFound": {
+    hy: "Տվյալ որոնմամբ անդամներ չեն գտնվել։",
+    en: "No committee members found matching your search.",
+    ru: "Члены оргкомитета по данному запросу не найдены.",
   },
 
   // Profile Page

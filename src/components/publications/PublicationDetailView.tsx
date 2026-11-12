@@ -435,7 +435,7 @@ export default function PublicationDetailView({ initialPublication, relatedPubli
             }}
           >
             <span>📄</span>
-            <span>Էկրանային Դիտարկիչ (PDF On-Screen Reader)</span>
+            <span>{locale === "en" ? "PDF On-Screen Reader" : locale === "ru" ? "Экранный просмотр PDF" : "Էկրանային Դիտարկիչ (PDF On-Screen Reader)"}</span>
           </h2>
 
           {pub.downloadUrl && (
@@ -452,7 +452,7 @@ export default function PublicationDetailView({ initialPublication, relatedPubli
                   gap: "0.35rem",
                 }}
               >
-                <span>{isFullscreen ? "✕ Ելք լիաէկրանից" : "⛶ Լիաէկրան դիտում"}</span>
+                <span>{isFullscreen ? (locale === "en" ? "✕ Exit Fullscreen" : locale === "ru" ? "✕ Выйти" : "✕ Ելք լիաէկրանից") : (locale === "en" ? "⛶ Fullscreen" : locale === "ru" ? "⛶ Во весь экран" : "⛶ Լիաէկրան դիտում")}</span>
               </button>
             </div>
           )}
@@ -481,9 +481,9 @@ export default function PublicationDetailView({ initialPublication, relatedPubli
                   rel="noopener noreferrer"
                   className="credo-action-btn"
                   style={{ padding: "0.35rem 0.75rem", fontSize: "0.8rem", textDecoration: "none" }}
-                  title="Բացել նոր պատուհանում"
+                  title={locale === "en" ? "Open in new window" : locale === "ru" ? "Открыть в новом окне" : "Բացել նոր պատուհանում"}
                 >
-                  ↗ Նոր պատուհան
+                  ↗ {locale === "en" ? "New Window" : locale === "ru" ? "Новое окно" : "Նոր պատուհան"}
                 </a>
                 <a
                   href={pub.downloadUrl}
@@ -498,7 +498,7 @@ export default function PublicationDetailView({ initialPublication, relatedPubli
                     gap: "0.3rem",
                   }}
                 >
-                  <span>⬇️ Ներբեռնել</span>
+                  <span>⬇️ {locale === "en" ? "Download" : locale === "ru" ? "Скачать" : "Ներբեռնել"}</span>
                 </a>
                 {canEdit && (
                   <button
@@ -506,9 +506,9 @@ export default function PublicationDetailView({ initialPublication, relatedPubli
                     onClick={() => directFileInputRef.current?.click()}
                     className="credo-action-btn"
                     style={{ padding: "0.35rem 0.75rem", fontSize: "0.8rem" }}
-                    title="Փոխարինել PDF փաստաթուղթը նոր ֆայլով"
+                    title={locale === "en" ? "Replace PDF file" : locale === "ru" ? "Заменить PDF" : "Փոխարինել PDF փաստաթուղթը նոր ֆայլով"}
                   >
-                    📎 Փոխել PDF
+                    📎 {locale === "en" ? "Change PDF" : locale === "ru" ? "Сменить PDF" : "Փոխել PDF"}
                   </button>
                 )}
                 <button
@@ -516,7 +516,7 @@ export default function PublicationDetailView({ initialPublication, relatedPubli
                   onClick={() => setIsFullscreen(!isFullscreen)}
                   className="credo-action-btn"
                   style={{ padding: "0.35rem 0.75rem", fontSize: "0.8rem" }}
-                  title={isFullscreen ? "Ելք լիաէկրանից" : "Լիաէկրան դիտում"}
+                  title={isFullscreen ? (locale === "en" ? "Exit fullscreen" : locale === "ru" ? "Выйти" : "Ելք լիաէկրանից") : (locale === "en" ? "Fullscreen" : locale === "ru" ? "Во весь экран" : "Լիաէկրան դիտում")}
                 >
                   {isFullscreen ? "✕" : "⛶"}
                 </button>
@@ -614,7 +614,7 @@ export default function PublicationDetailView({ initialPublication, relatedPubli
                   }}
                 >
                   <span>📎</span>
-                  <span>Ընտրել և Վերբեռնել PDF Ֆայլ</span>
+                  <span>{locale === "en" ? "Select & Upload PDF" : locale === "ru" ? "Выбрать и загрузить PDF" : "Ընտրել և Վերբեռնել PDF Ֆայլ"}</span>
                 </button>
                 <button
                   type="button"
@@ -622,7 +622,7 @@ export default function PublicationDetailView({ initialPublication, relatedPubli
                   className="credo-action-btn"
                   style={{ padding: "0.7rem 1.4rem", fontSize: "0.95rem" }}
                 >
-                  <span>✏️ Խմբագրել Տվյալները</span>
+                  <span>✏️ {locale === "en" ? "Edit Details" : locale === "ru" ? "Редактировать данные" : "Խմբագրել Տվյալները"}</span>
                 </button>
               </div>
             ) : null}
