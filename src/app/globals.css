@@ -234,34 +234,32 @@ a {
 
 @media (max-width: 768px) {
   .header {
-    padding: 0.85rem 1rem;
-    flex-wrap: wrap;
-    gap: 0.75rem;
+    padding: 0.5rem 1rem;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 56px;
+    height: 56px;
   }
   .header.is-scrolled {
-    padding: 0.45rem 1rem;
+    padding: 0.35rem 1rem;
+    min-height: 50px;
+    height: 50px;
   }
   .header-nav-links {
-    order: 3;
-    width: 100%;
-    justify-content: center;
-    gap: 0.5rem;
-    flex-wrap: wrap;
+    display: none !important;
   }
-  .header-nav-links > .nav-link:first-child {
-    margin-left: 0;
-  }
-  .nav-link {
-    font-size: 0.85rem;
-    padding: 0.3rem 0.6rem;
+  .header-actions {
+    gap: 0.4rem;
   }
   .logo-icon {
-    width: 36px;
-    height: 36px;
+    width: 34px;
+    height: 34px;
   }
   .logo-key-svg {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
   }
   .header.is-scrolled .logo-icon {
     width: 30px;
@@ -1689,6 +1687,308 @@ a {
   color: var(--gold-accent);
   transform: translateX(4px);
 }
+
+/* =========================================================
+   NATIVE MOBILE APPLICATION STYLES (App-like Feel)
+   ========================================================= */
+
+/* Hero Detail Card Responsive Style */
+.detail-hero-card {
+  padding: 3.5rem 3rem;
+  margin-bottom: 3.5rem;
+  transition: all 0.3s ease;
+}
+
+/* Horizontal Scroll Bars (Clean Swipeable App Experience) */
+.pub-filter-bar {
+  display: flex;
+  gap: 0.4rem;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-bottom: 0.35rem;
+  width: 100%;
+  scroll-snap-type: x proximity;
+}
+.pub-filter-bar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Mobile Bottom Navigation Bar (App Dock) */
+.mobile-bottom-nav {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  /* Tap interactions */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Safe Area & Mobile Body Padding */
+  body {
+    padding-bottom: calc(68px + env(safe-area-inset-bottom, 0px)) !important;
+    overflow-x: hidden;
+  }
+
+  /* Sticky App Bottom Nav */
+  .mobile-bottom-nav {
+    display: block;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: var(--card-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid var(--card-border);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .mobile-bottom-nav-inner {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    height: 58px;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 0 0.4rem;
+  }
+
+  .mobile-nav-tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    padding: 0.3rem 0.15rem;
+    min-height: 46px;
+    border-radius: 0.75rem;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .mobile-nav-tab:active {
+    transform: scale(0.92);
+  }
+
+  .mobile-nav-tab.active {
+    color: var(--gold-accent);
+  }
+
+  .mobile-nav-icon-wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+  }
+
+  .mobile-nav-tab.active .mobile-nav-icon-wrapper svg {
+    stroke: var(--gold-accent);
+    filter: drop-shadow(0 2px 6px rgba(183, 121, 31, 0.4));
+  }
+
+  .mobile-nav-active-dot {
+    position: absolute;
+    bottom: -3px;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--gold-accent);
+    box-shadow: 0 0 6px var(--gold-accent);
+  }
+
+  .mobile-nav-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    line-height: 1.1;
+    max-width: 68px;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .mobile-nav-tab.active .mobile-nav-label {
+    color: var(--gold-accent);
+    font-weight: 700;
+  }
+
+  /* CMS Admin Floating Bar on mobile */
+  aside[aria-label="CMS Կառավարման վահանակ"],
+  button[title*="Կառավարման Վահանակը"] {
+    bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important;
+    right: 14px !important;
+  }
+
+  /* Mobile Layout Containers */
+  .container {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+    padding-top: 1.25rem !important;
+    padding-bottom: 2rem !important;
+  }
+
+  .subpage-container {
+    padding: 1rem 1rem calc(2rem + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  /* Subpage Top Navigation Bar */
+  .subpage-top-nav {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.75rem !important;
+    margin-bottom: 1.5rem !important;
+  }
+
+  .civ-quick-pills {
+    width: 100% !important;
+    scroll-snap-type: x proximity;
+    padding: 0.2rem 0 !important;
+    gap: 0.4rem !important;
+  }
+
+  .civ-pill {
+    scroll-snap-align: start;
+    flex-shrink: 0;
+    padding: 0.4rem 0.8rem !important;
+    font-size: 0.82rem !important;
+  }
+
+  /* Detail Hero Cards */
+  .detail-hero-card {
+    padding: 1.5rem 1.25rem !important;
+    margin-bottom: 2rem !important;
+    border-radius: 1rem !important;
+  }
+
+  /* Grids to Single Column */
+  .cards-grid,
+  .cards-grid-subpage {
+    grid-template-columns: 1fr !important;
+    gap: 1.2rem !important;
+  }
+
+  /* Responsive Glass & Content Cards */
+  .glass-card {
+    padding: 1.35rem 1.15rem !important;
+    border-radius: 1rem !important;
+  }
+
+  .center-card,
+  .author-card {
+    padding: 1.35rem 1.15rem !important;
+    border-radius: 1rem !important;
+  }
+
+  /* Credo Block */
+  .block-credo {
+    padding: 1.6rem 1.25rem !important;
+    margin-bottom: 2rem !important;
+    border-radius: 1rem !important;
+  }
+
+  .credo-quote-text {
+    font-size: 1.05rem !important;
+    line-height: 1.65 !important;
+  }
+
+  .block-header {
+    margin-bottom: 2rem !important;
+    padding: 1.5rem 1rem 1rem !important;
+  }
+
+  .civ-main-title {
+    font-size: 1.75rem !important;
+    line-height: 1.25 !important;
+  }
+
+  /* Civilization Tabs Bar (Native App Segmented Control) */
+  .tabs-header-bar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.85rem !important;
+    margin-bottom: 1.75rem !important;
+  }
+
+  .tabs-nav-group {
+    width: 100% !important;
+    display: flex !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    padding: 0.25rem !important;
+    gap: 0.25rem !important;
+  }
+
+  .tabs-nav-group::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tab-nav-btn {
+    flex: 1 0 auto !important;
+    min-height: 44px !important;
+    padding: 0.5rem 0.75rem !important;
+    font-size: 0.85rem !important;
+    justify-content: center !important;
+    white-space: nowrap !important;
+  }
+
+  /* Prevent Mobile Form Zoom */
+  input[type="text"],
+  input[type="search"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+
+  /* Modals: Mobile Sheet Feel */
+  .cms-modal-overlay {
+    padding: 0 !important;
+    align-items: flex-end !important;
+  }
+
+  .cms-modal-content {
+    width: 100% !important;
+    max-height: 90vh !important;
+    border-radius: 1.5rem 1.5rem 0 0 !important;
+    padding: 1.5rem 1.25rem calc(1.5rem + env(safe-area-inset-bottom, 0px)) !important;
+  }
+}
+
+/* Extra-compact screens (under 480px) */
+@media (max-width: 480px) {
+  #forum-live-countdown {
+    gap: 0.35rem !important;
+  }
+
+  #forum-live-countdown > div {
+    min-width: 68px !important;
+    padding: 0.5rem 0.5rem !important;
+    border-radius: 0.6rem !important;
+  }
+
+  #forum-live-countdown > div > div:first-child {
+    font-size: 1.75rem !important;
+  }
+
+  #forum-live-countdown > div > div:last-child {
+    font-size: 0.62rem !important;
+  }
+}
+
 
 
 

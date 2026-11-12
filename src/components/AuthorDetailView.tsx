@@ -24,7 +24,7 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
   const [loading, setLoading] = useState(true);
   const { user, isAdmin } = useAuth();
   const { isEditMode, toggleEditMode, saveAuthor, saveCenter, savePublication, deletePublication } = useEditMode();
-  const { applyLocale, t } = useLanguage();
+  const { applyLocale, t, getCivilizationName } = useLanguage();
 
   const displayAuthor = applyLocale(author);
   const displayCiv = applyLocale(civ);
@@ -302,7 +302,7 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
           className="back-link"
           style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}
         >
-          <span>←</span> {t("btn.backToCiv")} {displayCiv.nameHy || civ.nameHy}
+          <span>←</span> {t("btn.backToCiv")} {getCivilizationName(displayCiv || civ)}
         </Link>
         <div style={{ display: "flex", alignItems: "center", gap: "0.8rem", flexWrap: "wrap" }}>
           {isAdmin && (
@@ -356,7 +356,7 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <span style={{ fontSize: "1.2rem" }}>{civ.symbol}</span>
             <span style={{ fontSize: "0.9rem", color: "var(--gold-accent)", fontWeight: "600" }}>
-              {displayCiv.nameHy || civ.nameHy}
+              {getCivilizationName(displayCiv || civ)}
             </span>
           </div>
         </div>
@@ -364,10 +364,8 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
 
       {/* Hero Header */}
       <div
-        className="glass-card"
+        className="glass-card detail-hero-card"
         style={{
-          padding: "3.5rem 3rem",
-          marginBottom: "3.5rem",
           borderLeft: "5px solid var(--gold-accent)",
           position: "relative",
         }}
@@ -771,7 +769,7 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
               fontSize: "1.8rem",
             }}
           >
-            {t("label.affiliatedCenters")} ({displayCiv.nameHy || civ.nameHy})
+            {t("label.affiliatedCenters")} ({getCivilizationName(displayCiv || civ)})
           </h2>
 
           <div className="cards-grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))" }}>

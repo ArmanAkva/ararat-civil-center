@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import MobileBottomNav from "@/components/MobileBottomNav";
 import { AuthProvider } from "@/context/AuthContext";
 import { LanguageProvider } from "@/context/LanguageContext";
 import { EditModeProvider } from "@/context/EditModeContext";
@@ -142,6 +143,7 @@ export default function RootLayout({
               {children}
               <Footer />
               <FloatingAdminBar />
+              <MobileBottomNav />
             </EditModeProvider>
           </LanguageProvider>
         </AuthProvider>

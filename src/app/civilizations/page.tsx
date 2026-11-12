@@ -21,7 +21,7 @@ export default function Civilizations() {
   const [loading, setLoading] = useState(true);
 
   const { isEditMode, savePageField, saveCivilizationField, saveCivilizationFull } = useEditMode();
-  const { locale, applyLocale, t } = useLanguage();
+  const { locale, applyLocale, t, getCivilizationName } = useLanguage();
 
   const displayContent = applyLocale(content);
   const displayCivilizations = applyLocale(civilizations);
@@ -214,7 +214,7 @@ export default function Civilizations() {
                 <EditableText
                   tag="h3"
                   label={`«${civ.nameHy}» Անվանում (Հայերեն)`}
-                  value={locale === "en" ? (displayCiv.nameEn || displayCiv.nameHy) : displayCiv.nameHy}
+                  value={getCivilizationName(displayCiv)}
                   style={{
                     fontSize: "1.35rem",
                     margin: "0 0 0.35rem 0",

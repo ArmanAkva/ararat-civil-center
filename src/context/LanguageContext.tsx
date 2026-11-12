@@ -9,7 +9,7 @@ import React, {
   useCallback,
 } from "react";
 import { Locale, DEFAULT_LOCALE, SUPPORTED_LOCALES, LocaleOption } from "@/types/i18n";
-import { t as translateKey, applyLocale as applyLocaleFn } from "@/lib/i18n";
+import { t as translateKey, applyLocale as applyLocaleFn, getCivilizationName as getCivNameFn } from "@/lib/i18n";
 
 interface LanguageContextType {
   locale: Locale;
@@ -17,6 +17,14 @@ interface LanguageContextType {
   supportedLocales: LocaleOption[];
   t: (key: string) => string;
   applyLocale: <T>(content: T) => T;
+  getCivilizationName: (
+    civOrKey:
+      | { id?: string; slug?: string; nameHy?: string; nameEn?: string; translations?: Record<string, any> }
+      | string
+      | null
+      | undefined,
+    short?: boolean
+  ) => string;
   isAiNoticeVisible: boolean;
   dismissAiNotice: () => void;
 }
@@ -81,6 +89,20 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     [locale]
   );
 
+  const getCivilizationName = useCallback(
+    (
+      civOrKey:
+        | { id?: string; slug?: string; nameHy?: string; nameEn?: string; translations?: Record<string, any> }
+        | string
+        | null
+        | undefined,
+      short = false
+    ): string => {
+      return getCivNameFn(civOrKey, locale, short);
+    },
+    [locale]
+  );
+
   return (
     <LanguageContext.Provider
       value={{
@@ -89,6 +111,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
         supportedLocales: SUPPORTED_LOCALES,
         t,
         applyLocale,
+        getCivilizationName,
         isAiNoticeVisible,
         dismissAiNotice,
       }}

@@ -14,7 +14,7 @@ import { AutoTruncateQuote } from "@/components/ui/AutoTruncateQuote";
 import PdfViewerModal from "@/components/publications/PdfViewerModal";
 import PdfUploadField from "@/components/publications/PdfUploadField";
 import { useLanguage } from "@/context/LanguageContext";
-import { applyLocale, t } from "@/lib/i18n";
+import { applyLocale, t, getCivilizationName } from "@/lib/i18n";
 
 interface Props {
   initialCenter: ThinkTank;
@@ -457,7 +457,7 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
           className="back-link"
           style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}
         >
-          <span>←</span> {locale === "hy" ? `Դեպի ${localizedCiv.nameHy}` : `${t("common.back", locale)} ${localizedCiv.nameHy}`}
+          <span>←</span> {t("btn.backToCiv", locale)} {getCivilizationName(localizedCiv || civ, locale)}
         </Link>
         <div style={{ display: "flex", alignItems: "center", gap: "0.8rem", flexWrap: "wrap" }}>
           {isAdmin && (
@@ -511,7 +511,7 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <span style={{ fontSize: "1.2rem" }}>{civ.symbol}</span>
             <span style={{ fontSize: "0.9rem", color: "var(--gold-accent)", fontWeight: "600" }}>
-              {localizedCiv.nameHy}
+              {getCivilizationName(localizedCiv || civ, locale)}
             </span>
           </div>
         </div>
@@ -519,10 +519,8 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
 
       {/* Main Hero Card for Center */}
       <div
-        className="glass-card"
+        className="glass-card detail-hero-card"
         style={{
-          padding: "3.5rem 3rem",
-          marginBottom: "3.5rem",
           borderLeft: "5px solid var(--gold-accent)",
           position: "relative",
         }}
@@ -1138,7 +1136,7 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
               fontSize: "1.8rem",
             }}
           >
-            {t("label.adjacentThinkers", locale)} ({localizedCiv.nameHy})
+            {t("label.adjacentThinkers", locale)} ({getCivilizationName(localizedCiv || civ, locale)})
           </h2>
 
           <div className="cards-grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))" }}>
@@ -1218,7 +1216,7 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
                 {t("label.modalAttachOrCreateAuthor", locale)}
               </h2>
               <p style={{ margin: 0, color: "var(--text-secondary)", fontSize: "0.9rem" }}>
-                {t("label.centerLabel", locale)} <strong style={{ color: "var(--text-primary)" }}>{center.name}</strong> ({localizedCiv.nameHy})
+                {t("label.centerLabel", locale)} <strong style={{ color: "var(--text-primary)" }}>{center.name}</strong> ({getCivilizationName(localizedCiv || civ, locale)})
               </p>
             </div>
 
@@ -1552,7 +1550,7 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
                 {t("label.modalAttachOrCreatePub", locale)}
               </h2>
               <p style={{ margin: 0, color: "var(--text-secondary)", fontSize: "0.9rem" }}>
-                {t("label.centerLabel", locale)} <strong style={{ color: "var(--text-primary)" }}>{center.name}</strong> ({localizedCiv.nameHy})
+                {t("label.centerLabel", locale)} <strong style={{ color: "var(--text-primary)" }}>{center.name}</strong> ({getCivilizationName(localizedCiv || civ, locale)})
               </p>
             </div>
 

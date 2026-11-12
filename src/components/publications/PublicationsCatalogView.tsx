@@ -10,7 +10,7 @@ import EditCardModal from "@/components/cms/EditCardModal";
 import PdfUploadField from "./PdfUploadField";
 import { savePublicationDoc } from "@/lib/contentService";
 import { useLanguage } from "@/context/LanguageContext";
-import { applyLocale, t } from "@/lib/i18n";
+import { applyLocale, t, getCivilizationName } from "@/lib/i18n";
 
 interface Props {
   initialPublications: PublicationWithDetails[];
@@ -535,8 +535,8 @@ export default function PublicationsCatalogView({ initialPublications, civilizat
           </div>
 
           {/* Civilization Filter Pills */}
-          <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap", alignItems: "center" }}>
-            <span style={{ fontSize: "0.82rem", color: "var(--text-secondary)", marginRight: "0.4rem" }}>
+          <div className="pub-filter-bar" style={{ display: "flex", gap: "0.4rem", alignItems: "center" }}>
+            <span style={{ fontSize: "0.82rem", color: "var(--text-secondary)", marginRight: "0.4rem", flexShrink: 0 }}>
               {t("label.civilizationLabel", locale)}
             </span>
             <button
@@ -552,6 +552,7 @@ export default function PublicationsCatalogView({ initialPublications, civilizat
                 background: selectedCiv === "all" ? "var(--gold-accent)" : "var(--input-bg)",
                 color: selectedCiv === "all" ? "#ffffff" : "var(--text-primary)",
                 border: selectedCiv === "all" ? "1px solid var(--gold-accent)" : "1px solid var(--card-border)",
+                flexShrink: 0,
               }}
             >
               {t("label.all", locale)} ({publications.length})
@@ -560,7 +561,6 @@ export default function PublicationsCatalogView({ initialPublications, civilizat
               const count = publications.filter((p) => p.civ.id.toLowerCase() === civ.id.toLowerCase()).length;
               if (count === 0) return null;
               const isSelected = selectedCiv.toLowerCase() === civ.id.toLowerCase();
-              const localizedCiv = applyLocale(civ, locale);
               return (
                 <button
                   key={civ.id}
@@ -576,9 +576,10 @@ export default function PublicationsCatalogView({ initialPublications, civilizat
                     background: isSelected ? "var(--gold-accent)" : "var(--input-bg)",
                     color: isSelected ? "#ffffff" : "var(--text-primary)",
                     border: isSelected ? "1px solid var(--gold-accent)" : "1px solid var(--card-border)",
+                    flexShrink: 0,
                   }}
                 >
-                  <span>{civ.symbol}</span> <span>{localizedCiv.nameHy} ({count})</span>
+                  <span>{civ.symbol}</span> <span>{getCivilizationName(civ, locale, true)} ({count})</span>
                 </button>
               );
             })}
@@ -739,7 +740,7 @@ export default function PublicationsCatalogView({ initialPublications, civilizat
                         }}
                       >
                         <span>{civ.symbol}</span>
-                        <span>{localizedCiv.nameHy}</span>
+                        <span>{getCivilizationName(civ, locale, false)}</span>
                       </Link>
 
                       <span className="pub-tag-badge">📄 {localizedPub.type || "Զեկույց"}</span>

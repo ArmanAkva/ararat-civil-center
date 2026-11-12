@@ -202,9 +202,9 @@ export const UI_STRINGS: Record<string, Record<Locale, string>> = {
     ru: "Прикрепить / Добавить автора",
   },
   "btn.backToAllCivs": {
-    hy: "← Բոլոր քաղաքակրթությունները",
-    en: "← All Civilizations",
-    ru: "← Все цивилизации",
+    hy: "Բոլոր քաղաքակրթությունները",
+    en: "All Civilizations",
+    ru: "Все цивилизации",
   },
   "btn.backToCiv": {
     hy: "Դեպի",
@@ -1412,6 +1412,86 @@ export const UI_STRINGS: Record<string, Record<Locale, string>> = {
     en: "Civilizational Consensus",
     ru: "Цивилизационный консенсус",
   },
+  "civ.chinese": {
+    hy: "Չինական քաղաքակրթություն",
+    en: "Chinese Civilization",
+    ru: "Китайская цивилизация",
+  },
+  "civ.armenian": {
+    hy: "Հայկական քաղաքակրթություն",
+    en: "Armenian Civilization",
+    ru: "Армянская цивилизация",
+  },
+  "civ.russian": {
+    hy: "Ռուսական քաղաքակրթություն",
+    en: "Russian Civilization",
+    ru: "Русская цивилизация",
+  },
+  "civ.european": {
+    hy: "Եվրոպական քաղաքակրթություն",
+    en: "European Civilization",
+    ru: "Европейская цивилизация",
+  },
+  "civ.iranian": {
+    hy: "Իրանական քաղաքակրթություն",
+    en: "Iranian Civilization",
+    ru: "Иранская цивилизация",
+  },
+  "civ.arabic": {
+    hy: "Արաբական քաղաքակրթություն",
+    en: "Arabic Civilization",
+    ru: "Арабская цивилизация",
+  },
+  "civ.greek": {
+    hy: "Հունական քաղաքակրթություն",
+    en: "Greek Civilization",
+    ru: "Греческая цивилизация",
+  },
+  "civ.indian": {
+    hy: "Հնդկական քաղաքակրթություն",
+    en: "Indian Civilization",
+    ru: "Индийская цивилизация",
+  },
+  "civ.short.chinese": {
+    hy: "Չինական",
+    en: "Chinese",
+    ru: "Китайская",
+  },
+  "civ.short.armenian": {
+    hy: "Հայկական",
+    en: "Armenian",
+    ru: "Армянская",
+  },
+  "civ.short.russian": {
+    hy: "Ռուսական",
+    en: "Russian",
+    ru: "Русская",
+  },
+  "civ.short.european": {
+    hy: "Եվրոպական",
+    en: "European",
+    ru: "Европейская",
+  },
+  "civ.short.iranian": {
+    hy: "Իրանական",
+    en: "Iranian",
+    ru: "Иранская",
+  },
+  "civ.short.arabic": {
+    hy: "Արաբական",
+    en: "Arabic",
+    ru: "Арабская",
+  },
+  "civ.short.greek": {
+    hy: "Հունական",
+    en: "Greek",
+    ru: "Греческая",
+  },
+  "civ.short.indian": {
+    hy: "Հնդկական",
+    en: "Indian",
+    ru: "Индийская",
+  },
 };
 
 /**
@@ -1508,4 +1588,170 @@ export function applyLocale<T>(content: T, locale: Locale): T {
   }
 
   return result as T;
+}
+
+export interface CivNameConfig {
+  hy: { full: string; short: string };
+  en: { full: string; short: string };
+  ru: { full: string; short: string };
+}
+
+export const CIVILIZATION_NAMES: Record<string, CivNameConfig> = {
+  chinese: {
+    hy: { full: "Չինական քաղաքակրթություն", short: "Չինական" },
+    en: { full: "Chinese Civilization", short: "Chinese" },
+    ru: { full: "Китайская цивилизация", short: "Китайская" },
+  },
+  armenian: {
+    hy: { full: "Հայկական քաղաքակրթություն", short: "Հայկական" },
+    en: { full: "Armenian Civilization", short: "Armenian" },
+    ru: { full: "Армянская цивилизация", short: "Армянская" },
+  },
+  russian: {
+    hy: { full: "Ռուսական քաղաքակրթություն", short: "Ռուսական" },
+    en: { full: "Russian Civilization", short: "Russian" },
+    ru: { full: "Русская цивилизация", short: "Русская" },
+  },
+  european: {
+    hy: { full: "Եվրոպական քաղաքակրթություն", short: "Եվրոպական" },
+    en: { full: "European Civilization", short: "European" },
+    ru: { full: "Европейская цивилизация", short: "Европейская" },
+  },
+  iranian: {
+    hy: { full: "Իրանական քաղաքակրթություն", short: "Իրանական" },
+    en: { full: "Iranian Civilization", short: "Iranian" },
+    ru: { full: "Иранская цивилизация", short: "Иранская" },
+  },
+  arabic: {
+    hy: { full: "Արաբական քաղաքակրթություն", short: "Արաբական" },
+    en: { full: "Arabic Civilization", short: "Arabic" },
+    ru: { full: "Арабская цивилизация", short: "Арабская" },
+  },
+  greek: {
+    hy: { full: "Հունական քաղաքակրթություն", short: "Հունական" },
+    en: { full: "Greek Civilization", short: "Greek" },
+    ru: { full: "Греческая цивилизация", short: "Греческая" },
+  },
+  indian: {
+    hy: { full: "Հնդկական քաղաքակրթություն", short: "Հնդկական" },
+    en: { full: "Indian Civilization", short: "Indian" },
+    ru: { full: "Индийская цивилизация", short: "Индийская" },
+  },
+};
+
+const CIV_KEY_MAP: Record<string, string> = {
+  chn: "chinese",
+  chinese: "chinese",
+  չինական: "chinese",
+  չինաստան: "chinese",
+  china: "chinese",
+
+  arm: "armenian",
+  armenian: "armenian",
+  հայկական: "armenian",
+  հայաստան: "armenian",
+  armenia: "armenian",
+
+  rus: "russian",
+  russian: "russian",
+  ռուսական: "russian",
+  ռուսաստան: "russian",
+  russia: "russian",
+
+  eur: "european",
+  european: "european",
+  եվրոպական: "european",
+  եվրոպա: "european",
+  europe: "european",
+
+  irn: "iranian",
+  iranian: "iranian",
+  իրանական: "iranian",
+  իրան: "iranian",
+  persian: "iranian",
+  iran: "iranian",
+
+  ara: "arabic",
+  arabic: "arabic",
+  արաբական: "arabic",
+  արաբ: "arabic",
+  arab: "arabic",
+
+  grk: "greek",
+  greek: "greek",
+  հունական: "greek",
+  հունաստան: "greek",
+  greece: "greek",
+
+  ind: "indian",
+  indian: "indian",
+  հնդկական: "indian",
+  հնդկաստան: "indian",
+  india: "indian",
+};
+
+/**
+ * Returns localized civilization name (full or short adjective) for any civilization
+ * object, id, slug or string in the active locale.
+ */
+export function getCivilizationName(
+  civOrKey:
+    | { id?: string; slug?: string; nameHy?: string; nameEn?: string; translations?: Record<string, any> }
+    | string
+    | null
+    | undefined,
+  locale: Locale = "hy",
+  short = false
+): string {
+  if (!civOrKey) return "";
+
+  let key = "";
+  if (typeof civOrKey === "string") {
+    key = civOrKey.toLowerCase().trim();
+  } else {
+    // Check if translations map has custom name for this locale
+    const trans = civOrKey.translations?.[locale];
+    if (trans && typeof trans === "object") {
+      const transName = trans.name || trans.nameHy || trans.nameEn;
+      if (typeof transName === "string" && transName.trim()) {
+        if (short) {
+          return transName
+            .replace(" քաղաքակրթություն", "")
+            .replace(" Civilization", "")
+            .replace(" цивилизация", "")
+            .trim();
+        }
+        return transName.trim();
+      }
+    }
+    key = (civOrKey.slug || civOrKey.id || civOrKey.nameEn || civOrKey.nameHy || "").toLowerCase().trim();
+  }
+
+  let mappedSlug = CIV_KEY_MAP[key];
+  if (!mappedSlug) {
+    for (const [k, s] of Object.entries(CIV_KEY_MAP)) {
+      if (key.includes(k)) {
+        mappedSlug = s;
+        break;
+      }
+    }
+  }
+
+  if (mappedSlug && CIVILIZATION_NAMES[mappedSlug]) {
+    const conf = CIVILIZATION_NAMES[mappedSlug];
+    const locConf = conf[locale] || conf.hy;
+    return short ? locConf.short : locConf.full;
+  }
+
+  // Fallback for custom or unrecognized civilizations
+  if (typeof civOrKey === "object") {
+    if (locale === "en" && civOrKey.nameEn) {
+      return short ? civOrKey.nameEn.replace(" Civilization", "").trim() : civOrKey.nameEn;
+    }
+    if (civOrKey.nameHy) {
+      return short ? civOrKey.nameHy.replace(" քաղաքակրթություն", "").trim() : civOrKey.nameHy;
+    }
+  }
+
+  return typeof civOrKey === "string" ? civOrKey : "";
 }

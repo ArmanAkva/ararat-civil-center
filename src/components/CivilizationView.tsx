@@ -26,7 +26,7 @@ interface Props {
 export default function CivilizationView({ civilization: initialCiv }: Props) {
   const [civ, setCiv] = useState<Civilization>(initialCiv);
   const [loading, setLoading] = useState(true);
-  const { locale, applyLocale, t } = useLanguage();
+  const { locale, applyLocale, t, getCivilizationName } = useLanguage();
   const displayCiv = applyLocale(civ);
   const {
     isEditMode,
@@ -230,17 +230,14 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
         </Link>
         <div className="civ-quick-pills">
           {civilizationsData.map((c) => {
-            const locC = applyLocale(c);
-            const shortName = (locC.nameHy || c.nameHy)
-              .replace(" քաղաքակրթություն", "")
-              .replace(" Civilization", "")
-              .replace(" цивилизация", "");
+            const shortName = getCivilizationName(c, true);
+            const fullName = getCivilizationName(c, false);
             return (
               <Link
                 key={c.id}
                 href={`/hubs/${c.slug}`}
                 className={`civ-pill ${c.id === civ.id ? "active" : ""}`}
-                title={locC.nameHy || c.nameHy}
+                title={fullName}
               >
                 <span>{c.symbol}</span>
                 <span>{shortName}</span>
@@ -286,7 +283,7 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
 
         <h1 id="civ-heading" className="civ-main-title">
           <EditableText
-            value={locale === "en" ? (displayCiv.nameEn || displayCiv.nameHy) : displayCiv.nameHy}
+            value={getCivilizationName(displayCiv)}
             label="Անվանում (Հայերեն)"
             tag="span"
             onSave={async (val) => {
@@ -340,7 +337,7 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
           <div className="credo-author-sign">
             <span>⚜️</span>
             <span>
-              <strong>{t("label.brandName")}</strong> | {displayCiv.nameHy}
+              <strong>{t("label.brandName")}</strong> | {getCivilizationName(displayCiv)}
             </span>
           </div>
 
@@ -733,8 +730,8 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
                               max={3}
                               size={28}
                               showLabel={true}
-                              labelSingular="գիտաշխատող"
-                              labelPlural="գիտաշխատողներ"
+                              labelSingular={locale === "en" ? "researcher" : locale === "ru" ? "исследователь" : "գիտաշխատող"}
+                              labelPlural={locale === "en" ? "researchers" : locale === "ru" ? "исследователей" : "գիտաշխատողներ"}
                             />
                           ) : (
                             <div />
@@ -1366,7 +1363,7 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
                             setViewingPdf({
                               url: pub.downloadUrl!,
                               title: localizedPub.title || pub.title,
-                              authorName: displayCiv.nameHy || civ.nameHy,
+                              authorName: getCivilizationName(displayCiv),
                               year: pub.year,
                               pages: pub.pages,
                               fileName: pub.fileName,
@@ -1398,7 +1395,7 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
                     ) : (
                       <button
                         type="button"
-                        onClick={() => setSelectedPublication({ pub, authorName: displayCiv.nameHy || civ.nameHy })}
+                        onClick={() => setSelectedPublication({ pub, authorName: getCivilizationName(displayCiv) })}
                         className="credo-action-btn"
                         style={{ padding: "0.45rem 0.75rem", fontSize: "0.78rem" }}
                       >
@@ -1479,8 +1476,8 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
         <EditCardModal
           title={
             editingLibraryPub.isNew
-              ? `Ավելացնել Նոր Գիտական Աշխատություն (${civ.nameHy})`
-              : `Խմբագրել՝ ${editingLibraryPub.pub.title || "Աշխատություն"}`
+              ? `${t("btn.addPublication")} (${getCivilizationName(civ)})`
+              : `${t("btn.edit")} «${editingLibraryPub.pub.title || ""}»`
           }
           initialData={editingLibraryPub.pub}
           civId={civ.id}

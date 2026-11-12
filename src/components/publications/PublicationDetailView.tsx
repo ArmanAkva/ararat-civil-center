@@ -10,7 +10,7 @@ import { savePublicationDoc } from "@/lib/contentService";
 import { MemberAvatar } from "@/components/ui/MemberCard";
 import EditCardModal from "@/components/cms/EditCardModal";
 import { useLanguage } from "@/context/LanguageContext";
-import { applyLocale, t } from "@/lib/i18n";
+import { applyLocale, t, getCivilizationName } from "@/lib/i18n";
 
 interface Props {
   initialPublication: PublicationWithDetails;
@@ -118,7 +118,7 @@ export default function PublicationDetailView({ initialPublication, relatedPubli
           </Link>
           <span>/</span>
           <Link href={`/civilizations/${civ.slug || civ.id}`} style={{ color: "inherit", textDecoration: "none" }}>
-            {localizedCiv.nameHy}
+            {getCivilizationName(localizedCiv || civ, locale)}
           </Link>
           <span>/</span>
           <span style={{ color: "var(--text-primary)", fontWeight: "600" }}>{localizedPub.title}</span>
@@ -130,7 +130,7 @@ export default function PublicationDetailView({ initialPublication, relatedPubli
             className="credo-action-btn"
             style={{ padding: "0.45rem 0.9rem", fontSize: "0.85rem", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "0.3rem" }}
           >
-            <span>←</span> <span>{locale === "en" ? "Back to Library" : locale === "ru" ? "Назад в библиотеку" : "Վերադառնալ Գրադարան"}</span>
+            <span>←</span> <span>{t("btn.backToLibrary", locale)}</span>
           </Link>
 
           {canEdit && (
@@ -213,7 +213,7 @@ export default function PublicationDetailView({ initialPublication, relatedPubli
             }}
           >
             <span>{civ.symbol}</span>
-            <span>{localizedCiv.nameHy} {locale === "en" ? "Civilization" : locale === "ru" ? "Цивилизация" : "Քաղաքակրթություն"}</span>
+            <span>{getCivilizationName(localizedCiv || civ, locale)}</span>
           </Link>
 
           <span className="pub-tag-badge">📄 {localizedPub.type || "Զեկույց"}</span>
@@ -316,7 +316,7 @@ export default function PublicationDetailView({ initialPublication, relatedPubli
               <div>
                 <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>{t("pub.author", locale)}</div>
                 <div style={{ fontSize: "1rem", color: "var(--text-primary)", fontWeight: "600" }}>
-                  {locale === "en" ? `${localizedCiv.nameHy} Academic Council` : locale === "ru" ? `Ученый совет (${localizedCiv.nameHy})` : `${civ.nameHy} Գիտական Խորհուրդ`}
+                  {locale === "en" ? `${getCivilizationName(localizedCiv || civ, "en", true)} Academic Council` : locale === "ru" ? `Ученый совет (${getCivilizationName(localizedCiv || civ, "ru")})` : `${civ.nameHy} Գիտական Խորհուրդ`}
                 </div>
               </div>
             </div>
@@ -367,7 +367,7 @@ export default function PublicationDetailView({ initialPublication, relatedPubli
               <div>
                 <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>{locale === "en" ? "Civilization" : locale === "ru" ? "Цивилизация" : "Քաղաքակրթություն"}</div>
                 <div style={{ fontSize: "1rem", color: "var(--text-primary)", fontWeight: "600" }}>
-                  {localizedCiv.nameHy}
+                  {getCivilizationName(localizedCiv || civ, locale)}
                 </div>
               </div>
             </div>
