@@ -110,7 +110,10 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
   const handleDeleteCenter = async (center: ThinkTank) => {
     const name = center.name || center.originalName || "այս կենտրոնը";
     if (!confirm(`Իսկապե՞ս ցանկանում եք հեռացնել «${name}» կենտրոնը:`)) return;
-    const newCenters = civ.centers.filter((c) => c.id !== center.id);
+    setEditingCenter(null);
+    const newCenters = civ.centers.filter(
+      (c) => c && c.id && c.id.toLowerCase().trim() !== center.id.toLowerCase().trim()
+    );
     setCiv((prev) => ({ ...prev, centers: newCenters }));
     await deleteCenter(civ.id, center.id);
   };
@@ -130,7 +133,10 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
   const handleDeleteAuthor = async (author: Thinker) => {
     const name = author.name || author.nameOriginal || "այս հեղինակին";
     if (!confirm(`Իսկապե՞ս ցանկանում եք հեռացնել «${name}» հեղինակին:`)) return;
-    const newAuthors = civ.authors.filter((a) => a.id !== author.id);
+    setEditingAuthor(null);
+    const newAuthors = civ.authors.filter(
+      (a) => a && a.id && a.id.toLowerCase().trim() !== author.id.toLowerCase().trim()
+    );
     setCiv((prev) => ({ ...prev, authors: newAuthors }));
     await deleteAuthor(civ.id, author.id);
   };
@@ -171,12 +177,15 @@ export default function CivilizationView({ civilization: initialCiv }: Props) {
 
   const handleDeleteLibraryPub = async (pub: Publication) => {
     if (!confirm(`Իսկապե՞ս ցանկանում եք հեռացնել «${pub.title}» աշխատությունը քաղաքակրթության գրադարանից:`)) return;
-    const newPubs = (civ.publications || []).filter((p) => p.id !== pub.id);
+    setEditingLibraryPub(null);
+    const pubIdNorm = (pub.id || "").toLowerCase().trim();
+    const newPubs = (civ.publications || []).filter(
+      (p) => p && p.id && (!pubIdNorm || p.id.toLowerCase().trim() !== pubIdNorm)
+    );
     setCiv((prev) => ({ ...prev, publications: newPubs }));
     if (pub.id) {
       await deletePublication(civ.id, pub.id);
     }
-    setEditingLibraryPub(null);
   };
 
   // Filter centers based on query

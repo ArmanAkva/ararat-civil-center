@@ -306,48 +306,11 @@ export const civilizationsData: Civilization[] = [
             description: "Անթրոպոլոգիական ճգնաժամի հաղթահարման, բազմաբևեռ արդարության և հոգևոր-քաղաքակրթական ներդաշնակման հայեցակարգ:"
           }
         ],
-        authorIds: ["vardan-grigoryan"],
-        publicationIds: ["pub-araratian-doctrine", "pub-islam-mosaic", "pub-book-path"]
-      },
-      {
-        id: "nas-ra",
-        name: "ՀՀ Գիտությունների Ազգային Ակադեմիայի Փիլիսոփայության Ինստիտուտ",
-        originalName: "Institute of Philosophy, Sociology and Law of NAS RA",
-        city: "Երևան",
-        country: "Հայաստան",
-        foundedYear: "1969",
-        description: "Հայոց փիլիսոփայական մտքի, ազգային ինքնության և սոցիալական արդարության հարցերով զբաղվող գլխավոր ակադեմիական օղակը։",
-        focusAreas: ["Հայ փիլիսոփայություն", "Իրավունքի տեսություն", "Սոցիալական էթիկա"],
-        website: "https://sci.am",
-        authorIds: ["grigor-tatevatsi", "naregatsi"],
-        publicationIds: ["pub-matenadaran-translations", "pub-narekatsi-tragedy"]
+        authorIds: [],
+        publicationIds: ["pub-araratian-doctrine"]
       }
     ],
     authors: [
-      {
-        id: "vardan-grigoryan",
-        name: "Վարդան Գրիգորյան (Vartan Gregorian)",
-        nameOriginal: "Vartan Gregorian",
-        title: "Պատմաբան, փիլիսոփա, Կարնեգի հիմնադրամի նախագահ",
-        bio: "Համաշխարհային հումանիտար մտքի ականավոր գործիչ, պատմաբան և մանկավարժ։ Իր աշխատություններում հետազոտել է իսլամական և արևմտյան մշակույթների հատման կետերը և կրթության փրկարար դերը։",
-        quote: "«Կրթությունն ու գիտելիքը լույս են, որը ցրում է անտարբերության և թշնամանքի խավարը քաղաքակրթությունների միջև։»",
-        publications: [
-          {
-            title: "«Իսլամ. Մոզաիկա, ոչ թե մոնոլիտ»",
-            year: "2003",
-            type: "PDF",
-            description: "Քաղաքակրթական բազմազանության և հանդուրժողականության հիմնարար հետազոտություն։",
-            pages: 192
-          },
-          {
-            title: "«Գրքերի ճանապարհը. Ինքնակենսագրություն»",
-            year: "2005",
-            type: "Մենագրություն",
-            description: "Հիշողություններ և խորհրդածություններ մշակույթի, գրադարանների և գիտության դերի մասին։",
-            pages: 350
-          }
-        ]
-      },
       {
         id: "mesrop-mashtots",
         name: "Մեսրոպ Մաշտոց (Mesrop Mashtots)",
@@ -393,7 +356,7 @@ export const civilizationsData: Civilization[] = [
         pages: 115,
         downloadUrl: "",
         description: "Անթրոպոլոգիական ճգնաժամի հաղթահարման, բազմաբևեռ արդարության և հոգևոր-քաղաքակրթական ներդաշնակման հայեցակարգ:",
-        authorIds: ["vardan-grigoryan"],
+        authorIds: [],
         centerIds: ["ararat-center"]
       },
       {
@@ -416,29 +379,7 @@ export const civilizationsData: Civilization[] = [
         downloadUrl: "",
         description: "Արիստոտելի, Պլատոնի և Փիլոն Եբրայեցու հայերեն թարգմանությունների համեմատական վերլուծություն:",
         authorIds: ["grigor-tatevatsi"],
-        centerIds: ["matenadaran", "nas-ra"]
-      },
-      {
-        id: "pub-islam-mosaic",
-        title: "Իսլամ. Մոզաիկա, ոչ թե մոնոլիտ",
-        year: "2003",
-        type: "PDF",
-        pages: 192,
-        downloadUrl: "",
-        description: "Քաղաքակրթական բազմազանության և հանդուրժողականության հիմնարար հետազոտություն։",
-        authorIds: ["vardan-grigoryan"],
-        centerIds: ["ararat-center"]
-      },
-      {
-        id: "pub-book-path",
-        title: "Գրքերի ճանապարհը. Ինքնակենսագրություն",
-        year: "2005",
-        type: "Մենագրություն",
-        pages: 350,
-        downloadUrl: "",
-        description: "Հիշողություններ և խորհրդածություններ մշակույթի, գրադարանների և գիտության դերի մասին։",
-        authorIds: ["vardan-grigoryan"],
-        centerIds: ["ararat-center"]
+        centerIds: ["matenadaran"]
       },
       {
         id: "pub-narekatsi-tragedy",
@@ -449,7 +390,7 @@ export const civilizationsData: Civilization[] = [
         downloadUrl: "",
         description: "Մարդաբանական և աստվածաբանական անզուգական ձեռագիր ժառանգություն։",
         authorIds: ["naregatsi"],
-        centerIds: ["matenadaran", "nas-ra"]
+        centerIds: ["matenadaran"]
       }
     ]
   },

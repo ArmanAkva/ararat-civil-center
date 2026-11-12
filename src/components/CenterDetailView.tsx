@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Civilization, ThinkTank, Publication, Thinker } from "@/lib/civilizationsData";
 import { useAuth } from "@/context/AuthContext";
 import { useEditMode } from "@/context/EditModeContext";
@@ -22,11 +23,12 @@ interface Props {
 }
 
 export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
+  const router = useRouter();
   const [center, setCenter] = useState<ThinkTank>(initialCenter);
   const [civ, setCiv] = useState<Civilization>(initialCiv);
   const [loading, setLoading] = useState(true);
   const { user, isAdmin } = useAuth();
-  const { isEditMode, toggleEditMode, saveCenter, saveAuthor, savePublication, deletePublication } = useEditMode();
+  const { isEditMode, toggleEditMode, saveCenter, deleteCenter, saveAuthor, deleteAuthor, savePublication, deletePublication } = useEditMode();
   const { locale } = useLanguage();
 
   const localizedCenter = applyLocale(center, locale);
@@ -444,6 +446,19 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
     setEditingAuthor(null);
   };
 
+  const handleDeleteThisCenter = async () => {
+    const name = center.name || center.originalName || "այս կենտրոնը";
+    if (!confirm(`Իսկապե՞ս ցանկանում եք հեռացնել «${name}» կենտրոնը:`)) return;
+    setIsEditingCenterProfile(false);
+    try {
+      await deleteCenter(civ.id, center.id);
+      router.push(`/hubs/${civ.slug || civ.id}`);
+    } catch (err) {
+      console.error(err);
+      alert("Չհաջողվեց հեռացնել կենտրոնը:");
+    }
+  };
+
   if (loading) {
     return <CenterLoading />;
   }
@@ -482,6 +497,29 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
               >
                 <span>✏️</span>
                 <span>{t("btn.editCenter", locale)}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleDeleteThisCenter}
+                style={{
+                  background: "rgba(239, 68, 68, 0.12)",
+                  color: "#ef4444",
+                  border: "1px solid rgba(239, 68, 68, 0.4)",
+                  padding: "0.4rem 0.85rem",
+                  borderRadius: "999px",
+                  fontSize: "0.82rem",
+                  fontWeight: "700",
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.35rem",
+                  transition: "all 0.2s ease",
+                }}
+                title={t("btn.delete", locale)}
+              >
+                <span>🗑</span>
+                <span>{t("btn.delete", locale)}</span>
               </button>
 
               <button
@@ -1519,6 +1557,31 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
             { key: "bio", label: "Կենսագրություն", type: "textarea", placeholder: "Կենսագրական տվյալներ..." },
           ]}
           onSave={handleSaveEditedAuthor}
+          onDelete={isAdmin ? async () => {
+            if (!editingAuthor) return;
+            const target = editingAuthor;
+            if (!confirm(`Իսկապե՞ս ցանկանում եք հեռացնել «${target.name}» հեղինակին:`)) return;
+            setEditingAuthor(null);
+            try {
+              await deleteAuthor(civ.id, target.id);
+              // Update local center state
+              const nextAuthorIds = (center.authorIds || []).filter((id) => id !== target.id);
+              const nextAuthors = (center.authors || []).filter((a) => a.id !== target.id);
+              const updatedCenter: ThinkTank = {
+                ...center,
+                authorIds: nextAuthorIds,
+                authors: nextAuthors,
+              };
+              setCenter(updatedCenter);
+              setCiv((prev) => ({
+                ...prev,
+                authors: (prev.authors || []).filter((a) => a.id !== target.id),
+              }));
+            } catch (err) {
+              console.error(err);
+              alert("Չհաջողվեց հեռացնել հեղինակին:");
+            }
+          } : undefined}
           onClose={() => setEditingAuthor(null)}
         />
       )}
@@ -2041,6 +2104,7 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
             setCenter(updated);
             await saveCenter(civ.id, updated);
           }}
+          onDelete={isAdmin ? handleDeleteThisCenter : undefined}
           onClose={() => setIsEditingCenterProfile(false)}
         />
       )}

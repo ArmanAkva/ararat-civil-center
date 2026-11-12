@@ -8,6 +8,8 @@ import {
   collectionGroup,
   query,
   where,
+  arrayUnion,
+  arrayRemove,
 } from "firebase/firestore";
 import { db } from "./firebase";
 import {
@@ -93,53 +95,81 @@ export async function getCivilizationContent(
       });
     }
 
+    // Parse deleted IDs from parent document
+    const parentData = parentSnap && parentSnap.exists() ? parentSnap.data() : null;
+    const extractDeletedIds = (raw: any): Set<string> => {
+      const arr = Array.isArray(raw)
+        ? raw
+        : typeof raw === "object" && raw !== null && Array.isArray(raw._elements)
+        ? raw._elements
+        : [];
+      return new Set(arr.map((id: any) => String(id).toLowerCase().trim()));
+    };
+    const deletedCenterIds = extractDeletedIds(parentData?.deletedCenterIds);
+    const deletedAuthorIds = extractDeletedIds(parentData?.deletedAuthorIds);
+    const deletedPublicationIds = extractDeletedIds(parentData?.deletedPublicationIds);
+
     // Merge centers by ID
-    const baseCenters = (parentSnap && parentSnap.exists() && Array.isArray(parentSnap.data().centers) && parentSnap.data().centers.length > 0)
-      ? parentSnap.data().centers
+    const baseCenters = (parentData && Array.isArray(parentData.centers))
+      ? parentData.centers
       : localCiv?.centers || [];
     const centerMap = new Map<string, ThinkTank>();
     for (const c of baseCenters) {
-      if (c && c.id) centerMap.set(c.id.toLowerCase(), c);
-    }
-    for (const c of fetchedCenters) {
-      if (c && c.id) {
-        centerMap.set(c.id.toLowerCase(), { ...(centerMap.get(c.id.toLowerCase()) || {}), ...c });
+      if (c && c.id && !deletedCenterIds.has(c.id.toLowerCase().trim())) {
+        centerMap.set(c.id.toLowerCase().trim(), c);
       }
     }
-    const mergedCenters = Array.from(centerMap.values());
+    for (const c of fetchedCenters) {
+      if (c && c.id && !deletedCenterIds.has(c.id.toLowerCase().trim())) {
+        const key = c.id.toLowerCase().trim();
+        centerMap.set(key, { ...(centerMap.get(key) || {}), ...c });
+      }
+    }
+    const mergedCenters = Array.from(centerMap.values()).filter(
+      (c) => c && c.id && !deletedCenterIds.has(c.id.toLowerCase().trim())
+    );
 
     // Merge authors by ID
-    const baseAuthors = (parentSnap && parentSnap.exists() && Array.isArray(parentSnap.data().authors) && parentSnap.data().authors.length > 0)
-      ? parentSnap.data().authors
+    const baseAuthors = (parentData && Array.isArray(parentData.authors))
+      ? parentData.authors
       : localCiv?.authors || [];
     const authorMap = new Map<string, Thinker>();
     for (const a of baseAuthors) {
-      if (a && a.id) authorMap.set(a.id.toLowerCase(), a);
-    }
-    for (const a of fetchedAuthors) {
-      if (a && a.id) {
-        authorMap.set(a.id.toLowerCase(), { ...(authorMap.get(a.id.toLowerCase()) || {}), ...a });
+      if (a && a.id && !deletedAuthorIds.has(a.id.toLowerCase().trim())) {
+        authorMap.set(a.id.toLowerCase().trim(), a);
       }
     }
-    const mergedAuthors = Array.from(authorMap.values());
+    for (const a of fetchedAuthors) {
+      if (a && a.id && !deletedAuthorIds.has(a.id.toLowerCase().trim())) {
+        const key = a.id.toLowerCase().trim();
+        authorMap.set(key, { ...(authorMap.get(key) || {}), ...a });
+      }
+    }
+    const mergedAuthors = Array.from(authorMap.values()).filter(
+      (a) => a && a.id && !deletedAuthorIds.has(a.id.toLowerCase().trim())
+    );
 
     // Merge publications by ID
-    const basePubs = (parentSnap && parentSnap.exists() && Array.isArray(parentSnap.data().publications) && parentSnap.data().publications.length > 0)
-      ? parentSnap.data().publications
+    const basePubs = (parentData && Array.isArray(parentData.publications))
+      ? parentData.publications
       : localCiv?.publications || [];
     const pubMap = new Map<string, Publication>();
     for (const p of basePubs) {
-      if (p && p.id) pubMap.set(p.id.toLowerCase(), p);
-    }
-    for (const p of fetchedPublications) {
-      if (p && p.id) {
-        pubMap.set(p.id.toLowerCase(), { ...(pubMap.get(p.id.toLowerCase()) || {}), ...p });
+      if (p && p.id && !deletedPublicationIds.has(p.id.toLowerCase().trim())) {
+        pubMap.set(p.id.toLowerCase().trim(), p);
       }
     }
-    const mergedPublications = Array.from(pubMap.values());
+    for (const p of fetchedPublications) {
+      if (p && p.id && !deletedPublicationIds.has(p.id.toLowerCase().trim())) {
+        const key = p.id.toLowerCase().trim();
+        pubMap.set(key, { ...(pubMap.get(key) || {}), ...p });
+      }
+    }
+    const mergedPublications = Array.from(pubMap.values()).filter(
+      (p) => p && p.id && !deletedPublicationIds.has(p.id.toLowerCase().trim())
+    );
 
-    if (parentSnap.exists()) {
-      const parentData = parentSnap.data();
+    if (parentData) {
       return {
         id: parentData.id || civId,
         slug: parentData.slug || localCiv?.slug || civId,
@@ -155,7 +185,7 @@ export async function getCivilizationContent(
         authors: mergedAuthors,
         publications: mergedPublications,
       };
-    } else if (fetchedCenters.length > 0 || fetchedAuthors.length > 0 || fetchedPublications.length > 0) {
+    } else {
       return {
         ...(localCiv || civilizationsData[0]),
         centers: mergedCenters,
@@ -249,28 +279,104 @@ export async function saveCenterDoc(
   civId: string,
   center: ThinkTank
 ): Promise<void> {
-  const docRef = doc(db, "civilizations", civId, "centers", center.id);
+  const normCivId = civId.toLowerCase().trim();
+  const normCenterId = center.id.toLowerCase().trim();
+  const docRef = doc(db, "civilizations", normCivId, "centers", center.id);
   await setDoc(
     docRef,
     cleanFirestoreData({
       ...center,
-      civId,
+      civId: normCivId,
       updatedAt: new Date().toISOString(),
     }),
     { merge: true }
   );
+
+  // If this center was previously marked as deleted, remove it from deletedCenterIds
+  try {
+    const parentRef = doc(db, "civilizations", normCivId);
+    const parentSnap = await getDoc(parentRef);
+    if (parentSnap.exists()) {
+      const data = parentSnap.data();
+      const raw = data?.deletedCenterIds;
+      const existing = Array.isArray(raw)
+        ? raw
+        : typeof raw === "object" && raw !== null && Array.isArray((raw as any)._elements)
+        ? (raw as any)._elements
+        : [];
+      const updated = existing
+        .map((id: any) => String(id).toLowerCase().trim())
+        .filter((id: string) => id !== normCenterId);
+      await setDoc(parentRef, cleanFirestoreData({ deletedCenterIds: updated }), { merge: true });
+    }
+  } catch (err) {
+    console.warn("Could not unmark deletedCenterIds:", err);
+  }
 }
 
 /**
  * Subcollection: Deletes a Center document
  * Path: /civilizations/{civId}/centers/{centerId}
+ * Also removes from parent civilization document and records in deletedCenterIds.
  */
 export async function deleteCenterDoc(
   civId: string,
   centerId: string
 ): Promise<void> {
-  const docRef = doc(db, "civilizations", civId, "centers", centerId);
-  await deleteDoc(docRef);
+  const normCivId = civId.toLowerCase().trim();
+  const normCenterId = centerId.toLowerCase().trim();
+
+  // 1. Delete from subcollection
+  try {
+    const docRef = doc(db, "civilizations", normCivId, "centers", centerId);
+    await deleteDoc(docRef);
+  } catch (err) {
+    console.warn(`Subcollection delete failed for center ${centerId}:`, err);
+  }
+
+  // 2. Update parent civilization doc: add to deletedCenterIds and remove from centers array
+  try {
+    const parentRef = doc(db, "civilizations", normCivId);
+    const parentSnap = await getDoc(parentRef);
+    const localCiv = getCivilizationBySlug(normCivId);
+    let updatedCenters: ThinkTank[] = [];
+    let updatedDeleted: string[] = [];
+
+    if (parentSnap.exists()) {
+      const data = parentSnap.data();
+      const existingCenters = Array.isArray(data.centers) ? data.centers : (localCiv?.centers || []);
+      updatedCenters = existingCenters.filter(
+        (c: ThinkTank) => c && c.id && c.id.toLowerCase().trim() !== normCenterId
+      );
+      const raw = data.deletedCenterIds;
+      const existing = Array.isArray(raw)
+        ? raw
+        : typeof raw === "object" && raw !== null && Array.isArray((raw as any)._elements)
+        ? (raw as any)._elements
+        : [];
+      updatedDeleted = Array.from(new Set([...existing.map((id: any) => String(id).toLowerCase().trim()), normCenterId]));
+    } else {
+      if (localCiv && localCiv.centers) {
+        updatedCenters = localCiv.centers.filter(
+          (c) => c && c.id && c.id.toLowerCase().trim() !== normCenterId
+        );
+      }
+      updatedDeleted = [normCenterId];
+    }
+
+    await setDoc(
+      parentRef,
+      cleanFirestoreData({
+        centers: updatedCenters,
+        deletedCenterIds: updatedDeleted,
+        updatedAt: new Date().toISOString(),
+      }),
+      { merge: true }
+    );
+  } catch (err) {
+    console.error(`Parent doc update failed while deleting center ${centerId}:`, err);
+    throw err;
+  }
 }
 
 /**
@@ -281,16 +387,39 @@ export async function saveAuthorDoc(
   civId: string,
   author: Thinker
 ): Promise<void> {
-  const docRef = doc(db, "civilizations", civId, "authors", author.id);
+  const normCivId = civId.toLowerCase().trim();
+  const normAuthorId = author.id.toLowerCase().trim();
+  const docRef = doc(db, "civilizations", normCivId, "authors", author.id);
   await setDoc(
     docRef,
     cleanFirestoreData({
       ...author,
-      civId,
+      civId: normCivId,
       updatedAt: new Date().toISOString(),
     }),
     { merge: true }
   );
+
+  // If this author was previously marked as deleted, remove it from deletedAuthorIds
+  try {
+    const parentRef = doc(db, "civilizations", normCivId);
+    const parentSnap = await getDoc(parentRef);
+    if (parentSnap.exists()) {
+      const data = parentSnap.data();
+      const raw = data?.deletedAuthorIds;
+      const existing = Array.isArray(raw)
+        ? raw
+        : typeof raw === "object" && raw !== null && Array.isArray((raw as any)._elements)
+        ? (raw as any)._elements
+        : [];
+      const updated = existing
+        .map((id: any) => String(id).toLowerCase().trim())
+        .filter((id: string) => id !== normAuthorId);
+      await setDoc(parentRef, cleanFirestoreData({ deletedAuthorIds: updated }), { merge: true });
+    }
+  } catch (err) {
+    console.warn("Could not unmark deletedAuthorIds:", err);
+  }
 }
 
 /**
@@ -301,8 +430,60 @@ export async function deleteAuthorDoc(
   civId: string,
   authorId: string
 ): Promise<void> {
-  const docRef = doc(db, "civilizations", civId, "authors", authorId);
-  await deleteDoc(docRef);
+  const normCivId = civId.toLowerCase().trim();
+  const normAuthorId = authorId.toLowerCase().trim();
+
+  // 1. Delete from subcollection
+  try {
+    const docRef = doc(db, "civilizations", normCivId, "authors", authorId);
+    await deleteDoc(docRef);
+  } catch (err) {
+    console.warn(`Subcollection delete failed for author ${authorId}:`, err);
+  }
+
+  // 2. Update parent civilization doc
+  try {
+    const parentRef = doc(db, "civilizations", normCivId);
+    const parentSnap = await getDoc(parentRef);
+    const localCiv = getCivilizationBySlug(normCivId);
+    let updatedAuthors: Thinker[] = [];
+    let updatedDeleted: string[] = [];
+
+    if (parentSnap.exists()) {
+      const data = parentSnap.data();
+      const existingAuthors = Array.isArray(data.authors) ? data.authors : (localCiv?.authors || []);
+      updatedAuthors = existingAuthors.filter(
+        (a: Thinker) => a && a.id && a.id.toLowerCase().trim() !== normAuthorId
+      );
+      const raw = data.deletedAuthorIds;
+      const existing = Array.isArray(raw)
+        ? raw
+        : typeof raw === "object" && raw !== null && Array.isArray((raw as any)._elements)
+        ? (raw as any)._elements
+        : [];
+      updatedDeleted = Array.from(new Set([...existing.map((id: any) => String(id).toLowerCase().trim()), normAuthorId]));
+    } else {
+      if (localCiv && localCiv.authors) {
+        updatedAuthors = localCiv.authors.filter(
+          (a) => a && a.id && a.id.toLowerCase().trim() !== normAuthorId
+        );
+      }
+      updatedDeleted = [normAuthorId];
+    }
+
+    await setDoc(
+      parentRef,
+      cleanFirestoreData({
+        authors: updatedAuthors,
+        deletedAuthorIds: updatedDeleted,
+        updatedAt: new Date().toISOString(),
+      }),
+      { merge: true }
+    );
+  } catch (err) {
+    console.error(`Parent doc update failed while deleting author ${authorId}:`, err);
+    throw err;
+  }
 }
 
 /**
@@ -313,18 +494,40 @@ export async function savePublicationDoc(
   civId: string,
   pub: Publication
 ): Promise<void> {
+  const normCivId = civId.toLowerCase().trim();
   const pubId = pub.id || `pub-${Date.now()}`;
-  const docRef = doc(db, "civilizations", civId, "publications", pubId);
+  const normPubId = pubId.toLowerCase().trim();
+  const docRef = doc(db, "civilizations", normCivId, "publications", pubId);
   await setDoc(
     docRef,
     cleanFirestoreData({
       ...pub,
       id: pubId,
-      civId,
+      civId: normCivId,
       updatedAt: new Date().toISOString(),
     }),
     { merge: true }
   );
+
+  try {
+    const parentRef = doc(db, "civilizations", normCivId);
+    const parentSnap = await getDoc(parentRef);
+    if (parentSnap.exists()) {
+      const data = parentSnap.data();
+      const raw = data?.deletedPublicationIds;
+      const existing = Array.isArray(raw)
+        ? raw
+        : typeof raw === "object" && raw !== null && Array.isArray((raw as any)._elements)
+        ? (raw as any)._elements
+        : [];
+      const updated = existing
+        .map((id: any) => String(id).toLowerCase().trim())
+        .filter((id: string) => id !== normPubId);
+      await setDoc(parentRef, cleanFirestoreData({ deletedPublicationIds: updated }), { merge: true });
+    }
+  } catch (err) {
+    console.warn("Could not unmark deletedPublicationIds:", err);
+  }
 }
 
 /**
@@ -335,8 +538,58 @@ export async function deletePublicationDoc(
   civId: string,
   pubId: string
 ): Promise<void> {
-  const docRef = doc(db, "civilizations", civId, "publications", pubId);
-  await deleteDoc(docRef);
+  const normCivId = civId.toLowerCase().trim();
+  const normPubId = pubId.toLowerCase().trim();
+
+  try {
+    const docRef = doc(db, "civilizations", normCivId, "publications", pubId);
+    await deleteDoc(docRef);
+  } catch (err) {
+    console.warn(`Subcollection delete failed for publication ${pubId}:`, err);
+  }
+
+  try {
+    const parentRef = doc(db, "civilizations", normCivId);
+    const parentSnap = await getDoc(parentRef);
+    const localCiv = getCivilizationBySlug(normCivId);
+    let updatedPubs: Publication[] = [];
+    let updatedDeleted: string[] = [];
+
+    if (parentSnap.exists()) {
+      const data = parentSnap.data();
+      const existingPubs = Array.isArray(data.publications) ? data.publications : (localCiv?.publications || []);
+      updatedPubs = existingPubs.filter(
+        (p: Publication) => p && p.id && p.id.toLowerCase().trim() !== normPubId
+      );
+      const raw = data.deletedPublicationIds;
+      const existing = Array.isArray(raw)
+        ? raw
+        : typeof raw === "object" && raw !== null && Array.isArray((raw as any)._elements)
+        ? (raw as any)._elements
+        : [];
+      updatedDeleted = Array.from(new Set([...existing.map((id: any) => String(id).toLowerCase().trim()), normPubId]));
+    } else {
+      if (localCiv && localCiv.publications) {
+        updatedPubs = localCiv.publications.filter(
+          (p) => p && p.id && p.id.toLowerCase().trim() !== normPubId
+        );
+      }
+      updatedDeleted = [normPubId];
+    }
+
+    await setDoc(
+      parentRef,
+      cleanFirestoreData({
+        publications: updatedPubs,
+        deletedPublicationIds: updatedDeleted,
+        updatedAt: new Date().toISOString(),
+      }),
+      { merge: true }
+    );
+  } catch (err) {
+    console.error(`Parent doc update failed while deleting publication ${pubId}:`, err);
+    throw err;
+  }
 }
 
 /**
@@ -1064,10 +1317,25 @@ export async function getCenterContent(
 
   if (civId) {
     try {
+      const fullCiv = await getCivilizationContent(civId);
+      // Check if this center is in the active, non-deleted centers of the civilization
+      const foundInCiv = fullCiv?.centers?.find(
+        (c) => c && c.id && c.id.toLowerCase() === centerId.toLowerCase()
+      );
+      if (foundInCiv && fullCiv) {
+        return {
+          center: foundInCiv,
+          civ: fullCiv,
+        };
+      }
+      // If the civilization was retrieved and this center was deleted, do not resurrect it
+      if (fullCiv) {
+        return undefined;
+      }
+
       const docRef = doc(db, "civilizations", civId, "centers", centerId);
       const snap = await getDoc(docRef);
       if (snap.exists()) {
-        const fullCiv = await getCivilizationContent(civId);
         const data = snap.data();
         const mergedCenter: ThinkTank = {
           ...(local?.center || {}),
@@ -1173,10 +1441,25 @@ export async function getAuthorContent(
 
   if (civId) {
     try {
+      const fullCiv = await getCivilizationContent(civId);
+      // Check if this author is in the active, non-deleted authors of the civilization
+      const foundInCiv = fullCiv?.authors?.find(
+        (a) => a && a.id && a.id.toLowerCase() === authorId.toLowerCase()
+      );
+      if (foundInCiv && fullCiv) {
+        return {
+          author: foundInCiv,
+          civ: fullCiv,
+        };
+      }
+      // If the civilization was retrieved and this author was deleted, do not resurrect them
+      if (fullCiv) {
+        return undefined;
+      }
+
       const docRef = doc(db, "civilizations", civId, "authors", authorId);
       const snap = await getDoc(docRef);
       if (snap.exists()) {
-        const fullCiv = await getCivilizationContent(civId);
         const data = snap.data();
         const mergedAuthor: Thinker = {
           ...(local?.author || {}),

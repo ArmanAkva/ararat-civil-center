@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Civilization, Thinker, Publication, ThinkTank } from "@/lib/civilizationsData";
 import { useAuth } from "@/context/AuthContext";
 import { useEditMode } from "@/context/EditModeContext";
@@ -19,11 +20,12 @@ interface Props {
 }
 
 export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
+  const router = useRouter();
   const [author, setAuthor] = useState<Thinker>(initialAuthor);
   const [civ, setCiv] = useState<Civilization>(initialCiv);
   const [loading, setLoading] = useState(true);
   const { user, isAdmin } = useAuth();
-  const { isEditMode, toggleEditMode, saveAuthor, saveCenter, savePublication, deletePublication } = useEditMode();
+  const { isEditMode, toggleEditMode, saveAuthor, deleteAuthor, saveCenter, savePublication, deletePublication } = useEditMode();
   const { applyLocale, t, getCivilizationName } = useLanguage();
 
   const displayAuthor = applyLocale(author);
@@ -289,6 +291,19 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
     await saveCenter(civ.id, updatedCenter);
   };
 
+  const handleDeleteThisAuthor = async () => {
+    const name = author.name || author.nameOriginal || "այս հեղինակին";
+    if (!confirm(`Իսկապե՞ս ցանկանում եք հեռացնել «${name}» հեղինակին:`)) return;
+    setIsEditingProfile(false);
+    try {
+      await deleteAuthor(civ.id, author.id);
+      router.push(`/hubs/${displayCiv.slug || civ.slug || civ.id}`);
+    } catch (err) {
+      console.error(err);
+      alert("Չհաջողվեց հեռացնել հեղինակին:");
+    }
+  };
+
   if (loading) {
     return <AuthorLoading />;
   }
@@ -327,6 +342,29 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
               >
                 <span>✏️</span>
                 <span>{t("btn.editProfile")}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleDeleteThisAuthor}
+                style={{
+                  background: "rgba(239, 68, 68, 0.12)",
+                  color: "#ef4444",
+                  border: "1px solid rgba(239, 68, 68, 0.4)",
+                  padding: "0.4rem 0.85rem",
+                  borderRadius: "999px",
+                  fontSize: "0.82rem",
+                  fontWeight: "700",
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.35rem",
+                  transition: "all 0.2s ease",
+                }}
+                title={t("btn.delete")}
+              >
+                <span>🗑</span>
+                <span>{t("btn.delete")}</span>
               </button>
 
               <button
@@ -1377,6 +1415,7 @@ export default function AuthorDetailView({ initialAuthor, initialCiv }: Props) {
             setAuthor(updated);
             await saveAuthor(civ.id, updated);
           }}
+          onDelete={isAdmin ? handleDeleteThisAuthor : undefined}
           onClose={() => setIsEditingProfile(false)}
         />
       )}
