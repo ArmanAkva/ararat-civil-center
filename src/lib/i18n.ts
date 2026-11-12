@@ -1533,6 +1533,60 @@ export function getLocalizedField<T extends Record<string, unknown>>(
   return item[field];
 }
 
+export const KNOWN_CONTENT_TRANSLATIONS: Record<string, { en: string; ru: string }> = {
+  // Home cards
+  "Քաղաքակրթական Բևեռներ": {
+    en: "Civilizational Poles",
+    ru: "Цивилизационные полюса",
+  },
+  "Բացահայտեք 8 ավանդական քաղաքակրթությունների մտավոր կենտրոններն ու առաջատար մտածողներին։": {
+    en: "Discover the intellectual centers and leading thinkers of the 8 traditional civilizations.",
+    ru: "Откройте для себя интеллектуальные центры и ведущих мыслителей 8 традиционных цивилизаций.",
+  },
+  "Երկխոսության Հարթակ": {
+    en: "Dialogue Platform",
+    ru: "Платформа диалога",
+  },
+  "Միացեք նախնական քննարկումներին, ուսումնասիրեք գիտական գրադարանը և ներկայացրեք ձեր տեսակետը։": {
+    en: "Join preparatory discussions, explore the scholarly library, and present your perspective.",
+    ru: "Присоединяйтесь к дискуссиям, изучайте научную библиотеку и высказывайте свою точку зрения.",
+  },
+  "Ֆորում": {
+    en: "Forum",
+    ru: "Форум",
+  },
+  "Ծանոթացեք Ֆորումի հայեցակարգային Մանիֆեստին, օրակարգին և դարձեք գործընթացի համահեղինակ։": {
+    en: "Explore the conceptual Manifesto of the Forum, view the agenda, and become a co-author of the process.",
+    ru: "Ознакомьтесь с концептуальным Манифестом Форума, повесткой дня и станьте соавтором процесса.",
+  },
+  // Home Hero & Credo
+  "Քաղաքակրթական Երկխոսությունների Արարատյան Ֆորում": {
+    en: "Ararat Forum of Civilizational Dialogues",
+    ru: "Араратский форум цивилизационных диалогов",
+  },
+  "Քաղաքակրթական Ճգնաժամ, Կոդեր, Արժեքներ և Համարարչություն": {
+    en: "Civilizational Crisis, Codes, Values and Co-creation",
+    ru: "Цивилизационный кризис, коды, ценности и со-созидание",
+  },
+  "«Քաղաքակրթական ճգնաժամը պարտադրում է արարող քաղաքակրթությունների երկխոսություն, որի շնորհիվ է հնարավոր ապահովել քաղաքակրթական անցումը և Արդար աշխարհակարգի կառուցումը»։": {
+    en: "\"The civilizational crisis necessitates dialogue among creator civilizations, which alone makes it possible to ensure civilizational transition and build a Just World Order.\"",
+    ru: "«Цивилизационный кризис требует диалога созидательных цивилизаций, благодаря которому возможно обеспечить цивилизационный переход и построение Справедливого миропорядка».",
+  },
+  // Civilizations Page
+  "8 Քաղաքակրթական Բևեռներ և Մտածողներ": {
+    en: "8 Civilizational Poles and Thinkers",
+    ru: "8 цивилизационных полюсов и мыслителей",
+  },
+  "Քաղաքակրթական Համարարչություն": {
+    en: "Civilizational Co-creation",
+    ru: "Цивилизационное со-созидание",
+  },
+  "Ընտրեք 8 ավանդական քաղաքակրթություններից որևէ մեկը՝ ծանոթանալու նրանց գաղափարական կոդին (Core Credo), առաջատար ուղեղային կենտրոններին և մեծագույն մտածողների ժառանգությանը։": {
+    en: "Select any of the 8 traditional civilizations to explore their ideological code (Core Credo), leading think tanks, and the intellectual legacy of their greatest thinkers.",
+    ru: "Выберите любую из 8 традиционных цивилизаций, чтобы познакомиться с их идеологическим кодом (Core Credo), ведущими аналитическими центрами и наследием мыслителей.",
+  },
+};
+
 /**
  * Applies a locale over a content object or array, returning a localized clone.
  * Falls back transparently to canonical Armenian fields.
@@ -1565,22 +1619,44 @@ export function applyLocale<T>(content: T, locale: Locale): T {
     }
   }
 
+  // Fallback translation for known canonical strings if not already translated
+  for (const [key, val] of Object.entries(result)) {
+    if (typeof val === "string") {
+      const known = KNOWN_CONTENT_TRANSLATIONS[val.trim()];
+      if (known && (locale === "en" || locale === "ru")) {
+        result[key] = known[locale];
+      }
+    }
+  }
+
   // Handle nested arrays with sub-items (e.g. cards, centers, authors, publications, agenda)
   for (const [key, val] of Object.entries(result)) {
     if (Array.isArray(val)) {
       result[key] = val.map((item) => {
         if (typeof item === "object" && item !== null) {
           const itemTrans = (item as { translations?: Record<string, Record<string, unknown>> }).translations?.[locale];
+          const localizedItem: Record<string, unknown> = { ...item };
+
           if (itemTrans && typeof itemTrans === "object") {
-            const localizedItem: Record<string, unknown> = { ...item };
             for (const [tKey, tVal] of Object.entries(itemTrans)) {
               if (tKey.startsWith("_")) continue;
               if (tVal !== undefined && tVal !== null && tVal !== "") {
                 localizedItem[tKey] = tVal;
               }
             }
-            return localizedItem;
           }
+
+          // Fallback to known canonical translations for nested card fields (title, description, etc.)
+          for (const [subKey, subVal] of Object.entries(localizedItem)) {
+            if (typeof subVal === "string") {
+              const known = KNOWN_CONTENT_TRANSLATIONS[subVal.trim()];
+              if (known && (locale === "en" || locale === "ru")) {
+                localizedItem[subKey] = known[locale];
+              }
+            }
+          }
+
+          return localizedItem;
         }
         return item;
       });

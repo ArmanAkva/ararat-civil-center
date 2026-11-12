@@ -351,7 +351,45 @@ export async function getPageContent<T>(
     const snap = await getDoc(docRef);
 
     if (snap.exists()) {
-      return { ...defaultData, ...snap.data() } as T;
+      const remoteData = snap.data() as Record<string, unknown>;
+      const def = (defaultData || {}) as Record<string, unknown>;
+      const merged: Record<string, unknown> = { ...def, ...remoteData };
+
+      // Preserve default root translations if not overridden by remote
+      if (def.translations && typeof def.translations === "object") {
+        const remoteTrans = (remoteData.translations || {}) as Record<string, unknown>;
+        merged.translations = {
+          ...(def.translations as Record<string, unknown>),
+          ...remoteTrans,
+        };
+      }
+
+      // Preserve default array item translations (such as cards, agenda, messages)
+      for (const [key, val] of Object.entries(def)) {
+        if (Array.isArray(val) && Array.isArray(remoteData[key])) {
+          const defaultArr = val as Array<Record<string, unknown>>;
+          const remoteArr = remoteData[key] as Array<Record<string, unknown>>;
+          merged[key] = remoteArr.map((rItem, idx) => {
+            if (typeof rItem !== "object" || rItem === null) return rItem;
+            const defItem =
+              defaultArr.find((d) => d && d.id && d.id === (rItem as Record<string, unknown>).id) ||
+              defaultArr[idx];
+            if (defItem && defItem.translations) {
+              return {
+                ...defItem,
+                ...rItem,
+                translations: {
+                  ...(defItem.translations as Record<string, unknown>),
+                  ...((rItem as Record<string, unknown>).translations as Record<string, unknown> || {}),
+                },
+              };
+            }
+            return rItem;
+          });
+        }
+      }
+
+      return merged as T;
     }
   } catch (error) {
     console.warn(`Firestore read failed for page ${pageKey}, using fallback:`, error);
