@@ -9,6 +9,8 @@ import PdfViewerModal from "./PdfViewerModal";
 import EditCardModal from "@/components/cms/EditCardModal";
 import PdfUploadField from "./PdfUploadField";
 import { savePublicationDoc } from "@/lib/contentService";
+import { useLanguage } from "@/context/LanguageContext";
+import { applyLocale, t } from "@/lib/i18n";
 
 interface Props {
   initialPublications: PublicationWithDetails[];
@@ -19,6 +21,7 @@ export default function PublicationsCatalogView({ initialPublications, civilizat
   const [publications, setPublications] = useState<PublicationWithDetails[]>(initialPublications);
   const { user, isAdmin } = useAuth();
   const { isEditMode, savePublication, deletePublication } = useEditMode();
+  const { locale } = useLanguage();
   const canEdit = Boolean(isAdmin || isEditMode || user);
 
   // Filters & Search
@@ -281,7 +284,7 @@ export default function PublicationsCatalogView({ initialPublications, civilizat
             }}
           >
             <span>📚</span>
-            <span>Արարատյան Գրադարան • Գիտական Արխիվ</span>
+            <span>{locale === "en" ? "Ararat Library • Scientific Archive" : locale === "ru" ? "Араратская Библиотека • Научный Архив" : "Արարատյան Գրադարան • Գիտական Արխիվ"}</span>
           </div>
 
           <h1
@@ -294,7 +297,7 @@ export default function PublicationsCatalogView({ initialPublications, civilizat
               fontWeight: "700",
             }}
           >
-            Գիտական Աշխատություններ և Զեկույցներ
+            {t("pub.title", locale)}
           </h1>
 
           <p
@@ -306,8 +309,7 @@ export default function PublicationsCatalogView({ initialPublications, civilizat
               lineHeight: "1.7",
             }}
           >
-            Քաղաքակրթական ռազմավարական կենտրոնների, փորձագետների և մտածողների հիմնարար աշխատություններ, 
-            վերլուծական զեկույցներ, մենագրություններ և հոդվածներ՝ առցանց ընթերցմամբ և PDF ներբեռնմամբ:
+            {t("pub.subtitle", locale)}
           </p>
 
           {/* Quick Stats Grid */}
@@ -332,7 +334,9 @@ export default function PublicationsCatalogView({ initialPublications, civilizat
               <div style={{ fontSize: "1.8rem", fontWeight: "800", color: "var(--gold-accent)", marginBottom: "0.2rem" }}>
                 {stats.total}
               </div>
-              <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>Ընդհանուր Աշխատություն</div>
+              <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>
+                {locale === "en" ? "Total Publications" : locale === "ru" ? "Всего публикаций" : "Ընդհանուր Աշխատություն"}
+              </div>
             </div>
 
             <div
@@ -347,7 +351,9 @@ export default function PublicationsCatalogView({ initialPublications, civilizat
               <div style={{ fontSize: "1.8rem", fontWeight: "800", color: "#10b981", marginBottom: "0.2rem" }}>
                 {stats.withPdf}
               </div>
-              <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>Թվային PDF Փաստաթուղթ</div>
+              <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>
+                {locale === "en" ? "Digital PDF Documents" : locale === "ru" ? "Цифровые документы PDF" : "Թվային PDF Փաստաթուղթ"}
+              </div>
             </div>
 
             <div
@@ -362,7 +368,9 @@ export default function PublicationsCatalogView({ initialPublications, civilizat
               <div style={{ fontSize: "1.8rem", fontWeight: "800", color: "var(--gold-accent)", marginBottom: "0.2rem" }}>
                 {stats.centersCount}
               </div>
-              <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>Գիտական Կենտրոններ</div>
+              <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>
+                {locale === "en" ? "Research Centers" : locale === "ru" ? "Научные центры" : "Գիտական Կենտրոններ"}
+              </div>
             </div>
 
             <div
@@ -377,7 +385,9 @@ export default function PublicationsCatalogView({ initialPublications, civilizat
               <div style={{ fontSize: "1.8rem", fontWeight: "800", color: "var(--gold-accent)", marginBottom: "0.2rem" }}>
                 {stats.authorsCount}
               </div>
-              <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>Մտածողներ և Հեղինակներ</div>
+              <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>
+                {locale === "en" ? "Scholars & Thinkers" : locale === "ru" ? "Мыслители и авторы" : "Մտածողներ և Հեղինակներ"}
+              </div>
             </div>
           </div>
         </div>
@@ -424,7 +434,7 @@ export default function PublicationsCatalogView({ initialPublications, civilizat
               </span>
               <input
                 type="text"
-                placeholder="Որոնել ըստ վերնագրի, հեղինակի, կենտրոնի կամ թեմայի..."
+                placeholder={t("pub.searchPlaceholder", locale)}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 style={{
@@ -474,9 +484,9 @@ export default function PublicationsCatalogView({ initialPublications, civilizat
                   cursor: "pointer",
                 }}
               >
-                <option value="newest">🕒 Տեսակավորել՝ Նորագույններ</option>
-                <option value="title">🔤 Այբբենական (Ա-Ֆ)</option>
-                <option value="pages">📄 Ըստ էջերի քանակի</option>
+                <option value="newest">🕒 {t("pub.sortNewest", locale)}</option>
+                <option value="title">🔤 {t("pub.sortTitle", locale)}</option>
+                <option value="pages">📄 {t("pub.sortPages", locale)}</option>
               </select>
 
               <label
@@ -502,7 +512,7 @@ export default function PublicationsCatalogView({ initialPublications, civilizat
                   onChange={(e) => setOnlyWithPdf(e.target.checked)}
                   style={{ cursor: "pointer" }}
                 />
-                <span>✓ Միայն PDF</span>
+                <span>✓ {t("pub.onlyPdf", locale)}</span>
               </label>
 
               {canEdit && (
@@ -527,7 +537,7 @@ export default function PublicationsCatalogView({ initialPublications, civilizat
           {/* Civilization Filter Pills */}
           <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap", alignItems: "center" }}>
             <span style={{ fontSize: "0.82rem", color: "var(--text-secondary)", marginRight: "0.4rem" }}>
-              Քաղաքակրթություն՝
+              {locale === "en" ? "Civilization:" : locale === "ru" ? "Цивилизация:" : "Քաղաքակրթություն՝"}
             </span>
             <button
               type="button"
@@ -544,12 +554,13 @@ export default function PublicationsCatalogView({ initialPublications, civilizat
                 border: selectedCiv === "all" ? "1px solid var(--gold-accent)" : "1px solid var(--card-border)",
               }}
             >
-              Բոլորը ({publications.length})
+              {locale === "en" ? "All" : locale === "ru" ? "Все" : "Բոլորը"} ({publications.length})
             </button>
             {civilizations.map((civ) => {
               const count = publications.filter((p) => p.civ.id.toLowerCase() === civ.id.toLowerCase()).length;
               if (count === 0) return null;
               const isSelected = selectedCiv.toLowerCase() === civ.id.toLowerCase();
+              const localizedCiv = applyLocale(civ, locale);
               return (
                 <button
                   key={civ.id}
@@ -567,7 +578,7 @@ export default function PublicationsCatalogView({ initialPublications, civilizat
                     border: isSelected ? "1px solid var(--gold-accent)" : "1px solid var(--card-border)",
                   }}
                 >
-                  <span>{civ.symbol}</span> <span>{civ.nameHy} ({count})</span>
+                  <span>{civ.symbol}</span> <span>{localizedCiv.nameHy} ({count})</span>
                 </button>
               );
             })}
@@ -577,7 +588,7 @@ export default function PublicationsCatalogView({ initialPublications, civilizat
           {publicationTypes.length > 0 && (
             <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap", alignItems: "center", marginTop: "0.85rem" }}>
               <span style={{ fontSize: "0.82rem", color: "var(--text-secondary)", marginRight: "0.4rem" }}>
-                Տեսակ՝
+                {locale === "en" ? "Type:" : locale === "ru" ? "Тип:" : "Տեսակ՝"}
               </span>
               <button
                 type="button"
@@ -593,7 +604,7 @@ export default function PublicationsCatalogView({ initialPublications, civilizat
                   border: selectedType === "all" ? "1px solid var(--gold-accent)" : "1px solid transparent",
                 }}
               >
-                Բոլորը
+                {locale === "en" ? "All" : locale === "ru" ? "Все" : "Բոլորը"}
               </button>
               {publicationTypes.map((type) => {
                 const isSelected = selectedType === type;
@@ -624,7 +635,13 @@ export default function PublicationsCatalogView({ initialPublications, civilizat
         {/* Results Counter */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
           <div style={{ fontSize: "0.95rem", color: "var(--text-secondary)" }}>
-            Ցուցադրված է <strong>{filteredPublications.length}</strong> աշխատություն
+            {locale === "en" ? (
+              <>Showing <strong>{filteredPublications.length}</strong> publications</>
+            ) : locale === "ru" ? (
+              <>Отображено <strong>{filteredPublications.length}</strong> публикаций</>
+            ) : (
+              <>Ցուցադրված է <strong>{filteredPublications.length}</strong> աշխատություն</>
+            )}
           </div>
           {(selectedCiv !== "all" || selectedType !== "all" || searchQuery || onlyWithPdf) && (
             <button
@@ -644,7 +661,7 @@ export default function PublicationsCatalogView({ initialPublications, civilizat
                 textDecoration: "underline",
               }}
             >
-              Մաքրել բոլոր ֆիլտրերը
+              {locale === "en" ? "Clear all filters" : locale === "ru" ? "Сбросить все фильтры" : "Մաքրել բոլոր ֆիլտրերը"}
             </button>
           )}
         </div>
@@ -654,6 +671,10 @@ export default function PublicationsCatalogView({ initialPublications, civilizat
           <div className="cards-grid-subpage">
             {filteredPublications.map((item, idx) => {
               const { pub, civ, author, center } = item;
+              const localizedPub = applyLocale(pub, locale);
+              const localizedCiv = applyLocale(civ, locale);
+              const localizedAuthor = author ? applyLocale(author, locale) : undefined;
+              const localizedCenter = center ? applyLocale(center, locale) : undefined;
               return (
                 <article key={pub.id || idx} className="publication-card">
                   {/* Admin Quick Action Controls */}
@@ -718,14 +739,14 @@ export default function PublicationsCatalogView({ initialPublications, civilizat
                         }}
                       >
                         <span>{civ.symbol}</span>
-                        <span>{civ.nameHy}</span>
+                        <span>{localizedCiv.nameHy}</span>
                       </Link>
 
-                      <span className="pub-tag-badge">📄 {pub.type || "Զեկույց"}</span>
+                      <span className="pub-tag-badge">📄 {localizedPub.type || "Զեկույց"}</span>
 
                       <span style={{ fontSize: "0.8rem", color: "var(--text-secondary)", fontWeight: "600" }}>
-                        {pub.year && `${pub.year}թ.`}
-                        {pub.pages && ` • ${pub.pages} էջ`}
+                        {pub.year && (locale === "hy" ? `${pub.year}թ.` : pub.year)}
+                        {pub.pages && ` • ${pub.pages} ${t("pub.pagesCount", locale)}`}
                       </span>
 
                       {pub.downloadUrl && (
@@ -740,7 +761,7 @@ export default function PublicationsCatalogView({ initialPublications, civilizat
                             fontWeight: "600",
                           }}
                         >
-                          ✓ PDF առկա
+                          ✓ PDF {locale === "en" ? "Available" : locale === "ru" ? "Есть" : "առկա"}
                         </span>
                       )}
                     </div>
@@ -748,26 +769,26 @@ export default function PublicationsCatalogView({ initialPublications, civilizat
                     {/* Title linking to dedicated On-Screen Reader Page */}
                     <h3 className="pub-card-title" style={{ paddingRight: canEdit ? "60px" : "0" }}>
                       <Link href={`/publications/${pub.id}`} style={{ color: "inherit", textDecoration: "none" }}>
-                        {pub.title}
+                        {localizedPub.title}
                       </Link>
                     </h3>
 
                     {/* Abstract / Description (Clamped to 3 lines) */}
-                    {pub.description ? (
-                      <p className="pub-card-desc">{pub.description}</p>
+                    {localizedPub.description ? (
+                      <p className="pub-card-desc">{localizedPub.description}</p>
                     ) : (
                       <p className="pub-card-desc" style={{ fontStyle: "italic", opacity: 0.6 }}>
-                        Քաղաքակրթական հիմնարար հետազոտություն և ռազմավարական վերլուծություն։
+                        {locale === "en" ? "Foundational civilizational research and strategic analysis." : locale === "ru" ? "Фундаментальное цивилизационное исследование и стратегический анализ." : "Քաղաքակրթական հիմնարար հետազոտություն և ռազմավարական վերլուծություն։"}
                       </p>
                     )}
 
                     {/* Affiliations (Author & Center) */}
                     <div className="pub-card-affiliations">
-                      {author ? (
+                      {localizedAuthor ? (
                         <div style={{ display: "flex", gap: "0.35rem", alignItems: "center" }}>
-                          <span style={{ fontSize: "0.74rem", color: "var(--text-secondary)" }}>Հեղինակ՝</span>
+                          <span style={{ fontSize: "0.74rem", color: "var(--text-secondary)" }}>{t("pub.author", locale)}՝</span>
                           <Link
-                            href={`/authors/${author.id}`}
+                            href={`/authors/${localizedAuthor.id}`}
                             style={{
                               fontSize: "0.74rem",
                               color: "var(--gold-accent)",
@@ -783,23 +804,23 @@ export default function PublicationsCatalogView({ initialPublications, civilizat
                             }}
                           >
                             <span>🖋</span>
-                            <span>{author.name}</span>
+                            <span>{localizedAuthor.name}</span>
                           </Link>
                         </div>
                       ) : pub.authorIds && pub.authorIds.length > 0 ? (
                         <div style={{ display: "flex", gap: "0.35rem", alignItems: "center" }}>
-                          <span style={{ fontSize: "0.74rem", color: "var(--text-secondary)" }}>Հեղինակ՝</span>
+                          <span style={{ fontSize: "0.74rem", color: "var(--text-secondary)" }}>{t("pub.author", locale)}՝</span>
                           <span style={{ fontSize: "0.74rem", color: "var(--text-primary)", fontWeight: "600" }}>
                             {pub.authorIds[0]}
                           </span>
                         </div>
                       ) : null}
 
-                      {center ? (
+                      {localizedCenter ? (
                         <div style={{ display: "flex", gap: "0.35rem", alignItems: "center" }}>
-                          <span style={{ fontSize: "0.74rem", color: "var(--text-secondary)" }}>Կենտրոն՝</span>
+                          <span style={{ fontSize: "0.74rem", color: "var(--text-secondary)" }}>{t("pub.center", locale)}՝</span>
                           <Link
-                            href={`/centers/${center.id}`}
+                            href={`/centers/${localizedCenter.id}`}
                             style={{
                               fontSize: "0.74rem",
                               color: "var(--gold-accent)",
@@ -815,12 +836,12 @@ export default function PublicationsCatalogView({ initialPublications, civilizat
                             }}
                           >
                             <span>🏛</span>
-                            <span>{center.name}</span>
+                            <span>{localizedCenter.name}</span>
                           </Link>
                         </div>
                       ) : pub.centerIds && pub.centerIds.length > 0 ? (
                         <div style={{ display: "flex", gap: "0.35rem", alignItems: "center" }}>
-                          <span style={{ fontSize: "0.74rem", color: "var(--text-secondary)" }}>Կենտրոն՝</span>
+                          <span style={{ fontSize: "0.74rem", color: "var(--text-secondary)" }}>{t("pub.center", locale)}՝</span>
                           <span style={{ fontSize: "0.74rem", color: "var(--text-primary)", fontWeight: "600" }}>
                             {pub.centerIds[0]}
                           </span>
@@ -846,7 +867,7 @@ export default function PublicationsCatalogView({ initialPublications, civilizat
                       }}
                     >
                       <span>📖</span>
-                      <span>Բացել էջում</span>
+                      <span>{t("pub.readOnline", locale)}</span>
                     </Link>
 
                     {/* PDF Actions */}
@@ -857,8 +878,8 @@ export default function PublicationsCatalogView({ initialPublications, civilizat
                           onClick={() =>
                             setViewingPdf({
                               url: pub.downloadUrl!,
-                              title: pub.title,
-                              authorName: author?.name || civ.nameHy,
+                              title: localizedPub.title,
+                              authorName: localizedAuthor?.name || localizedCiv.nameHy,
                               year: pub.year,
                               pages: pub.pages,
                               fileName: pub.fileName,
@@ -872,7 +893,7 @@ export default function PublicationsCatalogView({ initialPublications, civilizat
                             background: "rgba(183, 121, 31, 0.15)",
                             color: "var(--gold-accent)",
                           }}
-                          title="Արագ դիտել PDF-ը"
+                          title={locale === "en" ? "Preview PDF" : locale === "ru" ? "Просмотр PDF" : "Արագ դիտել PDF-ը"}
                         >
                           👁 PDF
                         </button>
@@ -881,21 +902,21 @@ export default function PublicationsCatalogView({ initialPublications, civilizat
                           href={pub.downloadUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          download={pub.fileName || `${pub.title}.pdf`}
+                          download={pub.fileName || `${localizedPub.title}.pdf`}
                           className="credo-action-btn"
                           style={{
                             padding: "0.45rem 0.75rem",
                             fontSize: "0.8rem",
                             textDecoration: "none",
                           }}
-                          title="Ներբեռնել PDF ֆայլը"
+                          title={t("pub.downloadPdf", locale)}
                         >
                           ⬇️
                         </a>
                       </div>
                     ) : (
                       <span style={{ fontSize: "0.75rem", color: "var(--text-secondary)", fontStyle: "italic" }}>
-                        Թվային արխիվ
+                        {locale === "en" ? "Digital archive" : locale === "ru" ? "Цифровой архив" : "Թվային արխիվ"}
                       </span>
                     )}
                   </div>
@@ -915,10 +936,10 @@ export default function PublicationsCatalogView({ initialPublications, civilizat
           >
             <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>📖</div>
             <h3 style={{ fontSize: "1.3rem", color: "var(--text-primary)", marginBottom: "0.5rem" }}>
-              Որոնմանը համապատասխանող աշխատություն չգտնվեց
+              {t("pub.notFound", locale)}
             </h3>
             <p style={{ color: "var(--text-secondary)", maxWidth: "450px", margin: "0 auto 1.5rem" }}>
-              Փորձեք փոխել որոնման բառերը կամ վերականգնել ֆիլտրերը՝ բոլոր աշխատությունները տեսնելու համար:
+              {locale === "en" ? "Try adjusting your search terms or clearing filters to see all publications." : locale === "ru" ? "Попробуйте изменить поисковый запрос или сбросить фильтры." : "Փորձեք փոխել որոնման բառերը կամ վերականգնել ֆիլտրերը՝ բոլոր աշխատությունները տեսնելու համար:"}
             </p>
             <button
               type="button"
@@ -930,7 +951,7 @@ export default function PublicationsCatalogView({ initialPublications, civilizat
                 setOnlyWithPdf(false);
               }}
             >
-              <span>Ցուցադրել բոլոր աշխատությունները</span>
+              <span>{locale === "en" ? "Show all publications" : locale === "ru" ? "Показать все публикации" : "Ցուցադրել բոլոր աշխատությունները"}</span>
             </button>
           </div>
         )}

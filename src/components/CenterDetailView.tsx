@@ -13,6 +13,8 @@ import { MemberAvatar } from "@/components/ui/MemberCard";
 import { AutoTruncateQuote } from "@/components/ui/AutoTruncateQuote";
 import PdfViewerModal from "@/components/publications/PdfViewerModal";
 import PdfUploadField from "@/components/publications/PdfUploadField";
+import { useLanguage } from "@/context/LanguageContext";
+import { applyLocale, t } from "@/lib/i18n";
 
 interface Props {
   initialCenter: ThinkTank;
@@ -25,6 +27,10 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
   const [loading, setLoading] = useState(true);
   const { user, isAdmin } = useAuth();
   const { isEditMode, toggleEditMode, saveCenter, saveAuthor, savePublication, deletePublication } = useEditMode();
+  const { locale } = useLanguage();
+
+  const localizedCenter = applyLocale(center, locale);
+  const localizedCiv = applyLocale(civ, locale);
 
   // Publications state
   const [selectedPublication, setSelectedPublication] = useState<Publication | null>(null);
@@ -447,7 +453,7 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
           className="back-link"
           style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}
         >
-          <span>←</span> Դեպի {civ.nameHy}
+          <span>←</span> {locale === "hy" ? `Դեպի ${localizedCiv.nameHy}` : `${t("common.back", locale)} ${localizedCiv.nameHy}`}
         </Link>
         <div style={{ display: "flex", alignItems: "center", gap: "0.8rem", flexWrap: "wrap" }}>
           {isAdmin && (
@@ -501,7 +507,7 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <span style={{ fontSize: "1.2rem" }}>{civ.symbol}</span>
             <span style={{ fontSize: "0.9rem", color: "var(--gold-accent)", fontWeight: "600" }}>
-              {civ.nameHy}
+              {localizedCiv.nameHy}
             </span>
           </div>
         </div>
@@ -523,27 +529,27 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
             <EditableText
               tag="span"
               label="Քաղաք"
-              value={center.city}
+              value={isEditMode ? center.city : localizedCenter.city}
               onSave={(val) => handleSaveField("city", val)}
             />
             <span>,</span>
             <EditableText
               tag="span"
               label="Երկիր"
-              value={center.country}
+              value={isEditMode ? center.country : localizedCenter.country}
               onSave={(val) => handleSaveField("country", val)}
             />
             {center.foundedYear && (
               <>
                 <span style={{ margin: "0 0.3rem" }}>•</span>
-                <span>հիմնադրված</span>
+                <span>{locale === "en" ? "founded in" : locale === "ru" ? "основан в" : "հիմնադրված"}</span>
                 <EditableText
                   tag="span"
                   label="Հիմնադրման տարեթիվ"
                   value={center.foundedYear}
                   onSave={(val) => handleSaveField("foundedYear", val)}
                 />
-                <span>թ.</span>
+                <span>{locale === "hy" ? "թ." : ""}</span>
               </>
             )}
           </div>
@@ -552,7 +558,7 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
         <EditableText
           tag="h1"
           label="Կենտրոնի Անվանում (Հայերեն)"
-          value={center.name}
+          value={isEditMode ? center.name : localizedCenter.name}
           style={{
             fontFamily: "var(--font-serif)",
             fontSize: "clamp(2rem, 4vw, 2.8rem)",
@@ -582,13 +588,13 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
 
         <div style={{ marginTop: "2rem", borderTop: "1px solid var(--card-border)", paddingTop: "2rem" }}>
           <h3 style={{ fontSize: "1.2rem", color: "var(--gold-accent)", marginBottom: "1rem", fontFamily: "var(--font-serif)" }}>
-            Գիտահետազոտական Առաքելություն և Գործունեություն
+            {t("center.mission", locale)}
           </h3>
           <EditableText
             tag="p"
             multiline
             label="Առաքելության նկարագրություն"
-            value={center.description}
+            value={isEditMode ? center.description : localizedCenter.description}
             style={{
               fontSize: "1.15rem",
               lineHeight: "1.85",
@@ -600,13 +606,13 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
         </div>
 
         {/* Focus Areas Tags */}
-        {center.focusAreas && center.focusAreas.length > 0 && (
+        {localizedCenter.focusAreas && localizedCenter.focusAreas.length > 0 && (
           <div style={{ marginTop: "2.5rem" }}>
             <h4 style={{ fontSize: "0.9rem", color: "var(--text-secondary)", marginBottom: "0.75rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-              Հետազոտական Ուղղություններ
+              {locale === "en" ? "Research Focus Areas" : locale === "ru" ? "Направления исследований" : "Հետազոտական Ուղղություններ"}
             </h4>
             <div style={{ display: "flex", gap: "0.6rem", flexWrap: "wrap" }}>
-              {center.focusAreas.map((tag, idx) => (
+              {localizedCenter.focusAreas.map((tag, idx) => (
                 <span
                   key={idx}
                   style={{
@@ -636,7 +642,7 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
               className="btn-primary"
               style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", textDecoration: "none" }}
             >
-              <span>Այցելել Պաշտոնական Կայք</span>
+              <span>{locale === "en" ? "Visit Official Website" : locale === "ru" ? "Посетить официальный сайт" : "Այցելել Պաշտոնական Կայք"}</span>
               <span>↗</span>
             </a>
           </div>
@@ -648,10 +654,10 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.8rem", borderBottom: "1px solid var(--card-border)", paddingBottom: "1rem", flexWrap: "wrap", gap: "1rem" }}>
           <div>
             <h2 style={{ fontFamily: "var(--font-serif)", color: "var(--gold-accent)", margin: "0 0 0.25rem 0", fontSize: "1.8rem" }}>
-              Գիտական Աշխատություններ և Զեկույցներ ({centerPublications.length})
+              {t("center.publications", locale)} ({centerPublications.length})
             </h2>
             <p style={{ margin: 0, color: "var(--text-secondary)", fontSize: "0.88rem" }}>
-              Կենտրոնի հետազոտական հրապարակումները, քաղաքականության զեկույցները և մենագրությունները
+              {locale === "en" ? "Research publications, policy papers and treatises of the center" : locale === "ru" ? "Исследовательские публикации, доклады и монографии центра" : "Կենտրոնի հետազոտական հրապարակումները, քաղաքականության զեկույցները և մենագրությունները"}
             </p>
           </div>
           {(isEditMode || isAdmin) && (
@@ -699,7 +705,9 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
           </div>
         ) : (
           <div style={{ display: "grid", gap: "1.2rem" }}>
-            {centerPublications.map((pub, idx) => (
+            {centerPublications.map((pub, idx) => {
+              const localizedPub = applyLocale(pub, locale);
+              return (
               <div
                 key={pub.id || idx}
                 className="glass-card"
@@ -715,25 +723,25 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
               >
                 <div style={{ flex: 1, minWidth: "260px" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginBottom: "0.4rem", flexWrap: "wrap" }}>
-                    <span className="pub-tag-badge">📄 {pub.type || "Զեկույց"}</span>
+                    <span className="pub-tag-badge">📄 {localizedPub.type || "Զեկույց"}</span>
                     <span style={{ fontSize: "0.85rem", color: "var(--gold-accent)", fontWeight: "600" }}>
-                      {pub.year && `${pub.year}թ.`}
-                      {pub.pages && ` • ${pub.pages} էջ`}
+                      {pub.year && (locale === "hy" ? `${pub.year}թ.` : pub.year)}
+                      {pub.pages && ` • ${pub.pages} ${t("pub.pagesCount", locale)}`}
                     </span>
                     {pub.downloadUrl && (
                       <span style={{ fontSize: "0.78rem", color: "#10b981", background: "rgba(16, 185, 129, 0.12)", padding: "0.15rem 0.5rem", borderRadius: "999px", border: "1px solid rgba(16, 185, 129, 0.3)" }}>
-                        ✓ Առցանց հասանելի
+                        ✓ {locale === "en" ? "Available online" : locale === "ru" ? "Доступно онлайн" : "Առցանց հասանելի"}
                       </span>
                     )}
                   </div>
                   <h3 style={{ margin: "0 0 0.5rem 0", color: "var(--text-primary)", fontSize: "1.2rem", fontFamily: "var(--font-serif)" }}>
                     <Link href={`/publications/${pub.id}`} style={{ color: "inherit", textDecoration: "none" }}>
-                      {pub.title}
+                      {localizedPub.title}
                     </Link>
                   </h3>
-                  {pub.description && (
+                  {localizedPub.description && (
                     <p style={{ margin: "0 0 0.6rem 0", color: "var(--text-secondary)", fontSize: "0.95rem", lineHeight: "1.6" }}>
-                      {pub.description}
+                      {localizedPub.description}
                     </p>
                   )}
 
@@ -870,7 +878,8 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
                   )}
                 </div>
               </div>
-            ))}
+            );
+          })}
 
             {(isEditMode || isAdmin) && (
               <button
@@ -909,10 +918,10 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.8rem", borderBottom: "1px solid var(--card-border)", paddingBottom: "1rem", flexWrap: "wrap", gap: "1rem" }}>
           <div>
             <h2 style={{ fontFamily: "var(--font-serif)", color: "var(--gold-accent)", margin: "0 0 0.25rem 0", fontSize: "1.8rem" }}>
-              Կենտրոնի Գիտաշխատողներ և Հեղինակներ ({centerAuthors.length})
+              {t("center.authors", locale)} ({centerAuthors.length})
             </h2>
             <p style={{ margin: 0, color: "var(--text-secondary)", fontSize: "0.88rem" }}>
-              Կենտրոնի առաջատար հետազոտողները, վերլուծաբանները և գիտական մտածողները
+              {locale === "en" ? "Leading researchers, analysts and scientific thinkers of the center" : locale === "ru" ? "Ведущие исследователи, аналитики и мыслители центра" : "Կենտրոնի առաջատար հետազոտողները, վերլուծաբանները և գիտական մտածողները"}
             </p>
           </div>
           {(isEditMode || isAdmin) && (
@@ -960,7 +969,9 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
           </div>
         ) : (
           <div className="cards-grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1.5rem" }}>
-            {centerAuthors.map((author) => (
+            {centerAuthors.map((author) => {
+              const localizedAuthor = applyLocale(author, locale);
+              return (
               <div
                 key={author.id}
                 className="glass-card"
@@ -1011,19 +1022,19 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
 
                 <div style={{ flex: "1 1 auto", display: "flex", flexDirection: "column", minHeight: 0 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1rem" }}>
-                    <MemberAvatar name={author.name} size={54} glow />
+                    <MemberAvatar name={localizedAuthor.name} size={54} glow />
                     <div>
                       <h3 style={{ margin: "0 0 0.2rem 0", color: "var(--text-primary)", fontSize: "1.15rem" }}>
-                        {author.name}
+                        {localizedAuthor.name}
                       </h3>
                       <p style={{ margin: 0, color: "var(--text-secondary)", fontSize: "0.85rem" }}>
-                        {author.title}
+                        {localizedAuthor.title}
                       </p>
                     </div>
                   </div>
-                  {author.quote && (
+                  {localizedAuthor.quote && (
                     <AutoTruncateQuote
-                      quote={author.quote}
+                      quote={localizedAuthor.quote}
                       containerStyle={{
                         margin: "0 0 0.8rem 0",
                         padding: "0.6rem 0.9rem",
@@ -1039,7 +1050,7 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
                       lineHeightPx={20}
                     />
                   )}
-                  {author.bio && (
+                  {localizedAuthor.bio && (
                     <p
                       style={{
                         color: "var(--text-secondary)",
@@ -1052,7 +1063,7 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
                         overflow: "hidden",
                       }}
                     >
-                      {author.bio}
+                      {localizedAuthor.bio}
                     </p>
                   )}
                 </div>
@@ -1070,12 +1081,13 @@ export default function CenterDetailView({ initialCenter, initialCiv }: Props) {
                       gap: "0.3rem",
                     }}
                   >
-                    <span>Դիտել հեղինակի պրոֆիլը</span>
+                    <span>{locale === "en" ? "View scholar profile" : locale === "ru" ? "Профиль автора" : "Դիտել հեղինակի պրոֆիլը"}</span>
                     <span>→</span>
                   </Link>
                 </div>
               </div>
-            ))}
+            );
+          })}
 
             {(isEditMode || isAdmin) && (
               <button

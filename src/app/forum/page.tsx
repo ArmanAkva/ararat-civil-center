@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { defaultForumContent } from "@/lib/defaultSiteContent";
 import {
@@ -32,6 +32,8 @@ import ForumOwnerModal from "@/components/forum/ForumOwnerModal";
 import ForumOrganizerModal from "@/components/forum/ForumOrganizerModal";
 import ForumLoading from "./loading";
 import { MemberAvatarStack } from "@/components/ui/MemberCard";
+import { useLanguage } from "@/context/LanguageContext";
+import { applyLocale, t } from "@/lib/i18n";
 
 function formatDate(dateStr?: string): string {
   if (!dateStr) return "";
@@ -112,6 +114,12 @@ export default function Forum() {
 
   const { isEditMode, savePageField } = useEditMode();
   const { user, profile, isAdmin } = useAuth();
+  const { locale } = useLanguage();
+
+  const localizedContent = useMemo(
+    () => applyLocale(content || defaultForumContent, locale),
+    [content, locale]
+  );
 
   const [activeTab, setActiveTab] = useState(1);
   const [manifestoLikeCount, setManifestoLikeCount] = useState(142);
@@ -515,13 +523,13 @@ export default function Forum() {
               marginBottom: "1.2rem",
             }}
           >
-            Քաղաքակրթությունների Համաշխարհային Հանդիպում
+            {locale === "en" ? "Global Gathering of Civilizations" : locale === "ru" ? "Всемирная Встреча Цивилизаций" : "Քաղաքակրթությունների Համաշխարհային Հանդիպում"}
           </div>
 
           <EditableText
             tag="h1"
             label="Ֆորումի Ժամկետներ"
-            value={content.datesTitle}
+            value={isEditMode ? content.datesTitle : localizedContent.datesTitle}
             style={{
               fontFamily: "var(--font-serif)",
               fontSize: "3.2rem",
@@ -538,7 +546,7 @@ export default function Forum() {
           <EditableText
             tag="h2"
             label="Անցկացման Վայրեր"
-            value={content.locationTitle}
+            value={isEditMode ? content.locationTitle : localizedContent.locationTitle}
             style={{
               fontSize: "1.45rem",
               fontWeight: "400",
@@ -797,7 +805,7 @@ export default function Forum() {
       <EditableText
         tag="h2"
         label="Մանիֆեստի Բաժնի Վերնագիր"
-        value={content.manifestoTitle}
+        value={isEditMode ? content.manifestoTitle : localizedContent.manifestoTitle}
         style={{
           fontFamily: "var(--font-serif)",
           color: "var(--gold-accent)",
@@ -840,13 +848,13 @@ export default function Forum() {
                 fontSize: "1.15rem",
               }}
             >
-              Ի՞նչ.
+              {locale === "en" ? "What:" : locale === "ru" ? "Что:" : "Ի՞նչ."}
             </span>
             <EditableText
               tag="span"
               multiline
               label="Մանիֆեստի Նկարագրություն"
-              value={content.manifestoWhat}
+              value={isEditMode ? content.manifestoWhat : localizedContent.manifestoWhat}
               style={{ fontSize: "1.15rem", lineHeight: "1.8", color: "var(--text-secondary)" }}
               onSave={async (val) => {
                 setContent((prev) => ({ ...prev, manifestoWhat: val }));
@@ -975,7 +983,7 @@ export default function Forum() {
                 <EditableText
                   tag="span"
                   label={`Ուղերձ ${idx + 1} Կոճակ`}
-                  value={msg.title}
+                  value={isEditMode ? msg.title : (localizedContent.messages?.find((m) => m.id === msg.id)?.title || msg.title)}
                   onSave={async (val) => {
                     const updated = [...content.messages];
                     updated[idx] = { ...updated[idx], title: val };
@@ -1023,13 +1031,13 @@ export default function Forum() {
                   marginBottom: "0.4rem",
                 }}
               >
-                Հիմնական Դրույթ
+                {locale === "en" ? "Core Thesis" : locale === "ru" ? "Основной тезис" : "Հիմնական Դրույթ"}
               </div>
               <EditableText
                 tag="p"
                 multiline
                 label={`Ուղերձ #${currentMessage.id} Բովանդակություն`}
-                value={currentMessage.content}
+                value={isEditMode ? currentMessage.content : (localizedContent.messages?.find((m) => m.id === currentMessage.id)?.content || currentMessage.content)}
                 style={{ fontSize: "1.2rem", lineHeight: "1.8", color: "var(--text-primary)", margin: 0 }}
                 onSave={async (val) => {
                   const updated = [...content.messages];
@@ -1404,7 +1412,7 @@ export default function Forum() {
               <EditableText
                 tag="span"
                 label="Օրվա Անվանում"
-                value={item.day}
+                value={isEditMode ? item.day : (localizedContent.agenda?.[idx]?.day || item.day)}
                 style={{ fontWeight: "bold", color: "var(--gold-accent)", fontSize: "1.1rem" }}
                 onSave={async (val) => {
                   const updated = [...content.agenda];
@@ -1417,7 +1425,7 @@ export default function Forum() {
               <EditableText
                 tag="h3"
                 label="Օրվա Վայր / Վերնագիր"
-                value={item.title}
+                value={isEditMode ? item.title : (localizedContent.agenda?.[idx]?.title || item.title)}
                 style={{ margin: 0, fontSize: "1.1rem" }}
                 onSave={async (val) => {
                   const updated = [...content.agenda];
@@ -1432,7 +1440,7 @@ export default function Forum() {
               tag="p"
               multiline
               label="Օրվա Ծրագրի Նկարագրություն"
-              value={item.description}
+              value={isEditMode ? item.description : (localizedContent.agenda?.[idx]?.description || item.description)}
               style={{ color: "var(--text-secondary)", fontSize: "0.95rem", margin: 0, lineHeight: "1.6" }}
               onSave={async (val) => {
                 const updated = [...content.agenda];
@@ -1967,7 +1975,7 @@ export default function Forum() {
           <EditableText
             tag="h3"
             label="Ցուցիչի Վերնագիր"
-            value={content.consensusTitle}
+            value={isEditMode ? content.consensusTitle : localizedContent.consensusTitle}
             style={{ margin: "0 0 0.5rem 0", fontFamily: "var(--font-serif)", fontSize: "1.45rem" }}
             onSave={async (val) => {
               setContent((prev) => ({ ...prev, consensusTitle: val }));
@@ -1977,7 +1985,7 @@ export default function Forum() {
           <EditableText
             tag="p"
             label="Ցուցիչի Ենթավերնագիր"
-            value={content.consensusSubtitle}
+            value={isEditMode ? content.consensusSubtitle : localizedContent.consensusSubtitle}
             style={{ margin: 0, color: "var(--text-secondary)", fontSize: "0.95rem" }}
             onSave={async (val) => {
               setContent((prev) => ({ ...prev, consensusSubtitle: val }));

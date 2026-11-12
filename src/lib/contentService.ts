@@ -564,6 +564,165 @@ export async function translateCivilizationWithAi(
 }
 
 /**
+ * Translates an Author / Thinker (title, bio, quote) with AI and saves to Firestore.
+ */
+export async function translateAuthorWithAi(
+  civId: string,
+  author: Thinker
+): Promise<{ success: boolean; message: string; translations?: any }> {
+  try {
+    const textsToTranslate: Record<string, string> = {};
+    if (author.title) textsToTranslate.title = author.title;
+    if (author.bio) textsToTranslate.bio = author.bio;
+    if (author.quote) textsToTranslate.quote = author.quote;
+
+    if (Object.keys(textsToTranslate).length === 0) {
+      return { success: false, message: "No translatable text found for this author." };
+    }
+
+    const response = await fetch("/api/translate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        texts: textsToTranslate,
+        targetLangs: ["en", "ru"],
+        sourceLang: "hy",
+        context: `Thinker / Philosopher profile: ${author.name}`,
+      }),
+    });
+
+    const result = await response.json();
+    if (!response.ok || !result.success) {
+      throw new Error(result.message || "Failed to translate author");
+    }
+
+    const authorRef = doc(db, "civilizations", civId, "authors", author.id);
+    await setDoc(
+      authorRef,
+      cleanFirestoreData({
+        translations: result.translations,
+        updatedAt: new Date().toISOString(),
+      }),
+      { merge: true }
+    );
+
+    return {
+      success: true,
+      message: "✓ Author translated and saved to Firestore!",
+      translations: result.translations,
+    };
+  } catch (error: any) {
+    return { success: false, message: error.message || String(error) };
+  }
+}
+
+/**
+ * Translates a Center / Think Tank (description, city, country) with AI and saves to Firestore.
+ */
+export async function translateCenterWithAi(
+  civId: string,
+  center: ThinkTank
+): Promise<{ success: boolean; message: string; translations?: any }> {
+  try {
+    const textsToTranslate: Record<string, string> = {};
+    if (center.description) textsToTranslate.description = center.description;
+    if (center.city) textsToTranslate.city = center.city;
+    if (center.country) textsToTranslate.country = center.country;
+
+    if (Object.keys(textsToTranslate).length === 0) {
+      return { success: false, message: "No translatable text found for this center." };
+    }
+
+    const response = await fetch("/api/translate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        texts: textsToTranslate,
+        targetLangs: ["en", "ru"],
+        sourceLang: "hy",
+        context: `Think Tank / Research Center: ${center.name}`,
+      }),
+    });
+
+    const result = await response.json();
+    if (!response.ok || !result.success) {
+      throw new Error(result.message || "Failed to translate center");
+    }
+
+    const centerRef = doc(db, "civilizations", civId, "centers", center.id);
+    await setDoc(
+      centerRef,
+      cleanFirestoreData({
+        translations: result.translations,
+        updatedAt: new Date().toISOString(),
+      }),
+      { merge: true }
+    );
+
+    return {
+      success: true,
+      message: "✓ Center translated and saved to Firestore!",
+      translations: result.translations,
+    };
+  } catch (error: any) {
+    return { success: false, message: error.message || String(error) };
+  }
+}
+
+/**
+ * Translates a Publication (title, description) with AI and saves to Firestore.
+ */
+export async function translatePublicationWithAi(
+  civId: string,
+  pub: Publication
+): Promise<{ success: boolean; message: string; translations?: any }> {
+  try {
+    const textsToTranslate: Record<string, string> = {};
+    if (pub.title) textsToTranslate.title = pub.title;
+    if (pub.description) textsToTranslate.description = pub.description;
+
+    if (Object.keys(textsToTranslate).length === 0) {
+      return { success: false, message: "No translatable text found for this publication." };
+    }
+
+    const response = await fetch("/api/translate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        texts: textsToTranslate,
+        targetLangs: ["en", "ru"],
+        sourceLang: "hy",
+        context: `Scholarly publication: ${pub.title}`,
+      }),
+    });
+
+    const result = await response.json();
+    if (!response.ok || !result.success) {
+      throw new Error(result.message || "Failed to translate publication");
+    }
+
+    const pubId = pub.id || `pub-${Date.now()}`;
+    const pubRef = doc(db, "civilizations", civId, "publications", pubId);
+    await setDoc(
+      pubRef,
+      cleanFirestoreData({
+        translations: result.translations,
+        updatedAt: new Date().toISOString(),
+      }),
+      { merge: true }
+    );
+
+    return {
+      success: true,
+      message: "✓ Publication translated and saved to Firestore!",
+      translations: result.translations,
+    };
+  } catch (error: any) {
+    return { success: false, message: error.message || String(error) };
+  }
+}
+
+/**
  * Seeds all site content and 8 civilizations with SUBCOLLECTIONS into Firestore
  */
 export async function seedAllContentToFirestore(): Promise<{

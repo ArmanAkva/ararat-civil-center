@@ -4,10 +4,13 @@ export interface RoleDefinition {
   id: UserRole;
   labelHy: string;
   labelEn: string;
+  labelRu?: string;
   badgeBg: string;
   badgeBorder: string;
   badgeColor: string;
   descriptionHy: string;
+  descriptionEn?: string;
+  descriptionRu?: string;
   permissions: string[];
 }
 
@@ -16,40 +19,52 @@ export const USER_ROLES: Record<UserRole, RoleDefinition> = {
     id: "super-admin",
     labelHy: "Գերադմին (Super Admin)",
     labelEn: "Super Administrator",
+    labelRu: "Главный Администратор",
     badgeBg: "rgba(220, 38, 38, 0.15)",
     badgeBorder: "rgba(220, 38, 38, 0.4)",
     badgeColor: "#ef4444",
     descriptionHy: "Համակարգի լիակատար կառավարում, դերերի նշանակում և փոփոխություն, բոլոր բաժինների հասանելիություն:",
+    descriptionEn: "Complete system administration, role management and full access to all sections.",
+    descriptionRu: "Полное администрирование системы, управление ролями и доступ ко всем разделам.",
     permissions: ["all_access", "manage_roles", "manage_admins", "manage_content", "delete_users"],
   },
   admin: {
     id: "admin",
     labelHy: "Ադմինիստրատոր (Admin)",
     labelEn: "Administrator",
+    labelRu: "Администратор",
     badgeBg: "rgba(183, 121, 31, 0.18)",
     badgeBorder: "rgba(183, 121, 31, 0.45)",
     badgeColor: "var(--gold-accent)",
     descriptionHy: "Քաղաքակրթությունների, ֆորումի, գիտական նյութերի և օգտատերերի բովանդակության կառավարում:",
+    descriptionEn: "Management of civilizations, forum, scientific publications and community content.",
+    descriptionRu: "Управление цивилизациями, форумом, научными материалами и контентом пользователей.",
     permissions: ["manage_content", "moderate_discussions", "view_users", "approve_contributions"],
   },
   scholar: {
     id: "scholar",
     labelHy: "Մտածող / Գիտնական",
     labelEn: "Scholar / Thinker",
+    labelRu: "Мыслитель / Ученый",
     badgeBg: "rgba(147, 51, 234, 0.15)",
     badgeBorder: "rgba(147, 51, 234, 0.4)",
     badgeColor: "#a855f7",
     descriptionHy: "Գիտական աշխատությունների հրապարակում, հարցադրումների վերլուծություն և Մանիֆեստի համահեղինակություն:",
+    descriptionEn: "Publishing scholarly papers, analyzing inquiries and co-authoring the Manifesto.",
+    descriptionRu: "Публикация научных работ, анализ вопрошаний и соавторство в Манифесте.",
     permissions: ["publish_papers", "propose_manifesto", "lead_dialogues"],
   },
   member: {
     id: "member",
     labelHy: "Արարատյան Անդամ",
     labelEn: "Member",
+    labelRu: "Участник Сообщества",
     badgeBg: "rgba(59, 130, 246, 0.12)",
     badgeBorder: "rgba(59, 130, 246, 0.35)",
     badgeColor: "#3b82f6",
     descriptionHy: "Սովորական գրանցված օգտատեր, ով մասնակցում է հանրային երկխոսություններին, քվեարկում և պահպանում նյութեր:",
+    descriptionEn: "Registered community member participating in public dialogues, voting and bookmarks.",
+    descriptionRu: "Зарегистрированный участник, участвующий в общественных диалогах и голосованиях.",
     permissions: ["comment", "vote", "bookmark", "view_content"],
   },
 };

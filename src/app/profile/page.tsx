@@ -7,10 +7,12 @@ import { useAuth } from "@/context/AuthContext";
 import { USER_ROLES } from "@/types/auth";
 import { updateUserProfile } from "@/lib/authService";
 import { civilizationsData } from "@/lib/civilizationsData";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function ProfilePage() {
   const router = useRouter();
   const { user, profile, role, isAdmin, isSuperAdmin, signOutUser, refreshProfile, loading } = useAuth();
+  const { t, locale } = useLanguage();
 
   const [displayName, setDisplayName] = useState(profile?.displayName || "");
   const [affiliationTitle, setAffiliationTitle] = useState(profile?.affiliationTitle || "");
@@ -24,7 +26,7 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <main className="container" style={{ textAlign: "center", padding: "5rem 0" }}>
-        <p style={{ color: "var(--text-secondary)", fontSize: "1.1rem" }}>Բեռնվում է...</p>
+        <p style={{ color: "var(--text-secondary)", fontSize: "1.1rem" }}>{t("common.loading")}</p>
       </main>
     );
   }
@@ -35,13 +37,13 @@ export default function ProfilePage() {
         <div className="glass-card" style={{ maxWidth: "500px", margin: "0 auto", padding: "3rem" }}>
           <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>🔒</div>
           <h2 style={{ fontFamily: "var(--font-serif)", color: "var(--gold-accent)", margin: "0 0 1rem 0" }}>
-            Անձնական Տիրույթ
+            {t("profile.pageTitle")}
           </h2>
           <p style={{ color: "var(--text-secondary)", marginBottom: "2rem" }}>
-            Ձեր պրոֆիլը տեսնելու համար անհրաժեշտ է մուտք գործել համակարգ:
+            {t("profile.needLogin")}
           </p>
           <Link href="/auth" className="btn-primary">
-            Մուտք Գործել →
+            {t("profile.loginBtn")}
           </Link>
         </div>
       </main>
@@ -173,7 +175,7 @@ export default function ProfilePage() {
             className="credo-action-btn"
             style={{ color: "#ef4444" }}
           >
-            Ելք (Sign Out)
+            {t("profile.logout")}
           </button>
         </div>
       </div>
@@ -196,10 +198,10 @@ export default function ProfilePage() {
         </span>
         <div>
           <div style={{ fontWeight: "700", color: "var(--text-primary)", fontSize: "0.95rem", marginBottom: "0.2rem" }}>
-            Ձեր Դերը. {roleConfig.labelHy}
+            {t("profile.personalData")} • {locale === "en" ? roleConfig.labelEn : locale === "ru" ? (roleConfig.labelRu || roleConfig.labelHy) : roleConfig.labelHy}
           </div>
           <div style={{ color: "var(--text-secondary)", fontSize: "0.88rem", lineHeight: "1.5" }}>
-            {roleConfig.descriptionHy}
+            {locale === "en" ? roleConfig.descriptionEn : locale === "ru" ? (roleConfig.descriptionRu || roleConfig.descriptionHy) : roleConfig.descriptionHy}
           </div>
         </div>
       </div>
@@ -207,7 +209,7 @@ export default function ProfilePage() {
       {/* Edit Profile Form */}
       <div className="glass-card" style={{ padding: "2.5rem" }}>
         <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "1.4rem", color: "var(--gold-accent)", margin: "0 0 1.5rem 0" }}>
-          Խմբագրել Պրոֆիլը
+          {t("common.edit")} {t("nav.profile")}
         </h2>
 
         {successMsg && (
@@ -222,7 +224,7 @@ export default function ProfilePage() {
               fontSize: "0.9rem",
             }}
           >
-            ✓ Ձեր տվյալները հաջողությամբ պահպանվեցին:
+            {t("profile.savedSuccess")}
           </div>
         )}
 
@@ -230,7 +232,7 @@ export default function ProfilePage() {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "1.5rem" }}>
             <div>
               <label style={{ display: "block", fontSize: "0.88rem", fontWeight: "600", marginBottom: "0.4rem" }}>
-                Անուն Ազգանուն
+                {t("profile.displayName")}
               </label>
               <input
                 type="text"
@@ -250,13 +252,13 @@ export default function ProfilePage() {
 
             <div>
               <label style={{ display: "block", fontSize: "0.88rem", fontWeight: "600", marginBottom: "0.4rem" }}>
-                Գիտական / Ինտելեկտուալ Կոչում կամ Դեր
+                {t("profile.affiliationTitle")}
               </label>
               <input
                 type="text"
                 value={affiliationTitle}
                 onChange={(e) => setAffiliationTitle(e.target.value)}
-                placeholder="օրինակ՝ Պատմաբան, Ավագ գիտաշխատող, Հետազոտող"
+                placeholder={locale === "en" ? "e.g., Historian, Senior Researcher" : "օրինակ՝ Պատմաբան, Ավագ գիտաշխատող, Հետազոտող"}
                 style={{
                   width: "100%",
                   padding: "0.8rem 1rem",
@@ -272,7 +274,7 @@ export default function ProfilePage() {
 
           <div>
             <label style={{ display: "block", fontSize: "0.88rem", fontWeight: "600", marginBottom: "0.4rem" }}>
-              Քաղաքակրթական Հիմնական Ուղղություն
+              {t("profile.civilizationAffiliation")}
             </label>
             <select
               value={civilizationAffiliation}
@@ -289,7 +291,7 @@ export default function ProfilePage() {
             >
               {civilizationsData.map((c) => (
                 <option key={c.id} value={c.nameHy}>
-                  {c.symbol} {c.nameHy}
+                  {c.symbol} {locale === "en" ? c.nameEn : c.nameHy}
                 </option>
               ))}
             </select>
@@ -297,13 +299,13 @@ export default function ProfilePage() {
 
           <div>
             <label style={{ display: "block", fontSize: "0.88rem", fontWeight: "600", marginBottom: "0.4rem" }}>
-              Համառոտ Կենսագրություն / Ասելիք (Bio)
+              {t("profile.bio")}
             </label>
             <textarea
               rows={4}
               value={bio}
               onChange={(e) => setBio(e.target.value)}
-              placeholder="Ներկայացրեք ձեր հետազոտական հետաքրքրությունները, գաղափարական հայացքները և կապը Արարատյան Ֆորումի հետ..."
+              placeholder={locale === "en" ? "Describe your research interests, worldview, and connection to the Ararat Forum..." : "Ներկայացրեք ձեր հետազոտական հետաքրքրությունները, գաղափարական հայացքները և կապը Արարատյան Ֆորումի հետ..."}
               style={{
                 width: "100%",
                 padding: "0.8rem 1rem",
@@ -325,7 +327,7 @@ export default function ProfilePage() {
               className="btn-primary"
               style={{ opacity: saving ? 0.7 : 1 }}
             >
-              {saving ? "Պահպանվում է..." : "Պահպանել Փոփոխությունները"}
+              {saving ? t("profile.saving") : t("profile.saveChanges")}
             </button>
           </div>
         </form>

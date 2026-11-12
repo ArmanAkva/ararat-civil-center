@@ -1,4 +1,5 @@
 import { ThinkTank, Thinker } from "@/lib/civilizationsData";
+import { TranslationsMap } from "@/types/i18n";
 
 export interface HomePageContent {
   heroTitle: string;
@@ -9,13 +10,16 @@ export interface HomePageContent {
     title: string;
     description: string;
     link: string;
+    translations?: TranslationsMap<{ title?: string; description?: string }>;
   }>;
+  translations?: TranslationsMap<Omit<HomePageContent, "cards" | "translations">>;
 }
 
 export interface CivilizationsPageContent {
   badge: string;
   title: string;
   description: string;
+  translations?: TranslationsMap<CivilizationsPageContent>;
 }
 
 export interface AboutPageContent {
@@ -38,6 +42,7 @@ export interface AboutPageContent {
   callToActionTitle: string;
   callToActionDesc: string;
   callToActionQuote: string;
+  translations?: TranslationsMap<AboutPageContent>;
 }
 
 export interface DialogueTopic {
@@ -70,6 +75,7 @@ export interface DialoguePageContent {
     text: string;
   }>;
   archiveTopics?: string[];
+  translations?: TranslationsMap<Record<string, unknown>>;
 }
 
 export interface ForumAgendaItem {
@@ -138,6 +144,7 @@ export interface ForumPageContent {
   organizerOwner?: ForumOrganizer;
   organizers?: ForumOrganizer[];
   suggestions?: ForumSuggestion[];
+  translations?: TranslationsMap<Record<string, unknown>>;
 }
 
 export interface FooterContent {
@@ -158,6 +165,7 @@ export interface FooterContent {
   copyrightText?: string;
   linkContactText?: string;
   linkCharterText?: string;
+  translations?: TranslationsMap<Record<string, unknown>>;
 }
 
 

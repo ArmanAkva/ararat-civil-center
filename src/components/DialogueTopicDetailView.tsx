@@ -26,6 +26,8 @@ import TopicStatusIconBadge from "@/components/dialogue/TopicStatusIconBadge";
 import EditableText from "@/components/cms/EditableText";
 import { Skeleton, TopicDetailSkeleton } from "@/components/ui/Skeleton";
 import { TopicAuthorSignature, MemberAvatar } from "@/components/ui/MemberCard";
+import { useLanguage } from "@/context/LanguageContext";
+import { applyLocale, t } from "@/lib/i18n";
 
 interface Props {
   initialTopic: DialogueTopicItem;
@@ -34,11 +36,13 @@ interface Props {
 export default function DialogueTopicDetailView({ initialTopic }: Props) {
   const router = useRouter();
   const { user, profile, role, isAdmin } = useAuth();
+  const { locale } = useLanguage();
 
   const civilCenters = useMemo(() => getAllCivilCenters(), []);
   const thinkerOptions = useMemo(() => getAllThinkersOptions(), []);
 
   const [topic, setTopic] = useState<DialogueTopicItem>(initialTopic);
+  const localizedTopic = applyLocale(topic, locale);
   const [loadingTopic, setLoadingTopic] = useState(true);
   const [comments, setComments] = useState<DialogueComment[]>([]);
   const [loadingComments, setLoadingComments] = useState(true);
@@ -559,7 +563,7 @@ export default function DialogueTopicDetailView({ initialTopic }: Props) {
           }}
         >
           <span>←</span>
-          <span>Վերադառնալ Բոլոր Հարցադրումներին</span>
+          <span>{locale === "en" ? "Back to All Inquiries" : locale === "ru" ? "Назад ко всем вопрошаниям" : "Վերադառնալ Բոլոր Հարցադրումներին"}</span>
         </Link>
       </div>
 
@@ -740,6 +744,8 @@ export default function DialogueTopicDetailView({ initialTopic }: Props) {
             paddingRight: "3.5rem",
           }}
         >
+          <span>{localizedTopic.number || topic.number}</span>
+          <span>•</span>
           <span>{topic.date}</span>
           {topic.civilizationTag && (
             <>
@@ -788,7 +794,7 @@ export default function DialogueTopicDetailView({ initialTopic }: Props) {
         <EditableText
           tag="h1"
           label="Հարցադրման Վերնագիր"
-          value={topic.title}
+          value={localizedTopic.title || topic.title}
           style={{
             fontFamily: "var(--font-serif)",
             fontSize: "clamp(2rem, 3.8vw, 2.7rem)",
@@ -808,7 +814,7 @@ export default function DialogueTopicDetailView({ initialTopic }: Props) {
           tag="p"
           multiline
           label="Հարցադրման Ամբողջական Նկարագրություն"
-          value={topic.description}
+          value={localizedTopic.description || topic.description}
           style={{
             color: "var(--text-secondary)",
             fontSize: "1.18rem",

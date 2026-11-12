@@ -8,6 +8,7 @@ import { getPageContent } from "@/lib/contentService";
 import { useEditMode } from "@/context/EditModeContext";
 import { useLanguage } from "@/context/LanguageContext";
 import EditableText from "@/components/cms/EditableText";
+import { TranslationsMap } from "@/types/i18n";
 
 export interface FooterData {
   quote: string;
@@ -23,6 +24,7 @@ export interface FooterData {
   copyrightText: string;
   linkContactText: string;
   linkCharterText: string;
+  translations?: TranslationsMap<Record<string, unknown>>;
 }
 
 const defaultFooterData: FooterData = {
@@ -39,12 +41,48 @@ const defaultFooterData: FooterData = {
   copyrightText: "© 2026 Արարատյան Ֆորում / Քաղաքակրթական Կենտրոն: Բոլոր իրավունքները պաշտպանված են:",
   linkContactText: "Կոնտակտներ",
   linkCharterText: "Կանոնադրություն",
+  translations: {
+    en: {
+      quote: "\"We do not predict the future, we co-create it together...\"",
+      brandName: "ARARAT FORUM",
+      btnDialogueText: "💬 Join Discussions",
+      btnCivText: "🏛️ View Civilizations",
+      navTitle: "Main Sections",
+      valuesTitle: "Core Values",
+      valueItem1: "✦ Civilizational Sovereignty",
+      valueItem2: "✦ Multipolar Harmony",
+      valueItem3: "✦ Spiritual-Scientific Synthesis",
+      valueItem4: "✦ Vision of Co-creation",
+      copyrightText: "© 2026 Ararat Forum / Civilizational Center. All rights reserved.",
+      linkContactText: "Contacts",
+      linkCharterText: "Charter",
+      _isAiTranslated: true,
+      _translatedAt: "2026-11-12T00:00:00.000Z",
+    },
+    ru: {
+      quote: "«Мы не предсказываем будущее, мы со-созидаем его вместе...»",
+      brandName: "АРАРАТСКИЙ ФОРУМ",
+      btnDialogueText: "💬 Присоединиться к дискуссиям",
+      btnCivText: "🏛️ Исследовать цивилизации",
+      navTitle: "Основные разделы",
+      valuesTitle: "Система ценностей",
+      valueItem1: "✦ Цивилизационный суверенитет",
+      valueItem2: "✦ Многополярная гармония",
+      valueItem3: "✦ Духовно-научный синтез",
+      valueItem4: "✦ Видение со-созидания",
+      copyrightText: "© 2026 Араратский Форум / Цивилизационный Центр. Все права защищены.",
+      linkContactText: "Контакты",
+      linkCharterText: "Устав",
+      _isAiTranslated: true,
+      _translatedAt: "2026-11-12T00:00:00.000Z",
+    },
+  },
 };
 
 export default function Footer() {
   const [content, setContent] = useState<FooterData>(defaultFooterData);
   const { savePageField } = useEditMode();
-  const { applyLocale } = useLanguage();
+  const { applyLocale, t } = useLanguage();
 
   const displayContent = applyLocale(content);
 
@@ -258,22 +296,22 @@ export default function Footer() {
             />
             <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "0.65rem" }}>
               <li>
-                <Link href="/" className="footer-link">Գլխավոր Էջ</Link>
+                <Link href="/" className="footer-link">{t("nav.home")}</Link>
               </li>
               <li>
-                <Link href="/about" className="footer-link">Մեր Մասին (Հայեցակարգ)</Link>
+                <Link href="/about" className="footer-link">{t("nav.about")}</Link>
               </li>
               <li>
-                <Link href="/civilizations" className="footer-link">Քաղաքակրթություններ</Link>
+                <Link href="/civilizations" className="footer-link">{t("nav.civilizations")}</Link>
               </li>
               <li>
-                <Link href="/publications" className="footer-link">Գրադարան (Գիտական Աշխատություններ)</Link>
+                <Link href="/publications" className="footer-link">{t("nav.library")}</Link>
               </li>
               <li>
-                <Link href="/dialogue" className="footer-link">Երկխոսության Հարթակ</Link>
+                <Link href="/dialogue" className="footer-link">{t("nav.dialogue")}</Link>
               </li>
               <li>
-                <Link href="/forum" className="footer-link">Ֆորում և Կոնֆերանս</Link>
+                <Link href="/forum" className="footer-link">{t("nav.forum")}</Link>
               </li>
             </ul>
           </div>

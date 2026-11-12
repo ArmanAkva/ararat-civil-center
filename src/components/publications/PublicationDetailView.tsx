@@ -9,6 +9,8 @@ import { formatFileSize, uploadPublicationPdf } from "@/lib/storageService";
 import { savePublicationDoc } from "@/lib/contentService";
 import { MemberAvatar } from "@/components/ui/MemberCard";
 import EditCardModal from "@/components/cms/EditCardModal";
+import { useLanguage } from "@/context/LanguageContext";
+import { applyLocale, t } from "@/lib/i18n";
 
 interface Props {
   initialPublication: PublicationWithDetails;
@@ -26,9 +28,14 @@ export default function PublicationDetailView({ initialPublication, relatedPubli
 
   const { user, isAdmin } = useAuth();
   const { isEditMode, savePublication } = useEditMode();
+  const { locale } = useLanguage();
   const canEdit = Boolean(isAdmin || isEditMode || user);
 
   const { pub, civ, author, center } = data;
+  const localizedPub = applyLocale(pub, locale);
+  const localizedCiv = applyLocale(civ, locale);
+  const localizedAuthor = author ? applyLocale(author, locale) : undefined;
+  const localizedCenter = center ? applyLocale(center, locale) : undefined;
 
   // Direct upload from page
   const handleDirectPdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -103,18 +110,18 @@ export default function PublicationDetailView({ initialPublication, relatedPubli
       >
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.9rem", color: "var(--text-secondary)", flexWrap: "wrap" }}>
           <Link href="/" style={{ color: "inherit", textDecoration: "none" }}>
-            Գլխավոր
+            {t("nav.home", locale)}
           </Link>
           <span>/</span>
           <Link href="/publications" style={{ color: "var(--gold-accent)", textDecoration: "none", fontWeight: "600" }}>
-            Գրադարան
+            {t("nav.library", locale)}
           </Link>
           <span>/</span>
           <Link href={`/civilizations/${civ.slug || civ.id}`} style={{ color: "inherit", textDecoration: "none" }}>
-            {civ.nameHy}
+            {localizedCiv.nameHy}
           </Link>
           <span>/</span>
-          <span style={{ color: "var(--text-primary)", fontWeight: "600" }}>{pub.title}</span>
+          <span style={{ color: "var(--text-primary)", fontWeight: "600" }}>{localizedPub.title}</span>
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", flexWrap: "wrap" }}>
@@ -123,7 +130,7 @@ export default function PublicationDetailView({ initialPublication, relatedPubli
             className="credo-action-btn"
             style={{ padding: "0.45rem 0.9rem", fontSize: "0.85rem", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "0.3rem" }}
           >
-            <span>←</span> <span>Վերադառնալ Գրադարան</span>
+            <span>←</span> <span>{locale === "en" ? "Back to Library" : locale === "ru" ? "Назад в библиотеку" : "Վերադառնալ Գրադարան"}</span>
           </Link>
 
           {canEdit && (
@@ -139,7 +146,7 @@ export default function PublicationDetailView({ initialPublication, relatedPubli
                 border: "1px solid var(--gold-accent)",
               }}
             >
-              ✏️ Խմբագրել
+              ✏️ {locale === "en" ? "Edit" : locale === "ru" ? "Редактировать" : "Խմբագրել"}
             </button>
           )}
 
@@ -151,13 +158,13 @@ export default function PublicationDetailView({ initialPublication, relatedPubli
                 rel="noopener noreferrer"
                 className="credo-action-btn"
                 style={{ padding: "0.45rem 0.9rem", fontSize: "0.85rem", textDecoration: "none" }}
-                title="Բացել առանձին ներդիրում"
+                title={locale === "en" ? "Open in new tab" : locale === "ru" ? "Открыть в новой вкладке" : "Բացել առանձին ներդիրում"}
               >
-                ↗ Բացել
+                ↗ {locale === "en" ? "Open" : locale === "ru" ? "Открыть" : "Բացել"}
               </a>
               <a
                 href={pub.downloadUrl}
-                download={pub.fileName || `${pub.title}.pdf`}
+                download={pub.fileName || `${localizedPub.title}.pdf`}
                 className="btn-primary"
                 style={{
                   padding: "0.45rem 1.1rem",
@@ -168,7 +175,7 @@ export default function PublicationDetailView({ initialPublication, relatedPubli
                   gap: "0.35rem",
                 }}
               >
-                <span>⬇️ Ներբեռնել PDF</span>
+                <span>⬇️ {t("pub.downloadPdf", locale)}</span>
               </a>
             </>
           )}
@@ -206,20 +213,20 @@ export default function PublicationDetailView({ initialPublication, relatedPubli
             }}
           >
             <span>{civ.symbol}</span>
-            <span>{civ.nameHy} Քաղաքակրթություն</span>
+            <span>{localizedCiv.nameHy} {locale === "en" ? "Civilization" : locale === "ru" ? "Цивилизация" : "Քաղաքակրթություն"}</span>
           </Link>
 
-          <span className="pub-tag-badge">📄 {pub.type || "Զեկույց"}</span>
+          <span className="pub-tag-badge">📄 {localizedPub.type || "Զեկույց"}</span>
 
           {pub.year && (
             <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: "600" }}>
-              🗓 {pub.year} թվական
+              🗓 {locale === "hy" ? `${pub.year} թվական` : pub.year}
             </span>
           )}
 
           {pub.pages && (
             <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: "600" }}>
-              📖 {pub.pages} էջ
+              📖 {pub.pages} {t("pub.pagesCount", locale)}
             </span>
           )}
 
@@ -235,7 +242,7 @@ export default function PublicationDetailView({ initialPublication, relatedPubli
                 fontWeight: "600",
               }}
             >
-              ✓ Թվային PDF {pub.fileSizeBytes ? `(${formatFileSize(pub.fileSizeBytes)})` : ""}
+              ✓ PDF {pub.fileSizeBytes ? `(${formatFileSize(pub.fileSizeBytes)})` : ""}
             </span>
           ) : (
             <span
@@ -248,7 +255,7 @@ export default function PublicationDetailView({ initialPublication, relatedPubli
                 border: "1px solid var(--card-border)",
               }}
             >
-              Թվային արխիվ (պատրաստվում է)
+              {locale === "en" ? "Digital archive (pending)" : locale === "ru" ? "Цифровой архив (готовится)" : "Թվային արխիվ (պատրաստվում է)"}
             </span>
           )}
         </div>
@@ -264,7 +271,7 @@ export default function PublicationDetailView({ initialPublication, relatedPubli
             fontWeight: "700",
           }}
         >
-          {pub.title}
+          {localizedPub.title}
         </h1>
 
         {/* Affiliations: Author & Center */}
@@ -280,10 +287,10 @@ export default function PublicationDetailView({ initialPublication, relatedPubli
           {/* Author info */}
           {author ? (
             <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-              <MemberAvatar name={author.name} size={48} />
+              <MemberAvatar name={localizedAuthor?.name || author.name} size={48} />
               <div>
                 <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-                  Հեղինակ
+                  {t("pub.author", locale)}
                 </div>
                 <Link
                   href={`/authors/${author.id}`}
@@ -294,11 +301,11 @@ export default function PublicationDetailView({ initialPublication, relatedPubli
                     textDecoration: "none",
                   }}
                 >
-                  {author.name}
+                  {localizedAuthor?.name || author.name}
                 </Link>
-                {author.title && (
+                {(localizedAuthor?.title || author.title) && (
                   <div style={{ fontSize: "0.82rem", color: "var(--text-secondary)" }}>
-                    {author.title}
+                    {localizedAuthor?.title || author.title}
                   </div>
                 )}
               </div>
@@ -307,9 +314,9 @@ export default function PublicationDetailView({ initialPublication, relatedPubli
             <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
               <div style={{ fontSize: "1.8rem" }}>🖋</div>
               <div>
-                <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>Հեղինակ</div>
+                <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>{t("pub.author", locale)}</div>
                 <div style={{ fontSize: "1rem", color: "var(--text-primary)", fontWeight: "600" }}>
-                  {civ.nameHy} Գիտական Խորհուրդ
+                  {locale === "en" ? `${localizedCiv.nameHy} Academic Council` : locale === "ru" ? `Ученый совет (${localizedCiv.nameHy})` : `${civ.nameHy} Գիտական Խորհուրդ`}
                 </div>
               </div>
             </div>
@@ -336,7 +343,7 @@ export default function PublicationDetailView({ initialPublication, relatedPubli
               </div>
               <div>
                 <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-                  Գիտական Կենտրոն
+                  {t("pub.center", locale)}
                 </div>
                 <Link
                   href={`/centers/${center.id}`}
@@ -347,10 +354,10 @@ export default function PublicationDetailView({ initialPublication, relatedPubli
                     textDecoration: "none",
                   }}
                 >
-                  {center.name}
+                  {localizedCenter?.name || center.name}
                 </Link>
                 <div style={{ fontSize: "0.82rem", color: "var(--text-secondary)" }}>
-                  {center.city}, {center.country}
+                  {localizedCenter?.city || center.city}, {localizedCenter?.country || center.country}
                 </div>
               </div>
             </div>
@@ -358,9 +365,9 @@ export default function PublicationDetailView({ initialPublication, relatedPubli
             <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
               <div style={{ fontSize: "1.8rem" }}>🏛</div>
               <div>
-                <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>Քաղաքակրթություն</div>
+                <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>{locale === "en" ? "Civilization" : locale === "ru" ? "Цивилизация" : "Քաղաքակրթություն"}</div>
                 <div style={{ fontSize: "1rem", color: "var(--text-primary)", fontWeight: "600" }}>
-                  {civ.nameHy}
+                  {localizedCiv.nameHy}
                 </div>
               </div>
             </div>
@@ -393,7 +400,7 @@ export default function PublicationDetailView({ initialPublication, relatedPubli
           }}
         >
           <span>📑</span>
-          <span>Ամփոփագիր և Գիտական Հիմնադրույթներ</span>
+          <span>{locale === "en" ? "Summary & Key Theses" : locale === "ru" ? "Аннотация и ключевые тезисы" : "Ամփոփագիր և Գիտական Հիմնադրույթներ"}</span>
         </h3>
         <p
           style={{
@@ -404,8 +411,9 @@ export default function PublicationDetailView({ initialPublication, relatedPubli
             whiteSpace: "pre-line",
           }}
         >
-          {pub.description ||
-            `Այս աշխատությունը ներկայացնում է «${civ.nameHy}» քաղաքակրթական ռազմավարության հիմնարար դոկտրինը, գիտական հետազոտությունները և արդի փիլիսոփայական հայեցակարգերը։`}
+          {localizedPub.description ||
+            pub.description ||
+            `Այս աշխատությունը ներկայացնում է «${localizedCiv.nameHy}» քաղաքակրթական ռազմավարության հիմնարար դոկտրինը, գիտական հետազոտությունները և արդի փիլիսոփայական հայեցակարգերը։`}
         </p>
       </section>
 

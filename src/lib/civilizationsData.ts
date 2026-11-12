@@ -1,3 +1,5 @@
+import { TranslationsMap } from "@/types/i18n";
+
 export interface Publication {
   id?: string;
   civId?: string;
@@ -13,6 +15,7 @@ export interface Publication {
   centerIds?: string[];
   createdAt?: string;
   updatedAt?: string;
+  translations?: TranslationsMap<Record<string, unknown>>;
 }
 
 export interface ThinkTank {
@@ -29,6 +32,7 @@ export interface ThinkTank {
   publicationIds?: string[];
   authors?: Thinker[];
   authorIds?: string[];
+  translations?: TranslationsMap<Record<string, unknown>>;
 }
 
 export interface Thinker {
@@ -41,6 +45,7 @@ export interface Thinker {
   avatarBg?: string;
   publications: Publication[];
   publicationIds?: string[];
+  translations?: TranslationsMap<Record<string, unknown>>;
 }
 
 export interface Civilization {
@@ -56,6 +61,7 @@ export interface Civilization {
   centers: ThinkTank[];
   authors: Thinker[];
   publications?: Publication[];
+  translations?: TranslationsMap<Record<string, unknown>>;
 }
 
 export const civilizationsData: Civilization[] = [

@@ -31,12 +31,15 @@ import {
 import PersonWithLoupeIcon from "@/components/icons/PersonWithLoupeIcon";
 import TopicStatusIconBadge from "@/components/dialogue/TopicStatusIconBadge";
 import { MemberChip } from "@/components/ui/MemberCard";
+import { useLanguage } from "@/context/LanguageContext";
+import { applyLocale, t } from "@/lib/i18n";
 
 function DialogueHubContent() {
   const router = useRouter();
 
   const { user, profile, role, isAdmin, isSuperAdmin } = useAuth();
   const { isEditMode, savePageField } = useEditMode();
+  const { locale } = useLanguage();
 
   // Civil Centers List for optional selection
   const civilCenters = useMemo(() => getAllCivilCenters(), []);
@@ -44,6 +47,11 @@ function DialogueHubContent() {
   // Page Content State (Editable via CMS)
   const [content, setContent] = useState<DialoguePageContent | null>(null);
   const [loadingContent, setLoadingContent] = useState(true);
+
+  const localizedContent = useMemo(
+    () => applyLocale(content || defaultDialogueContent, locale),
+    [content, locale]
+  );
 
   // Topics State
   const [topics, setTopics] = useState<DialogueTopicItem[]>([]);
@@ -454,7 +462,7 @@ function DialogueHubContent() {
           <EditableText
             tag="span"
             label="Էջի Տիտղոս / Բեյջ (Eyebrow)"
-            value={content.heroBadge || defaultDialogueContent.heroBadge || "Արարատյան Կենտրոն · Փիլիսոփայական Ֆորում"}
+            value={isEditMode ? (content.heroBadge || defaultDialogueContent.heroBadge || "") : (localizedContent.heroBadge || defaultDialogueContent.heroBadge || "Արարատյան Կենտրոն · Փիլիսոփայական Ֆորում")}
             style={{
               display: "inline-block",
               fontSize: "0.85rem",
@@ -472,7 +480,7 @@ function DialogueHubContent() {
         <EditableText
           tag="h1"
           label="Էջի Գլխավոր Վերնագիր"
-          value={content.heroTitle || defaultDialogueContent.heroTitle || "Քաղաքակրթական Երկխոսություն & Հարցադրումներ"}
+          value={isEditMode ? (content.heroTitle || defaultDialogueContent.heroTitle || "") : (localizedContent.heroTitle || defaultDialogueContent.heroTitle || "Քաղաքակրթական Երկխոսություն & Հարցադրումներ")}
           style={{
             fontFamily: "var(--font-serif)",
             fontSize: "clamp(2rem, 4vw, 3rem)",
@@ -490,7 +498,7 @@ function DialogueHubContent() {
           tag="p"
           multiline
           label="Էջի Նկարագրություն"
-          value={content.heroDescription || defaultDialogueContent.heroDescription || ""}
+          value={isEditMode ? (content.heroDescription || defaultDialogueContent.heroDescription || "") : (localizedContent.heroDescription || defaultDialogueContent.heroDescription || "")}
           style={{
             fontSize: "1.05rem",
             lineHeight: "1.7",
@@ -534,7 +542,7 @@ function DialogueHubContent() {
             <EditableText
               tag="div"
               label="KPI 1 Անվանում"
-              value={content.kpiPublishedLabel || defaultDialogueContent.kpiPublishedLabel || "Հրապարակված Հարցադրումներ"}
+              value={isEditMode ? (content.kpiPublishedLabel || defaultDialogueContent.kpiPublishedLabel || "") : (localizedContent.kpiPublishedLabel || defaultDialogueContent.kpiPublishedLabel || "Հրապարակված Հարցադրումներ")}
               style={{ fontSize: "0.82rem", color: "var(--text-secondary)", marginTop: "0.25rem" }}
               onSave={async (val) => {
                 setContent((prev) => ({ ...prev, kpiPublishedLabel: val }));
@@ -564,7 +572,7 @@ function DialogueHubContent() {
             <EditableText
               tag="div"
               label="KPI 2 Անվանում"
-              value={content.kpiActiveLabel || defaultDialogueContent.kpiActiveLabel || "Ակտիվ Բանավեճեր"}
+              value={isEditMode ? (content.kpiActiveLabel || defaultDialogueContent.kpiActiveLabel || "") : (localizedContent.kpiActiveLabel || defaultDialogueContent.kpiActiveLabel || "Ակտիվ Բանավեճեր")}
               style={{ fontSize: "0.82rem", color: "var(--text-secondary)", marginTop: "0.25rem" }}
               onSave={async (val) => {
                 setContent((prev) => ({ ...prev, kpiActiveLabel: val }));
@@ -594,7 +602,7 @@ function DialogueHubContent() {
             <EditableText
               tag="div"
               label="KPI 3 Անվանում"
-              value={content.kpiCommentsLabel || defaultDialogueContent.kpiCommentsLabel || "Գրանցված Կարծիքներ"}
+              value={isEditMode ? (content.kpiCommentsLabel || defaultDialogueContent.kpiCommentsLabel || "") : (localizedContent.kpiCommentsLabel || defaultDialogueContent.kpiCommentsLabel || "Գրանցված Կարծիքներ")}
               style={{ fontSize: "0.82rem", color: "var(--text-secondary)", marginTop: "0.25rem" }}
               onSave={async (val) => {
                 setContent((prev) => ({ ...prev, kpiCommentsLabel: val }));
@@ -637,7 +645,7 @@ function DialogueHubContent() {
               <EditableText
                 tag="span"
                 label="KPI 4 Անվանում"
-                value={content.kpiExpertsLabel || defaultDialogueContent.kpiExpertsLabel || "Փորձագիտական Կարծիքներ"}
+                value={isEditMode ? (content.kpiExpertsLabel || defaultDialogueContent.kpiExpertsLabel || "") : (localizedContent.kpiExpertsLabel || defaultDialogueContent.kpiExpertsLabel || "Փորձագիտական Կարծիքներ")}
                 style={{ fontSize: "0.82rem", color: "var(--text-secondary)" }}
                 onSave={async (val) => {
                   setContent((prev) => ({ ...prev, kpiExpertsLabel: val }));
@@ -676,7 +684,9 @@ function DialogueHubContent() {
           >
             <span>{isAdmin ? "⚡️" : "💡"}</span>
             <span>
-              {isAdmin ? "Առաջարկել / Ստեղծել Հարցադրում (Admin)" : "Առաջարկել Նոր Հարցադրում"}
+              {isAdmin
+                ? (locale === "en" ? "Propose / Create Inquiry (Admin)" : locale === "ru" ? "Предложить / Создать вопрошание (Админ)" : "Առաջարկել / Ստեղծել Հարցադրում (Admin)")
+                : (localizedContent.suggestButtonText || t("dialogue.suggest", locale))}
             </span>
           </button>
         </div>
@@ -1067,6 +1077,7 @@ function DialogueHubContent() {
           }}
         >
           {filteredTopics.map((topic) => {
+            const localizedTopic = applyLocale(topic, locale);
             const commentCount = topic.commentsCount || 0;
             const expertCount = topic.expertOpinionsCount ?? topic.expertResponses?.length ?? 0;
             const isPending = topic.status === "pending";
@@ -1211,7 +1222,7 @@ function DialogueHubContent() {
                       <EditableText
                         tag="h3"
                         label={`Հարցադրման Վերնագիր (${topic.number})`}
-                        value={topic.title}
+                        value={isEditMode ? topic.title : localizedTopic.title}
                         style={{
                           fontFamily: "var(--font-serif)",
                           fontSize: "1.25rem",
@@ -1255,7 +1266,7 @@ function DialogueHubContent() {
                         onMouseEnter={(e) => (e.currentTarget.style.color = "var(--gold-accent)")}
                         onMouseLeave={(e) => (e.currentTarget.style.color = "inherit")}
                       >
-                        {topic.title}
+                        {localizedTopic.title}
                       </Link>
                     </h3>
                   )}
@@ -1267,8 +1278,8 @@ function DialogueHubContent() {
                         tag="p"
                         multiline
                         label={`Հարցադրման Նկարագրություն (${topic.number})`}
-                        value={topic.description}
-                        title={topic.description}
+                        value={isEditMode ? topic.description : localizedTopic.description}
+                        title={isEditMode ? topic.description : localizedTopic.description}
                         style={{
                           fontSize: "0.9rem",
                           lineHeight: "1.6",
@@ -1292,7 +1303,7 @@ function DialogueHubContent() {
                     </div>
                   ) : (
                     <p
-                      title={topic.description}
+                      title={localizedTopic.description}
                       style={{
                         fontSize: "0.9rem",
                         lineHeight: "1.6",
@@ -1306,7 +1317,7 @@ function DialogueHubContent() {
                         wordBreak: "break-word",
                       }}
                     >
-                      {topic.description}
+                      {localizedTopic.description}
                     </p>
                   )}
                 </div>
